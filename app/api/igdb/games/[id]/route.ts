@@ -1,4 +1,4 @@
-// app/api/games/[id]/route.ts
+// app/api/igdb/games/[id]/route.ts
 import { igdbClient } from '@/lib/igdb/client';
 import { NextResponse } from 'next/server';
 

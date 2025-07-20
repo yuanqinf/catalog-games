@@ -80,15 +80,13 @@ export default function AddGamePage() {
       setLoading(true);
       try {
         // Fetch IGDB game data from local API
-        const res = await fetch(`/api/games/${igdbId}`);
+        const res = await fetch(`/api/igdb/games/${igdbId}`);
         if (!res.ok) {
           toast.error('Failed to fetch game data');
           setLoading(false);
           return;
         }
         const data = await res.json();
-
-        console.log(data);
 
         // Prepare data for Supabase
         const dbData: GameDbData = {
