@@ -148,7 +148,7 @@ export default function HighlightGameCard({ game }: { game: GameData }) {
         <div className="ml-2 flex flex-shrink-0 items-center text-yellow-400">
           <Star size={18} className="mr-1 fill-current" />
           <span className="text-md font-bold">
-            {calculateAverageRating(game.catalog_rating)}
+            {game.catalog_rating && calculateAverageRating(game.catalog_rating)}
           </span>
         </div>
       </div>
@@ -185,7 +185,7 @@ export default function HighlightGameCard({ game }: { game: GameData }) {
         </div>
       )}
       {/* Featured Comments */}
-      {game.featured_comment_tags.length > 0 && (
+      {game.featured_comment_tags && game.featured_comment_tags.length > 0 && (
         <div className="highlight-card-section mb-4">
           <div className="flex h-full flex-wrap gap-1.5 overflow-hidden">
             {game.featured_comment_tags.map(

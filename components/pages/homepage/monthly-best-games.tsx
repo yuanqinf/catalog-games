@@ -68,20 +68,22 @@ const MonthlyBestGames = () => {
                           fill="rgba(0,0,0,0.5)"
                         />
                       </div>
-                      <div className="absolute bottom-0 left-0 z-10 p-3">
-                        <div className="bg-opacity-50 flex items-center rounded bg-black px-2 py-1 text-white">
-                          <Image
-                            src="/images/logo.png"
-                            alt="Logo"
-                            width={36}
-                            height={36}
-                          />
-                          <span>
-                            Catalog Rating:{' '}
-                            {calculateAverageRating(game.catalog_rating)}
-                          </span>
+                      {game.catalog_rating && (
+                        <div className="absolute bottom-0 left-0 z-10 p-3">
+                          <div className="bg-opacity-50 flex items-center rounded bg-black px-2 py-1 text-white">
+                            <Image
+                              src="/images/logo.png"
+                              alt="Logo"
+                              width={36}
+                              height={36}
+                            />
+                            <span>
+                              Catalog Rating:{' '}
+                              {calculateAverageRating(game.catalog_rating)}
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      )}
                       {game.images && game.images.banner ? (
                         <Image
                           src={game.images.banner}
@@ -143,12 +145,14 @@ const MonthlyBestGames = () => {
                   <p className="truncate text-xs text-zinc-400">
                     {game.developer}
                   </p>
-                  <div className="flex items-center gap-1 text-yellow-400">
-                    <Star size={12} fill="currentColor" />
-                    <span className="text-xs">
-                      {calculateAverageRating(game.catalog_rating)}
-                    </span>
-                  </div>
+                  {game.catalog_rating && (
+                    <div className="flex items-center gap-1 text-yellow-400">
+                      <Star size={12} fill="currentColor" />
+                      <span className="text-xs">
+                        {calculateAverageRating(game.catalog_rating)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

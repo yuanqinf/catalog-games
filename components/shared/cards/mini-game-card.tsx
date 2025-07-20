@@ -40,7 +40,8 @@ const MiniGameCard = ({ game }: { game: GameData }) => {
           <h4 className="truncate text-sm text-zinc-300">{game.developer}</h4>
           <div className="flex justify-between gap-2">
             <p className="text-sm text-zinc-400">
-              {game.isUpcoming ? (
+              {game.release_date &&
+              new Date(game.release_date).getTime() > Date.now() ? (
                 <span className="flex items-center">
                   <Calendar size={14} className="mr-1.5 flex-shrink-0" />
                   {`Release: ${game.release_date}`}
@@ -54,7 +55,8 @@ const MiniGameCard = ({ game }: { game: GameData }) => {
             </p>
             <p className="flex items-center text-sm text-zinc-400">
               <Star size={14} className="mr-1 flex-shrink-0 text-yellow-400" />
-              {calculateAverageRating(game.catalog_rating)}
+              {game.catalog_rating &&
+                calculateAverageRating(game.catalog_rating)}
             </p>
           </div>
         </div>

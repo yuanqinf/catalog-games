@@ -73,7 +73,7 @@ const GameDetail = ({ game }: { game: GameData }) => {
   };
 
   const mediaItems = [
-    { type: 'image', url: game.images.gameplay },
+    { type: 'image', url: game.images.banner },
     ...(game.videos?.map((v) => ({ type: 'video', url: v })) || []),
   ];
 
@@ -84,8 +84,8 @@ const GameDetail = ({ game }: { game: GameData }) => {
         <section className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg shadow-2xl lg:col-span-2">
             <Image
-              src={game.images.gameplay}
-              alt={`${game.name} gameplay`}
+              src={game.images.banner}
+              alt={`${game.name} banner`}
               fill
               className="object-cover"
             />
@@ -273,11 +273,12 @@ const GameDetail = ({ game }: { game: GameData }) => {
                 Tags
               </h3>
               <div className="flex flex-wrap gap-2">
-                {game.tags.map((t) => (
-                  <Badge key={t} variant="outline">
-                    {t}
-                  </Badge>
-                ))}
+                {game.featured_comment_tags &&
+                  game.featured_comment_tags.map((t) => (
+                    <Badge key={t} variant="outline">
+                      {t}
+                    </Badge>
+                  ))}
               </div>
             </div>
           </div>

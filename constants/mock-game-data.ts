@@ -27,28 +27,25 @@ export interface GameData {
   developer: string;
   publisher: string;
   game_engine: string;
+  videos?: string[];
+  release_date?: string;
+  update_date?: string;
 
   images: {
     banner: string;
-    gameplay: string;
     thumbnail: string;
   };
 
-  featured_comment_tags: string[];
-  videos?: string[];
-  isUpcoming?: boolean; //TODO: do not include this to main data table
-  release_date?: string;
-  update_date?: string;
-  catalog_rating: catalog_rating;
-  catalog_rating_count: number;
-  steam_recent_review?: SteamReview;
+  catalog_rating?: catalog_rating;
+  catalog_rating_count?: number;
+
   steam_all_review?: SteamReview;
+  steam_recent_review?: SteamReview;
   metacritic_user_score?: number;
+  featured_comment_tags?: string[];
   player_count?: number;
+
   average_play_time?: number;
-  age_ratings?: string[];
-  similar_games?: string[];
-  official_links?: string[];
 }
 
 export const mockMonthlyBestGamesData: GameData[] = [
@@ -64,8 +61,6 @@ export const mockMonthlyBestGamesData: GameData[] = [
       banner:
         'https://preview.redd.it/znxzjlws0i471.jpg?width=1920&format=pjpg&auto=webp&s=2514f6dd7c16a0ed3aa0c93cd80b134cd8853178',
       thumbnail: 'https://egy4gamers.com/storage/2024/07/Elden-Ring.jpg',
-      gameplay:
-        'https://www.godisageek.com/wp-content/uploads/Elden-Ring-combat.jpg',
     },
     videos: ['https://www.youtube.com/watch?v=E3Huy2cdih0'],
     release_date: '2022-02-25',
@@ -101,8 +96,6 @@ export const mockMonthlyBestGamesData: GameData[] = [
         'https://cdn1.epicgames.com/spt-assets/ca9ef1bcf2f54043baac351366aec677/black-myth-wukong-jz9yr.jpg',
       thumbnail:
         'https://sm.ign.com/t/ign_ap/cover/b/black-myth/black-myth-wukong_fmws.600.jpg',
-      gameplay:
-        'https://www.gematsu.com/wp-content/uploads/2022/08/Black-Myth_08-19-22.jpg',
     },
     videos: ['https://www.youtube.com/watch?v=7gYaZgn2pW8'],
     release_date: '2024-08-20',
@@ -139,7 +132,6 @@ export const mockMonthlyBestGamesData: GameData[] = [
         'https://cdn.wccftech.com/wp-content/uploads/2023/08/Baldurs-Gate-3-header-1920x1080.jpg',
       thumbnail:
         'https://sm.ign.com/t/ign_ap/cover/b/baldurs-ga/baldurs-gate-iii_9c7e.600.jpg',
-      gameplay: 'https://cdn.mos.cms.futurecdn.net/oavWjqPpN87uaYrcASSgti.jpg',
     },
     videos: ['https://www.youtube.com/watch?v=zg0_ulgtRqA'],
     release_date: '2023-08-03',
@@ -176,8 +168,6 @@ export const mockMonthlyBestGamesData: GameData[] = [
         'https://wallpapercat.com/w/full/1/7/f/2618-1920x1080-desktop-1080p-cyberpunk-2077-background.jpg',
       thumbnail:
         'https://sm.ign.com/t/ign_ap/cover/c/cyberpunk-/cyberpunk-2077-ultimate-edition_t3xe.600.jpg',
-      gameplay:
-        'https://i0.wp.com/waytoomany.games/wp-content/uploads/2022/02/Cyberpunk-2077_20220216225610.jpg?ssl=1',
     },
     videos: ['https://www.youtube.com/watch?v=qIcTM8WXFjk'],
     release_date: '2020-12-10',
@@ -214,8 +204,6 @@ export const mockMonthlyBestGamesData: GameData[] = [
         'https://zelda.nintendo.com/breath-of-the-wild/assets/media/wallpapers/desktop-1.jpg',
       thumbnail:
         'https://sm.ign.com/t/ign_pk/cover/t/the-legend/the-legend-of-zelda-breath-of-the-wild-nintendo-switch-2-edi_bf37.600.png',
-      gameplay:
-        'https://staticg.sportskeeda.com/editor/2023/05/34684-16838975002342-1920.jpg',
     },
     videos: ['https://www.youtube.com/watch?v=zw47_q9wbBE'],
     release_date: '2017-03-03',
@@ -251,7 +239,6 @@ export const mockMonthlyWorstGamesData: GameData[] = [
     images: {
       banner:
         'https://blog.playstation.com/tachyon/2024/05/b06a8cc47aebcaeaff8cf93d58435221e8b1b616.jpg',
-      gameplay: 'https://images.alphacoders.com/137/thumb-1920-1370133.jpeg',
       thumbnail:
         'https://sm.ign.com/t/ign_nordic/cover/f/firewalk-s/firewalk-studios-probablymonsters-project_q9ua.600.jpg',
     },
@@ -288,8 +275,6 @@ export const mockMonthlyWorstGamesData: GameData[] = [
     images: {
       banner:
         'https://cdn1.epicgames.com/offer/4583306dbdc34076ac7ac2bf19bf7096/EGS_DragonAgeTheVeilguard_Bioware_S1_2560x1440-0c5844de6318595b22d3dece8fff0fb6_2560x1440-0c5844de6318595b22d3dece8fff0fb6',
-      gameplay:
-        'https://static0.gamerantimages.com/wordpress/wp-content/uploads/2024/10/dragon-age-veilguard-combat.jpg',
       thumbnail:
         'https://sm.ign.com/t/ign_mear/cover/d/dragon-age/dragon-age-the-veilguard_yngr.600.jpg',
     },
@@ -326,8 +311,6 @@ export const mockMonthlyWorstGamesData: GameData[] = [
     publisher: 'Blizzard Entertainment',
     images: {
       banner: 'https://images7.alphacoders.com/124/1249649.png',
-      gameplay:
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTL71Iq7E9Ic8EWxi06imbS-KS6fD7f241-Ag&s',
       thumbnail:
         'https://images.nintendolife.com/1558f6cd6d6fe/overwatch-2-cover.cover_large.jpg',
     },
@@ -357,7 +340,6 @@ export const mockMonthlyWorstGamesData: GameData[] = [
 
 export const mockUpcomingGamesData: GameData[] = [
   {
-    isUpcoming: true,
     id: 'borderlands-4',
     name: 'Borderlands 4',
     description:
@@ -369,7 +351,6 @@ export const mockUpcomingGamesData: GameData[] = [
     images: {
       banner:
         'https://cdn1.epicgames.com/spt-assets/20d989fc07a447b2af3c59e4fd5f49c7/borderlands-4-14saz.jpg',
-      gameplay: 'https://images.alphacoders.com/138/thumb-1920-1385466.jpg',
       thumbnail:
         'https://sm.ign.com/t/ign_pk/cover/b/borderland/borderlands-4_fchm.600.jpg',
     },
@@ -387,7 +368,6 @@ export const mockUpcomingGamesData: GameData[] = [
     featured_comment_tags: ['Not enough user reviews'],
   },
   {
-    isUpcoming: true,
     id: 'metal-gear-solid-delta',
     name: 'Metal Gear Solid Delta: Snake Eater',
     description:
@@ -399,8 +379,6 @@ export const mockUpcomingGamesData: GameData[] = [
     images: {
       banner:
         'https://cdn.wccftech.com/wp-content/uploads/2023/10/Metal-Gear-Solid-Delta-Snake-Eater.jpg',
-      gameplay:
-        'https://static1.thegamerimages.com/wordpress/wp-content/uploads/2024/08/knm_mgs_delta_gameplay_03.png',
       thumbnail:
         'https://sm.ign.com/t/ign_za/cover/m/metal-gear/metal-gear-solid-delta-snake-eater_hdn4.600.jpg',
     },
@@ -419,7 +397,6 @@ export const mockUpcomingGamesData: GameData[] = [
     featured_comment_tags: ['Not enough user reviews'],
   },
   {
-    isUpcoming: true,
     id: 'donkey-kong-bananza',
     name: 'Donkey Kong Bananza',
     description:
@@ -431,8 +408,6 @@ export const mockUpcomingGamesData: GameData[] = [
     images: {
       banner:
         'https://cdn.wccftech.com/wp-content/uploads/2025/04/WCCFdonkeykongbananza1.jpg',
-      gameplay:
-        'https://gamingbolt.com/wp-content/uploads/2025/04/donkey-kong-bananza-image-5-scaled.jpg',
       thumbnail:
         'https://i.pinimg.com/736x/e7/22/45/e72245d795703573503a861c14de9c34.jpg',
     },
@@ -462,7 +437,6 @@ export const mockUpcomingGamesData: GameData[] = [
     images: {
       banner:
         'https://cdn1.epicgames.com/spt-assets/61237a4bad9f482a9ad1a1ac74520bba/wuchang-fallen-feathers-199kj.jpg',
-      gameplay: 'https://505games.com/wp-content/uploads/2024/10/7.jpg',
       thumbnail:
         'https://image.api.playstation.com/vulcan/ap/rnd/202503/2515/7a30e03231f8ea811a225b4b4e21ffdc8bf260e41145f196.png',
     },
@@ -486,7 +460,6 @@ export const mockUpcomingGamesData: GameData[] = [
     player_count: 0,
   },
   {
-    isUpcoming: true,
     id: 'slay-the-spire-2',
     name: 'Slay the Spire 2',
     description:
@@ -497,8 +470,6 @@ export const mockUpcomingGamesData: GameData[] = [
     publisher: 'MegaCrit',
     images: {
       banner: 'https://www.megacrit.com/images/sts2_key_art_16x9-scaled.jpg',
-      gameplay:
-        'https://i.redd.it/slay-the-spire-ii-gameplay-screenshots-from-steam-page-v0-82xi38esrotc1.jpg?width=1920&format=pjpg&auto=webp&s=ba4b50d4301d638e9a6bff73f0fd033c08584ad8',
       thumbnail:
         'https://sm.ign.com/t/ign_nordic/cover/s/slay-the-s/slay-the-spire-2_8ypg.600.jpg',
     },

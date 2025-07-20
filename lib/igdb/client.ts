@@ -163,7 +163,7 @@ class IgdbClient {
       if (game.screenshots) {
         game.screenshots = game.screenshots.map((screenshot) => ({
           ...screenshot,
-          url: `https:${screenshot.url}`.replace('/t_thumb/', '/t1080p/'),
+          url: `https:${screenshot.url}`.replace('/t_thumb/', '/t_1080p/'),
         }));
       }
       if (game.artworks) {
