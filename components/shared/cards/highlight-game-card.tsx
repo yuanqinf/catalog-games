@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { GameData } from '@/constants/mock-game-data';
+import type { GameDbData } from '@/types';
 import { Star, Ghost, Gamepad2, ThumbsUp, ThumbsDown, Meh } from 'lucide-react';
 import {
   TAILWIND_TEXT_COLORS,
@@ -8,6 +8,14 @@ import {
   EMPTY_BLOCK_COLOR,
 } from '@/constants/colors';
 import styled from 'styled-components';
+
+const mockRating = {
+  story: 0,
+  music: 0,
+  graphics: 0,
+  gameplay: 0,
+  longevity: 0,
+};
 
 const RatingBlock = styled.div<{
   $fillColor: string;
@@ -31,7 +39,7 @@ type SteamReviewPresentation = {
   label: string;
 };
 
-export default function HighlightGameCard({ game }: { game: GameData }) {
+export default function HighlightGameCard({ game }: { game: GameDbData }) {
   const getSteamReviewPresentation = (
     review?: string,
   ): SteamReviewPresentation | null => {
@@ -65,35 +73,21 @@ export default function HighlightGameCard({ game }: { game: GameData }) {
     }
   };
 
-  const player_count = game.player_count ?? 0;
+  // const player_count = game.player_count ?? 0;
 
   let playerSalesInfo = '';
-  if (player_count > 0) {
-    playerSalesInfo = `~ ${formatNumberAbbreviated(player_count)} units sold`;
-  }
+  // if (player_count > 0) {
+  //   playerSalesInfo = `~ ${formatNumberAbbreviated(player_count)} units sold`;
+  // }
 
-  const steamPresentation = getSteamReviewPresentation(game.steam_all_review);
+  // const steamPresentation = getSteamReviewPresentation(game.steam_all_review); //TODO: Add steam review
   let avatarBorderColorClass: string = TAILWIND_BORDER_COLORS.neutral; // Default border
-  if (steamPresentation && steamPresentation.colorClass) {
-    avatarBorderColorClass = steamPresentation.colorClass.replace(
-      'text-',
-      'border-',
-    );
-  }
-
-  /**
-   * Calculates the average rating from a record of category ratings
-   * @param ratings - Object containing rating categories and their values
-   * @returns The average rating as a string with one decimal place
-   */
-  const calculateAverageRating = (ratings: Record<string, number>) => {
-    const values = Object.values(ratings);
-    if (values.length === 0) return '0.0';
-
-    const sum = values.reduce((total, rating) => total + rating, 0);
-    const average = sum / values.length;
-    return average.toFixed(1);
-  };
+  // if (steamPresentation && steamPresentation.colorClass) {
+  //   avatarBorderColorClass = steamPresentation.colorClass.replace(
+  //     'text-',
+  //     'border-',
+  //   );
+  // }
 
   /**
    * Generates the appropriate style object for a rating block based on the rating value
@@ -132,7 +126,7 @@ export default function HighlightGameCard({ game }: { game: GameData }) {
         >
           <div className="relative h-10 w-10 overflow-hidden rounded-full">
             <Image
-              src={game.images.thumbnail}
+              src={game.cover_url ?? ''}
               alt={`${game.name} avatar`}
               fill
               sizes="40px"
@@ -148,7 +142,8 @@ export default function HighlightGameCard({ game }: { game: GameData }) {
         <div className="ml-2 flex flex-shrink-0 items-center text-yellow-400">
           <Star size={18} className="mr-1 fill-current" />
           <span className="text-md font-bold">
-            {game.catalog_rating && calculateAverageRating(game.catalog_rating)}
+            {/* TODO: Add rating */}
+            {'N/A'}
           </span>
         </div>
       </div>
@@ -157,25 +152,23 @@ export default function HighlightGameCard({ game }: { game: GameData }) {
       <div className="mb-3 flex items-center space-x-2 truncate text-xs text-neutral-400">
         <div className="flex min-w-0 items-center">
           <Ghost size={12} className="mr-1 flex-shrink-0" />
-          <span className="truncate" title={game.developer}>
-            {game.developer}
+          <span className="truncate" title={game.developers?.[0] ?? ''}>
+            {game.developers?.[0]}
           </span>
         </div>
         <span className="text-neutral-500">•</span>
         <div className="flex min-w-0 items-center">
           <Gamepad2 size={12} className="mr-1 flex-shrink-0" />
-          <span className="truncate" title={game.genre}>
-            {game.genre}
-          </span>
+          <span className="truncate">{game.genre?.join(', ')}</span>
         </div>
       </div>
 
       {/* Media: Banner Image */}
-      {game.images?.banner && (
+      {game.banner_url && (
         <div className="mb-3 aspect-[16/9] overflow-hidden rounded-md bg-neutral-800">
           <div className="relative h-full w-full">
             <Image
-              src={game.images.banner}
+              src={game.banner_url}
               alt={`${game.name} banner`}
               fill
               sizes="(max-width: 768px) 100vw, 800px"
@@ -204,33 +197,33 @@ export default function HighlightGameCard({ game }: { game: GameData }) {
       )}
 
       {/* Catalog Rating Section */}
-      {game.catalog_rating && (
-        <div className="highlight-card-section mb-4">
-          <div className="space-y-2 text-sm">
-            {Object.entries(game.catalog_rating).map(([category, rating]) => (
-              <div key={category} className="flex items-center">
-                <span className="w-20 flex-shrink-0 text-neutral-400 capitalize">
-                  {category}
-                </span>
-                <div className="flex flex-grow gap-1.5">
-                  {[...Array(5)].map((_, i) => {
-                    const { fillColor, bgColor, fillPercent } =
-                      getBlockFillStyle(i, rating);
-                    return (
-                      <RatingBlock
-                        key={i}
-                        $fillColor={fillColor}
-                        $bgColor={bgColor}
-                        $fillPercent={fillPercent}
-                      />
-                    );
-                  })}
-                </div>
+      <div className="highlight-card-section mb-4">
+        <div className="space-y-2 text-sm">
+          {Object.entries(mockRating).map(([category, rating]) => (
+            <div key={category} className="flex items-center">
+              <span className="w-20 flex-shrink-0 text-neutral-400 capitalize">
+                {category}
+              </span>
+              <div className="flex flex-grow gap-1.5">
+                {[...Array(5)].map((_, i) => {
+                  const { fillColor, bgColor, fillPercent } = getBlockFillStyle(
+                    i,
+                    rating,
+                  );
+                  return (
+                    <RatingBlock
+                      key={i}
+                      $fillColor={fillColor}
+                      $bgColor={bgColor}
+                      $fillPercent={fillPercent}
+                    />
+                  );
+                })}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* Footer Row */}
       <div className="highlight-card-footer">
@@ -244,7 +237,7 @@ export default function HighlightGameCard({ game }: { game: GameData }) {
         )}
 
         {/* Steam Review */}
-        {steamPresentation && (
+        {/* {steamPresentation && (
           <div
             className="flex items-center"
             title={`Steam: ${steamPresentation.label}`}
@@ -258,17 +251,17 @@ export default function HighlightGameCard({ game }: { game: GameData }) {
               {steamPresentation.label}
             </span>
           </div>
-        )}
+        )} */}
 
         {/* Metacritic Score */}
-        {game?.metacritic_user_score !== undefined && (
+        {/* {game?.metacritic_user_score !== undefined && (
           <div title={`Metacritic Score: ${game.metacritic_user_score}`}>
             <span className="mr-1 hidden sm:inline-block">Metacritic: </span>
             <span className="font-semibold text-neutral-200">
               {game.metacritic_user_score}
             </span>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

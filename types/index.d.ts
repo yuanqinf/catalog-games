@@ -1,82 +1,73 @@
-// type User = {
-//   name: string;
-//   email: string;
-//   image?: string;
-//   accountId: string;
-// };
+// Type for game data to insert/update in Supabase
+export interface GameDbData {
+  igdb_id: number;
+  name: string;
+  storyline?: string;
+  summary?: string;
+  slug?: string;
+  first_release_date?: string | null;
+  igdb_update_date?: string | null;
+  total_rating?: number;
+  total_rating_count?: number;
+  genre?: string[] | null;
+  platforms?: string[] | null;
+  involved_companies?: string[] | null;
+  game_engines?: string[] | null;
+  game_modes?: string[] | null;
+  cover_url?: string | null;
+  screenshots?: string[] | null;
+  artworks?: string[] | null;
+  videos?: string[] | null;
+  updated_at?: string;
+  publishers?: string[] | null;
+  developers?: string[] | null;
+  featured_comment_tags?: string[] | null;
+  banner_url?: string | null;
+}
 
-// enum Subject {
-//   maths = "maths",
-//   language = "language",
-//   science = "science",
-//   history = "history",
-//   coding = "coding",
-//   geography = "geography",
-//   economics = "economics",
-//   finance = "finance",
-//   business = "business",
-// }
+// Type for IGDB game data from API
+export interface IgdbGameData {
+  id: number;
+  name: string;
+  storyline?: string;
+  summary?: string;
+  slug: string;
+  first_release_date?: number;
+  updated_at?: number;
+  total_rating?: number;
+  total_rating_count?: number;
+  genre?: Array<{ name: string }>;
+  platforms?: Array<{ name: string }>;
+  game_engines?: Array<{ name: string }>;
+  game_modes?: Array<{ name: string }>;
+  cover?: { url: string };
+  screenshots?: Array<{ url: string }>;
+  artworks?: Array<{ url: string }>;
+  videos?: Array<{ video_id: string }>;
+  involved_companies?: Array<{
+    publisher?: boolean;
+    developer?: boolean;
+    company?: { name: string };
+  }>;
+}
 
-// type Companion = Models.DocumentList<Models.Document> & {
-//   $id: string;
-//   name: string;
-//   subject: Subject;
-//   topic: string;
-//   duration: number;
-//   bookmarked: boolean;
-// };
+// Type for IGDB OAuth token response
+export interface IgdbToken {
+  access_token: string;
+  expires_in: number;
+  token_type: string;
+}
 
-// interface CreateCompanion {
-//   name: string;
-//   subject: string;
-//   topic: string;
-//   voice: string;
-//   style: string;
-//   duration: number;
-// }
-
-// interface GetAllCompanions {
-//   limit?: number;
-//   page?: number;
-//   subject?: string | string[];
-//   topic?: string | string[];
-// }
-
-// interface BuildClient {
-//   key?: string;
-//   sessionToken?: string;
-// }
-
-// interface CreateUser {
-//   email: string;
-//   name: string;
-//   image?: string;
-//   accountId: string;
-// }
-
-// interface SearchParams {
-//   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-// }
-
-// interface Avatar {
-//   userName: string;
-//   width: number;
-//   height: number;
-//   className?: string;
-// }
-
-// interface SavedMessage {
-//   role: "user" | "system" | "assistant";
-//   content: string;
-// }
-
-// interface CompanionComponentProps {
-//   companionId: string;
-//   subject: string;
-//   topic: string;
-//   name: string;
-//   userName: string;
-//   userImage: string;
-//   voice: string;
-//   style: string;
-// }
+// Type for IGDB game response (simplified)
+export interface IgdbGame {
+  id: number;
+  name: string;
+  slug: string;
+  cover?: {
+    url: string;
+  };
+  screenshots?: { url: string }[];
+  artworks?: { url: string }[];
+  rating?: number;
+  first_release_date?: number; // Unix timestamp
+}

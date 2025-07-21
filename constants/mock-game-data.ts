@@ -22,7 +22,7 @@ export interface GameData {
   name: string;
   storyline?: string;
   description: string;
-  genre: string;
+  genre: string[];
   platforms: ('pc' | 'ps5' | 'xbox' | 'switch')[];
   developer: string;
   publisher: string;
@@ -53,7 +53,7 @@ export const mockMonthlyBestGamesData: GameData[] = [
     id: 'elden-ring',
     name: 'ELDEN RING',
     description: 'An Epic Drama Born from a Myth Created by George R.R. Martin',
-    genre: 'Action RPG',
+    genre: ['Action RPG'],
     platforms: ['pc', 'ps5', 'xbox'],
     developer: 'FromSoftware',
     publisher: 'Bandai Namco',
@@ -87,7 +87,7 @@ export const mockMonthlyBestGamesData: GameData[] = [
     id: 'black-myth-wukong',
     name: 'Black Myth: Wukong',
     description: 'An action RPG rooted in Chinese mythology',
-    genre: 'Action RPG',
+    genre: ['Action RPG'],
     platforms: ['pc', 'ps5', 'xbox'],
     developer: 'Game Science',
     publisher: 'Game Science',
@@ -123,7 +123,7 @@ export const mockMonthlyBestGamesData: GameData[] = [
     name: "BALDUR'S GATE 3",
     description:
       'A story-rich, party-based RPG set in the universe of Dungeons & Dragons,',
-    genre: 'RPG',
+    genre: ['RPG'],
     platforms: ['pc', 'ps5', 'xbox'],
     developer: 'Larian Studios',
     publisher: 'Larian Studios',
@@ -159,7 +159,7 @@ export const mockMonthlyBestGamesData: GameData[] = [
     name: 'CYBERPUNK 2077',
     description:
       'A storydriven, open world RPG of the dark future from CD PROJEKT RED',
-    genre: 'Action RPG',
+    genre: ['Action RPG'],
     platforms: ['pc', 'ps5', 'xbox'],
     developer: 'CD Projekt Red',
     publisher: 'CD Projekt Red',
@@ -195,7 +195,7 @@ export const mockMonthlyBestGamesData: GameData[] = [
     name: 'The Legend of Zelda: Breath of the Wild',
     description:
       'A 2017 action-adventure game developed and published by Nintendo',
-    genre: 'Adventure',
+    genre: ['Adventure'],
     platforms: ['switch'],
     developer: 'Nintendo',
     publisher: 'Nintendo',
@@ -232,7 +232,7 @@ export const mockMonthlyWorstGamesData: GameData[] = [
     name: 'Concord',
     description:
       'A PvP sci-fi shooter with vibrant characters and team-based gameplay.',
-    genre: 'Multiplayer Shooter',
+    genre: ['Multiplayer Shooter'],
     platforms: ['pc', 'ps5'],
     developer: 'Firewalk Studios',
     publisher: 'Firewalk Studios',
@@ -268,7 +268,7 @@ export const mockMonthlyWorstGamesData: GameData[] = [
     name: 'Dragon Age: The Veilguard',
     description:
       'The next chapter in the Dragon Age franchise with new heroes and darker threats.',
-    genre: 'Action RPG',
+    genre: ['Action RPG'],
     platforms: ['pc', 'ps5', 'xbox'],
     developer: 'BioWare',
     publisher: 'BioWare',
@@ -305,7 +305,7 @@ export const mockMonthlyWorstGamesData: GameData[] = [
     name: 'Overwatch 2',
     description:
       'A free-to-play, team-based action game set in the optimistic future, where every match is the ultimate 5v5 battlefield brawl.',
-    genre: 'FPS',
+    genre: ['FPS'],
     platforms: ['pc', 'ps5', 'xbox', 'switch'],
     developer: 'Blizzard Entertainment',
     publisher: 'Blizzard Entertainment',
@@ -344,7 +344,7 @@ export const mockUpcomingGamesData: GameData[] = [
     name: 'Borderlands 4',
     description:
       'The looter-shooter franchise returns with even more chaotic action, wild humor, and insane weapons.',
-    genre: 'Action RPG',
+    genre: ['Action RPG'],
     platforms: ['pc', 'ps5', 'xbox'],
     developer: 'Gearbox Software',
     publisher: 'Gearbox Software',
@@ -372,7 +372,7 @@ export const mockUpcomingGamesData: GameData[] = [
     name: 'Metal Gear Solid Delta: Snake Eater',
     description:
       'The legendary stealth-action classic returns fully rebuilt for a new generation.',
-    genre: 'Stealth Action',
+    genre: ['Stealth Action'],
     platforms: ['pc', 'ps5', 'xbox'],
     developer: 'Konami',
     publisher: 'Konami',
@@ -401,7 +401,7 @@ export const mockUpcomingGamesData: GameData[] = [
     name: 'Donkey Kong Bananza',
     description:
       'The Kong family embarks on a new adventure filled with jungle platforming, bananas, and boss battles.',
-    genre: 'Platformer',
+    genre: ['Platformer']   ,
     platforms: ['switch'],
     developer: 'Nintendo',
     publisher: 'Nintendo',
@@ -430,7 +430,7 @@ export const mockUpcomingGamesData: GameData[] = [
     name: 'WUCHANG: Fallen Feathers',
     description:
       'A dark soulslike action RPG set in ancient China filled with mystical creatures and deadly combat.',
-    genre: 'Action RPG',
+    genre: ['Action RPG'],
     platforms: ['pc', 'ps5', 'xbox'],
     developer: 'Leenzee Games',
     publisher: 'Leenzee Games',
@@ -464,7 +464,7 @@ export const mockUpcomingGamesData: GameData[] = [
     name: 'Slay the Spire 2',
     description:
       'The deckbuilding roguelike returns with new cards, new classes, and deeper strategic gameplay.',
-    genre: 'Roguelike Deckbuilder',
+    genre: ['Roguelike Deckbuilder'],
     platforms: ['pc', 'ps5', 'xbox', 'switch'],
     developer: 'MegaCrit',
     publisher: 'MegaCrit',

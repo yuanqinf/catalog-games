@@ -1,23 +1,5 @@
 // lib/igdb/client.ts
-
-interface IgdbToken {
-  access_token: string;
-  expires_in: number;
-  token_type: string;
-}
-
-export interface IgdbGame {
-  id: number;
-  name: string;
-  slug: string;
-  cover?: {
-    url: string;
-  };
-  screenshots?: { url: string }[];
-  artworks?: { url: string }[];
-  rating?: number;
-  first_release_date?: number; // Unix timestamp
-}
+import type { IgdbToken, IgdbGame } from '@/types';
 
 class IgdbClient {
   private clientId: string;

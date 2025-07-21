@@ -1,60 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { useSession } from '@clerk/nextjs';
+import type { GameDbData, IgdbGameData } from '@/types';
 
 type ClerkSession = ReturnType<typeof useSession>['session'];
-
-// Type for game data to insert/update
-export interface GameDbData {
-  igdb_id: number;
-  name: string;
-  storyline?: string;
-  summary?: string;
-  slug?: string;
-  first_release_date?: string | null;
-  igdb_update_date?: string | null;
-  total_rating?: number;
-  total_rating_count?: number;
-  genre?: string[] | null;
-  platforms?: string[] | null;
-  involved_companies?: string[] | null;
-  game_engines?: string[] | null;
-  game_modes?: string[] | null;
-  cover_url?: string | null;
-  screenshots?: string[] | null;
-  artworks?: string[] | null;
-  videos?: string[] | null;
-  updated_at?: string;
-  publishers?: string[] | null;
-  developers?: string[] | null;
-  featured_comment_tags?: string[] | null;
-  banner_url?: string | null;
-}
-
-// Type for IGDB game data from API
-export interface IgdbGameData {
-  id: number;
-  name: string;
-  storyline?: string;
-  summary?: string;
-  slug: string;
-  first_release_date?: number;
-  updated_at?: number;
-  total_rating?: number;
-  total_rating_count?: number;
-  genres?: Array<{ name: string }>;
-  platforms?: Array<{ name: string }>;
-  game_engines?: Array<{ name: string }>;
-  game_modes?: Array<{ name: string }>;
-  cover?: { url: string };
-  screenshots?: Array<{ url: string }>;
-  artworks?: Array<{ url: string }>;
-  videos?: Array<{ video_id: string }>;
-  involved_companies?: Array<{
-    publisher?: boolean;
-    developer?: boolean;
-    company?: { name: string };
-  }>;
-}
 
 export function createClerkSupabaseClient(session: ClerkSession) {
   return createClient(
@@ -98,7 +46,7 @@ export class GameService {
         : null,
       total_rating: data.total_rating,
       total_rating_count: data.total_rating_count,
-      genre: data.genres ? data.genres.map((g) => g.name) : null,
+      genre: data.genre ? data.genre.map((g) => g.name) : null,
       platforms: data.platforms ? data.platforms.map((p) => p.name) : null,
       game_engines: data.game_engines
         ? data.game_engines.map((e) => e.name)

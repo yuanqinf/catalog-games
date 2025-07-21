@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { FileUpload } from '@/components/ui/file-upload';
 import { toast } from 'sonner';
-import { GameService, type IgdbGameData } from '@/lib/supabase/client';
+import { GameService } from '@/lib/supabase/client';
+import type { IgdbGameData } from '@/types';
 
 // TODO: Only allow admin users to access this page
 
