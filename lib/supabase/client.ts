@@ -26,6 +26,8 @@ export interface GameDbData {
   updated_at?: string;
   publishers?: string[] | null;
   developers?: string[] | null;
+  featured_comment_tags?: string[] | null;
+  banner_url?: string | null;
 }
 
 // Type for IGDB game data from API
@@ -34,7 +36,7 @@ export interface IgdbGameData {
   name: string;
   storyline?: string;
   summary?: string;
-  slug?: string;
+  slug: string;
   first_release_date?: number;
   updated_at?: number;
   total_rating?: number;
@@ -96,28 +98,16 @@ export class GameService {
         : null,
       total_rating: data.total_rating,
       total_rating_count: data.total_rating_count,
-      genre: data.genres
-        ? data.genres.map((g) => g.name)
-        : null,
-      platforms: data.platforms
-        ? data.platforms.map((p) => p.name)
-        : null,
+      genre: data.genres ? data.genres.map((g) => g.name) : null,
+      platforms: data.platforms ? data.platforms.map((p) => p.name) : null,
       game_engines: data.game_engines
         ? data.game_engines.map((e) => e.name)
         : null,
-      game_modes: data.game_modes
-        ? data.game_modes.map((m) => m.name)
-        : null,
+      game_modes: data.game_modes ? data.game_modes.map((m) => m.name) : null,
       cover_url: data.cover?.url || null,
-      screenshots: data.screenshots
-        ? data.screenshots.map((s) => s.url)
-        : null,
-      artworks: data.artworks
-        ? data.artworks.map((a) => a.url)
-        : null,
-      videos: data.videos
-        ? data.videos.map((v) => v.video_id)
-        : null,
+      screenshots: data.screenshots ? data.screenshots.map((s) => s.url) : null,
+      artworks: data.artworks ? data.artworks.map((a) => a.url) : null,
+      videos: data.videos ? data.videos.map((v) => v.video_id) : null,
       updated_at: new Date().toISOString(),
       publishers: data.involved_companies
         ? data.involved_companies
@@ -150,10 +140,92 @@ export class GameService {
   }
 
   /**
-   * Add or update a game from IGDB data
+   * Upload a banner image to Supabase storage
    */
-  async addOrUpdateGame(igdbData: IgdbGameData) {
+  async uploadBanner(
+    file: File,
+    igdbId: number,
+    slug: string,
+  ): Promise<string> {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${igdbId}_${slug}_banner.${fileExt}`;
+    const filePath = `banners/${fileName}`;
+
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('Banner file size must be less than 5MB');
+    }
+
+    // Check file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('Banner must be a JPEG, PNG, or WebP image');
+    }
+
+    // Check if file already exists (for logging purposes)
+    const { data: existingFile } = await this.supabase.storage
+      .from('game-image-assets')
+      .list('banners', {
+        search: `${igdbId}_${slug}_banner`,
+      });
+
+    const fileExists = existingFile && existingFile.length > 0;
+
+    if (fileExists) {
+      console.log(`🔄 Replacing existing banner for game ${igdbId} (${slug})`);
+    } else {
+      console.log(`📤 Uploading new banner for game ${igdbId} (${slug})`);
+    }
+
+    const { error: uploadError } = await this.supabase.storage
+      .from('game-image-assets')
+      .upload(filePath, file, {
+        upsert: true, // Replace existing file if it exists
+      });
+
+    if (uploadError) {
+      throw new Error(`Failed to upload banner: ${uploadError.message}`);
+    }
+
+    // Get public URL with cache busting timestamp
+    const { data } = this.supabase.storage
+      .from('game-image-assets')
+      .getPublicUrl(filePath);
+
+    // Add cache busting parameter to ensure fresh image loads
+    const timestamp = Date.now();
+    const urlWithCacheBust = `${data.publicUrl}?updated=${timestamp}`;
+
+    console.log(`✅ Banner uploaded successfully: ${urlWithCacheBust}`);
+
+    return urlWithCacheBust;
+  }
+
+  /**
+   * Add or update a game from IGDB data with optional banner
+   */
+  async addOrUpdateGame(igdbData: IgdbGameData, bannerFile?: File) {
     const dbData = this.transformIgdbData(igdbData);
+
+    // Upload banner if provided
+    if (bannerFile) {
+      try {
+        const bannerUrl = await this.uploadBanner(
+          bannerFile,
+          igdbData.id,
+          igdbData.slug,
+        );
+        dbData.banner_url = bannerUrl;
+        console.log(`🖼️ Banner uploaded and attached to game data`);
+      } catch (error) {
+        console.warn(
+          'Banner upload failed, but continuing with game data save:',
+          error,
+        );
+        // Continue with game data save even if banner upload fails
+        throw error; // Re-throw to let the caller handle it
+      }
+    }
 
     // Check if the game already exists
     const existingGame = await this.checkGameExists(igdbData.id);
@@ -161,12 +233,14 @@ export class GameService {
     let result;
     if (existingGame) {
       // Update existing game
+      console.log(`🔄 Updating existing game: ${igdbData.name}`);
       result = await this.supabase
         .from('games')
         .update(dbData)
         .eq('igdb_id', igdbData.id);
     } else {
       // Insert new game
+      console.log(`➕ Creating new game: ${igdbData.name}`);
       result = await this.supabase.from('games').insert([dbData]);
     }
 
@@ -208,21 +282,5 @@ export class GameService {
     }
 
     return data;
-  }
-
-  /**
-   * Delete a game by IGDB ID
-   */
-  async deleteGame(igdbId: number) {
-    const { error } = await this.supabase
-      .from('games')
-      .delete()
-      .eq('igdb_id', igdbId);
-
-    if (error) {
-      throw new Error(error.message || 'Failed to delete game');
-    }
-
-    return true;
   }
 }
