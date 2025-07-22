@@ -13,29 +13,27 @@ const GameExplorePage = () => {
   const [loading, setLoading] = useState(false);
   const { isLoaded, isSignedIn, session } = useSession();
 
-  const gameService = useMemo(() => new GameService(session), [session]);
+  const gameService = useMemo(() => new GameService(), []);
 
   // Fetch games using gameService.getAllGames
   useEffect(() => {
     async function fetchGames() {
-      if (isLoaded && isSignedIn && session) {
-        setLoading(true);
-        try {
-          console.log('🎮 Fetching games from Supabase...');
-          const dbGames = await gameService.getAllGames();
-          console.log(`📊 Loaded ${dbGames.length} games from database`);
-          setGames(dbGames);
-        } catch (error) {
-          console.error('❌ Failed to fetch games:', error);
-          setGames([]);
-        } finally {
-          setLoading(false);
-        }
+      setLoading(true);
+      try {
+        console.log('🎮 Fetching games from Supabase...');
+        const dbGames = await gameService.getAllGames();
+        console.log(`📊 Loaded ${dbGames.length} games from database`);
+        setGames(dbGames);
+      } catch (error) {
+        console.error('❌ Failed to fetch games:', error);
+        setGames([]);
+      } finally {
+        setLoading(false);
       }
     }
 
     fetchGames();
-  }, [isLoaded, isSignedIn, session, gameService]);
+  }, [gameService]);
 
   const displayGames = games.length > 0 ? games : [];
 

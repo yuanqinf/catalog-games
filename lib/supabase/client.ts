@@ -4,17 +4,22 @@ import type { GameDbData, IgdbGameData } from '@/types';
 
 type ClerkSession = ReturnType<typeof useSession>['session'];
 
-export function createClerkSupabaseClient(session: ClerkSession) {
+export function createClerkSupabaseClient(session?: ClerkSession | null) {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       global: {
         fetch: async (url, options = {}) => {
-          const clerkToken = await session?.getToken({ template: 'supabase' });
-          const headers = new Headers(options?.headers);
-          headers.set('Authorization', `Bearer ${clerkToken}`);
-          return fetch(url, { ...options, headers });
+          // Only add auth header if session exists
+          if (session) {
+            const clerkToken = await session.getToken({ template: 'supabase' });
+            const headers = new Headers(options?.headers);
+            headers.set('Authorization', `Bearer ${clerkToken}`);
+            return fetch(url, { ...options, headers });
+          }
+          // Use default fetch for unauthenticated requests
+          return fetch(url, options);
         },
       },
     },
@@ -24,7 +29,7 @@ export function createClerkSupabaseClient(session: ClerkSession) {
 export class GameService {
   private supabase;
 
-  constructor(session: ClerkSession) {
+  constructor(session?: ClerkSession | null) {
     this.supabase = createClerkSupabaseClient(session);
   }
 

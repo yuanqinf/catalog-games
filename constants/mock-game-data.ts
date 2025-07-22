@@ -401,7 +401,7 @@ export const mockUpcomingGamesData: GameData[] = [
     name: 'Donkey Kong Bananza',
     description:
       'The Kong family embarks on a new adventure filled with jungle platforming, bananas, and boss battles.',
-    genre: ['Platformer']   ,
+    genre: ['Platformer'],
     platforms: ['switch'],
     developer: 'Nintendo',
     publisher: 'Nintendo',
