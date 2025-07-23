@@ -80,14 +80,16 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
   //   playerSalesInfo = `~ ${formatNumberAbbreviated(player_count)} units sold`;
   // }
 
-  // const steamPresentation = getSteamReviewPresentation(game.steam_all_review); //TODO: Add steam review
+  const steamPresentation = getSteamReviewPresentation(
+    game.steam_all_review ?? undefined,
+  );
   let avatarBorderColorClass: string = TAILWIND_BORDER_COLORS.neutral; // Default border
-  // if (steamPresentation && steamPresentation.colorClass) {
-  //   avatarBorderColorClass = steamPresentation.colorClass.replace(
-  //     'text-',
-  //     'border-',
-  //   );
-  // }
+  if (steamPresentation && steamPresentation.colorClass) {
+    avatarBorderColorClass = steamPresentation.colorClass.replace(
+      'text-',
+      'border-',
+    );
+  }
 
   /**
    * Generates the appropriate style object for a rating block based on the rating value
@@ -237,7 +239,7 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
         )}
 
         {/* Steam Review */}
-        {/* {steamPresentation && (
+        {steamPresentation && (
           <div
             className="flex items-center"
             title={`Steam: ${steamPresentation.label}`}
@@ -251,7 +253,7 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
               {steamPresentation.label}
             </span>
           </div>
-        )} */}
+        )}
 
         {/* Metacritic Score */}
         {/* {game?.metacritic_user_score !== undefined && (

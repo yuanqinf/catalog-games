@@ -23,6 +23,9 @@ export interface GameDbData {
   developers?: string[] | null;
   featured_comment_tags?: string[] | null;
   banner_url?: string | null;
+  steam_app_id?: number | null;
+  steam_all_review?: string | null;
+  steam_recent_review?: string | null;
 }
 
 // Type for IGDB game data from API

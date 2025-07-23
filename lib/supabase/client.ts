@@ -155,7 +155,7 @@ export class GameService {
   }
 
   /**
-   * Add or update a game from IGDB data with optional banner
+   * Add or update a game from IGDB data with optional banner and Steam reviews
    */
   async addOrUpdateGame(igdbData: IgdbGameData, bannerFile?: File) {
     const dbData = this.transformIgdbData(igdbData);
@@ -178,6 +178,38 @@ export class GameService {
         // Continue with game data save even if banner upload fails
         throw error; // Re-throw to let the caller handle it
       }
+    }
+
+    // Fetch Steam reviews via API route
+    try {
+      console.log(`🎮 Fetching Steam reviews for: ${igdbData.name}`);
+      const response = await fetch(
+        `/api/steam/reviews?q=${encodeURIComponent(igdbData.name)}`,
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.result.steamAppId) {
+          dbData.steam_app_id = result.result.steamAppId;
+          dbData.steam_all_review = result.result.steam_all_review;
+          dbData.steam_recent_review = result.result.steam_recent_review;
+          console.log(
+            `📊 Steam reviews added: Overall="${result.result.steam_all_review}", Recent="${result.result.steam_recent_review}"`,
+          );
+        } else {
+          console.log(`❌ No Steam match found for: ${igdbData.name}`);
+        }
+      } else {
+        console.log(
+          `⚠️ Steam API request failed with status: ${response.status}`,
+        );
+      }
+    } catch (error) {
+      console.warn(
+        'Steam reviews fetch failed, continuing without Steam data:',
+        error,
+      );
+      // Continue without Steam data if fetch fails
     }
 
     // Check if the game already exists
