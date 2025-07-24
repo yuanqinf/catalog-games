@@ -36,8 +36,6 @@ export class GameService {
     this.supabase = createClerkSupabaseClient(session);
   }
 
-
-
   /**
    * Check if a game exists by IGDB ID
    */
@@ -54,8 +52,6 @@ export class GameService {
 
     return data;
   }
-
-
 
   /**
    * Add or update a game from IGDB data with optional banner and Steam reviews

@@ -110,7 +110,7 @@ const GameDetail = ({ game }: { game: GameData }) => {
             <Card className="flex flex-col items-center justify-center p-6">
               <Star className="mb-2 h-10 w-10 text-yellow-400" />
               <p className="text-2xl font-bold">
-                {game.metacritic_user_score?.toFixed(1) ?? 'N/A'}
+                {game.igdb_user_rating ?? 'N/A'}
               </p>
               <p className="text-muted-foreground">Metacritic Score</p>
             </Card>

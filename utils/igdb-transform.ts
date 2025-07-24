@@ -43,5 +43,7 @@ export function transformIgdbData(data: IgdbGameData): GameDbData {
           .filter((c) => c.developer)
           .map((c) => c.company?.name || '')
       : null,
+    igdb_user_rating:
+      data.rating != null ? Number((data.rating / 10).toFixed(1)) : null,
   };
-} 
+}

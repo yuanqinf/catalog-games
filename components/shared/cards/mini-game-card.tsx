@@ -12,7 +12,6 @@ const MiniGameCard = ({ game }: { game: GameDbData }) => {
           className="absolute top-6 right-6 z-10 cursor-pointer text-white hover:text-yellow-400"
           // TODO: Add onClick handler for bookmark functionality
         />
-        {/* Updated image container with 672:895 aspect ratio (3:4) */}
         <div
           className="relative mb-2 overflow-hidden rounded bg-zinc-700"
           style={{ aspectRatio: '672/895' }}

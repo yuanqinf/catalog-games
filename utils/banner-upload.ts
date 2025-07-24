@@ -81,4 +81,4 @@ export async function uploadBanner(
   console.log(`✅ Banner uploaded successfully: ${urlWithCacheBust}`);
 
   return urlWithCacheBust;
-} 
+}

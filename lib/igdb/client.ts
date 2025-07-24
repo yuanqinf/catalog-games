@@ -118,7 +118,7 @@ class IgdbClient {
         
         genres.name, platforms.name, involved_companies.developer, involved_companies.publisher, involved_companies.company.name, game_engines.name, game_modes.name,
 
-        cover.url, screenshots.url, artworks.url, videos.video_id;
+        cover.url, screenshots.url, artworks.url, videos.video_id, rating;
 
         where id = ${id};
         limit 10;

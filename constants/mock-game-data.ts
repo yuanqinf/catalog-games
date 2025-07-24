@@ -41,7 +41,7 @@ export interface GameData {
 
   steam_all_review?: SteamReview;
   steam_recent_review?: SteamReview;
-  metacritic_user_score?: number;
+  igdb_user_rating?: number;
   featured_comment_tags?: string[];
   player_count?: number;
 
@@ -66,7 +66,7 @@ export const mockMonthlyBestGamesData: GameData[] = [
     release_date: '2022-02-25',
     steam_recent_review: 'very positive',
     steam_all_review: 'very positive',
-    metacritic_user_score: 8.3,
+    igdb_user_rating: 8.3,
     catalog_rating: {
       story: 5,
       music: 5,
@@ -101,7 +101,7 @@ export const mockMonthlyBestGamesData: GameData[] = [
     release_date: '2024-08-20',
     steam_recent_review: 'very positive',
     steam_all_review: 'overwhelmingly positive',
-    metacritic_user_score: 8.2,
+    igdb_user_rating: 8.2,
     catalog_rating: {
       story: 5,
       music: 5,
@@ -137,7 +137,7 @@ export const mockMonthlyBestGamesData: GameData[] = [
     release_date: '2023-08-03',
     steam_recent_review: 'overwhelmingly positive',
     steam_all_review: 'overwhelmingly positive',
-    metacritic_user_score: 9.2,
+    igdb_user_rating: 9.2,
     catalog_rating: {
       story: 5,
       music: 3,
@@ -173,7 +173,7 @@ export const mockMonthlyBestGamesData: GameData[] = [
     release_date: '2020-12-10',
     steam_recent_review: 'very positive',
     steam_all_review: 'very positive',
-    metacritic_user_score: 7.9,
+    igdb_user_rating: 7.9,
     catalog_rating: {
       story: 5,
       music: 4,
@@ -207,7 +207,7 @@ export const mockMonthlyBestGamesData: GameData[] = [
     },
     videos: ['https://www.youtube.com/watch?v=zw47_q9wbBE'],
     release_date: '2017-03-03',
-    metacritic_user_score: 8.9,
+    igdb_user_rating: 8.9,
     catalog_rating: {
       story: 5,
       music: 5,
@@ -244,7 +244,7 @@ export const mockMonthlyWorstGamesData: GameData[] = [
     },
     videos: ['https://www.youtube.com/watch?v=UroOs1dAq3k'],
     release_date: '2024-08-23',
-    metacritic_user_score: 1.7,
+    igdb_user_rating: 1.7,
     catalog_rating: {
       story: 1.2,
       music: 1.4,
@@ -282,7 +282,7 @@ export const mockMonthlyWorstGamesData: GameData[] = [
     release_date: '2024-12-10',
     steam_recent_review: 'mixed',
     steam_all_review: 'mixed',
-    metacritic_user_score: 3.9,
+    igdb_user_rating: 3.9,
     catalog_rating: {
       story: 1,
       music: 2,
@@ -318,7 +318,7 @@ export const mockMonthlyWorstGamesData: GameData[] = [
     release_date: '2022-10-04',
     steam_recent_review: 'mixed',
     steam_all_review: 'overwhelmingly negative',
-    metacritic_user_score: 1.8,
+    igdb_user_rating: 1.8,
     catalog_rating: {
       story: 1,
       music: 2,

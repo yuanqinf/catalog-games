@@ -26,6 +26,7 @@ export interface GameDbData {
   steam_app_id?: number | null;
   steam_all_review?: string | null;
   steam_recent_review?: string | null;
+  igdb_user_rating?: number | null;
 }
 
 // Type for IGDB game data from API
@@ -52,6 +53,7 @@ export interface IgdbGameData {
     developer?: boolean;
     company?: { name: string };
   }>;
+  rating?: number;
 }
 
 // Type for IGDB OAuth token response

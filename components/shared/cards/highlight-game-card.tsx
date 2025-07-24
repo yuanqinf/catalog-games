@@ -255,15 +255,17 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
           </div>
         )}
 
-        {/* Metacritic Score */}
-        {/* {game?.metacritic_user_score !== undefined && (
-          <div title={`Metacritic Score: ${game.metacritic_user_score}`}>
-            <span className="mr-1 hidden sm:inline-block">Metacritic: </span>
+        {/* IGDB Score */}
+        {game?.igdb_user_rating && (
+          <div title={`IGDB User Rating: ${game.igdb_user_rating}`}>
+            <span className="mr-1 hidden sm:inline-block">
+              IGDB User Rating:{' '}
+            </span>
             <span className="font-semibold text-neutral-200">
-              {game.metacritic_user_score}
+              {game.igdb_user_rating}
             </span>
           </div>
-        )} */}
+        )}
       </div>
     </div>
   );

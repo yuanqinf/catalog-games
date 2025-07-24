@@ -14,7 +14,7 @@ export interface SteamData {
 export async function fetchSteamReviews(gameName: string): Promise<SteamData> {
   try {
     console.log(`🎮 Fetching Steam reviews for: ${gameName}`);
-    
+
     const response = await fetch(
       `/api/steam/reviews?q=${encodeURIComponent(gameName)}`,
     );
@@ -27,7 +27,7 @@ export async function fetchSteamReviews(gameName: string): Promise<SteamData> {
     }
 
     const result = await response.json();
-    
+
     if (result.success && result.result.steamAppId) {
       const steamData = {
         steam_app_id: result.result.steamAppId,
@@ -51,4 +51,4 @@ export async function fetchSteamReviews(gameName: string): Promise<SteamData> {
     );
     return {};
   }
-} 
+}

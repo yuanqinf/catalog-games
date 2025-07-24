@@ -4,10 +4,7 @@
  */
 
 import * as cheerio from 'cheerio';
-import {
-  findBestSteamMatch,
-  type SteamMatchResult,
-} from '@/lib/steam/find-best-steam-match';
+import { findBestSteamMatch } from '@/lib/steam/find-best-steam-match';
 
 export interface SteamReviewsResult {
   steamAppId: number | null;
