@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import {
   Star,
-  Users,
   Clock,
   MessageSquarePlus,
   ThumbsUp,
@@ -113,13 +112,6 @@ const GameDetail = ({ game }: { game: GameData }) => {
                 {game.igdb_user_rating ?? 'N/A'}
               </p>
               <p className="text-muted-foreground">Metacritic Score</p>
-            </Card>
-            <Card className="flex flex-col items-center justify-center p-6">
-              <Users className="text-primary mb-2 h-10 w-10" />
-              <p className="text-2xl font-bold">
-                {formatPlayerCount(game.player_count)}
-              </p>
-              <p className="text-muted-foreground">Player Count</p>
             </Card>
           </div>
           <div className="md:col-span-1">

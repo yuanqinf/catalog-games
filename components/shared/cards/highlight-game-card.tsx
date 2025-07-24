@@ -61,25 +61,6 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
     return { IconComponent, colorClass, label: review };
   };
 
-  const formatNumberAbbreviated = (num: number): string => {
-    if (num >= 1000000) {
-      const val = num / 1000000;
-      return (val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)) + 'M';
-    } else if (num >= 1000) {
-      const val = num / 1000;
-      return (val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)) + 'K';
-    } else {
-      return num.toLocaleString();
-    }
-  };
-
-  // const player_count = game.player_count ?? 0;
-
-  let playerSalesInfo = '';
-  // if (player_count > 0) {
-  //   playerSalesInfo = `~ ${formatNumberAbbreviated(player_count)} units sold`;
-  // }
-
   const steamPresentation = getSteamReviewPresentation(
     game.steam_all_review ?? undefined,
   );
@@ -229,14 +210,12 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
 
       {/* Footer Row */}
       <div className="highlight-card-footer">
-        {/* Player/Sales Info */}
-        {playerSalesInfo && (
-          <div className="truncate" title={playerSalesInfo}>
-            <p className="truncate font-medium text-neutral-300">
-              {playerSalesInfo}
-            </p>
-          </div>
-        )}
+        {/* TODO: Google Trend Score*/}
+        {/* <div className="truncate">
+          <p className="truncate font-medium text-neutral-300">
+            {"Google Trend: 123"}
+          </p>
+        </div> */}
 
         {/* Steam Review */}
         {steamPresentation && (

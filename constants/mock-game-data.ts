@@ -43,8 +43,6 @@ export interface GameData {
   steam_recent_review?: SteamReview;
   igdb_user_rating?: number;
   featured_comment_tags?: string[];
-  player_count?: number;
-
   average_play_time?: number;
 }
 
@@ -81,7 +79,6 @@ export const mockMonthlyBestGamesData: GameData[] = [
       'Best Open World',
       'Best Fantasy',
     ],
-    player_count: 50000000,
   },
   {
     id: 'black-myth-wukong',
@@ -116,7 +113,6 @@ export const mockMonthlyBestGamesData: GameData[] = [
       'Stunning Visuals',
       'Next-Gen Souls-like',
     ],
-    player_count: 25000000,
   },
   {
     id: 'baldurs-gate-3',
@@ -152,7 +148,6 @@ export const mockMonthlyBestGamesData: GameData[] = [
       'Masterclass in Storytelling',
       'Top Turn-Based Combat',
     ],
-    player_count: 20000000,
   },
   {
     id: 'cyberpunk-2077',
@@ -188,7 +183,6 @@ export const mockMonthlyBestGamesData: GameData[] = [
       'Immersive Sci-Fi',
       'Narrative Powerhouse',
     ],
-    player_count: 32000000,
   },
   {
     id: 'the-legend-of-zelda-breath-of-the-wild',
@@ -222,7 +216,6 @@ export const mockMonthlyBestGamesData: GameData[] = [
       'Best Exploration',
       'Revolutionary Open World',
     ],
-    player_count: 40000000,
   },
 ];
 
@@ -261,7 +254,6 @@ export const mockMonthlyWorstGamesData: GameData[] = [
       'Outdated Gameplay',
       'Bad Story',
     ],
-    player_count: 0,
   },
   {
     id: 'dragon-age-the-veilguard',
@@ -298,7 +290,6 @@ export const mockMonthlyWorstGamesData: GameData[] = [
       'Button-Mashing Combat',
       'Forced Political Correctness',
     ],
-    player_count: 2000000,
   },
   {
     id: 'overwatch-2',
@@ -334,7 +325,6 @@ export const mockMonthlyWorstGamesData: GameData[] = [
       'Cash Grab',
       'Embarrassing Reputation Damage',
     ],
-    player_count: 25000000,
   },
 ];
 
@@ -457,7 +447,6 @@ export const mockUpcomingGamesData: GameData[] = [
       'Hardcore Combat',
       'Atmospheric',
     ],
-    player_count: 0,
   },
   {
     id: 'slay-the-spire-2',
@@ -490,7 +479,6 @@ export const mockUpcomingGamesData: GameData[] = [
       'Deep Strategy',
       'Endless Replayability',
     ],
-    player_count: 0,
   },
 ];
 
