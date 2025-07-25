@@ -240,7 +240,7 @@ const GameDetail = ({ game }: { game: GameData }) => {
               <h3 className="text-muted-foreground mb-2 font-bold uppercase">
                 Genre
               </h3>
-              <Badge>{game.genre}</Badge>
+              <Badge>{game.genres?.join(', ')}</Badge>
             </div>
             <div>
               <h3 className="text-muted-foreground mb-2 font-bold uppercase">

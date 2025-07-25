@@ -85,7 +85,7 @@ async function fetchSteamReviewsByAppId(steamAppId: number): Promise<{
  * Find Steam match and fetch reviews for an IGDB game name
  * This is the main function to get both Steam match and review data
  */
-export async function findSteamReviews(
+export async function findSteamReviewSummary(
   igdbName: string,
 ): Promise<SteamReviewsResult> {
   // First, find the Steam match

@@ -9,7 +9,7 @@ export interface GameDbData {
   igdb_update_date?: string | null;
   total_rating?: number;
   total_rating_count?: number;
-  genre?: string[] | null;
+  genres?: string[] | null;
   platforms?: string[] | null;
   involved_companies?: string[] | null;
   game_engines?: string[] | null;
@@ -27,6 +27,7 @@ export interface GameDbData {
   steam_all_review?: string | null;
   steam_recent_review?: string | null;
   igdb_user_rating?: number | null;
+  steam_popular_tags?: string[] | null;
 }
 
 // Type for IGDB game data from API
@@ -40,7 +41,7 @@ export interface IgdbGameData {
   updated_at?: number;
   total_rating?: number;
   total_rating_count?: number;
-  genre?: Array<{ name: string }>;
+  genres?: Array<{ name: string }>;
   platforms?: Array<{ name: string }>;
   game_engines?: Array<{ name: string }>;
   game_modes?: Array<{ name: string }>;
@@ -54,6 +55,7 @@ export interface IgdbGameData {
     company?: { name: string };
   }>;
   rating?: number;
+  steam_popular_tags?: Array<{ name: string }>;
 }
 
 // Type for IGDB OAuth token response

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findSteamReviewSummary } from '@/lib/steam/get-steam-review-summary';
+import { findSteamPopularTags } from '@/lib/steam/get-steam-popular-tags';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,17 +13,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const result = await findSteamReviewSummary(query.trim());
+    const result = await findSteamPopularTags(query.trim());
 
     if (!result.steamAppId) {
       return NextResponse.json(
         {
-          message: 'No Steam reviews found - game not found on Steam',
+          message: 'No Steam tags found - game not found on Steam',
           query,
           result: {
             steamAppId: null,
-            steam_all_review: null,
-            steam_recent_review: null,
+            steamName: null,
+            steam_popular_tags: null,
           },
         },
         { status: 404 },
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       result,
     });
   } catch (error) {
-    console.error('Steam reviews API error:', error);
+    console.error('Steam tags API error:', error);
 
     return NextResponse.json(
       {

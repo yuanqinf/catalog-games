@@ -142,7 +142,18 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
         <span className="text-neutral-500">•</span>
         <div className="flex min-w-0 items-center">
           <Gamepad2 size={12} className="mr-1 flex-shrink-0" />
-          <span className="truncate">{game.genre?.join(', ')}</span>
+          <span className="truncate">
+            {(() => {
+              // Prioritize Steam tags over IGDB genres
+              const tags = game.steam_popular_tags || game.genres;
+              if (!tags || tags.length === 0) return '';
+
+              const displayTags = tags.slice(0, 3);
+              const hasMore = tags.length > 3;
+
+              return displayTags.join(', ');
+            })()}
+          </span>
         </div>
       </div>
 
@@ -235,16 +246,14 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
         )}
 
         {/* IGDB Score */}
-        {game?.igdb_user_rating && (
-          <div title={`IGDB User Rating: ${game.igdb_user_rating}`}>
-            <span className="mr-1 hidden sm:inline-block">
-              IGDB User Rating:{' '}
-            </span>
-            <span className="font-semibold text-neutral-200">
-              {game.igdb_user_rating}
-            </span>
-          </div>
-        )}
+        <div title={`IGDB User Rating: ${game.igdb_user_rating}`}>
+          <span className="mr-1 hidden sm:inline-block">
+            IGDB User Rating:{' '}
+          </span>
+          <span className="font-semibold text-neutral-200">
+            {game.igdb_user_rating ? game.igdb_user_rating : 'N/A'}
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -22,7 +22,7 @@ export function transformIgdbData(data: IgdbGameData): GameDbData {
       : null,
     total_rating: data.total_rating,
     total_rating_count: data.total_rating_count,
-    genre: data.genre ? data.genre.map((g) => g.name) : null,
+    genres: data.genres ? data.genres.map((g) => g.name) : null,
     platforms: data.platforms ? data.platforms.map((p) => p.name) : null,
     game_engines: data.game_engines
       ? data.game_engines.map((e) => e.name)

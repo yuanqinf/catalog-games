@@ -3,7 +3,10 @@ import { useSession } from '@clerk/nextjs';
 import type { GameDbData, IgdbGameData } from '@/types';
 import { transformIgdbData } from '@/utils/igdb-transform';
 import { uploadBanner } from '@/utils/banner-upload';
-import { fetchSteamReviews } from '@/utils/steam-integration';
+import {
+  fetchSteamReviewSummary,
+  fetchSteamTags,
+} from '@/utils/steam-integration';
 
 type ClerkSession = ReturnType<typeof useSession>['session'];
 
@@ -80,8 +83,9 @@ export class GameService {
     }
 
     // Fetch Steam reviews via API route
-    const steamData = await fetchSteamReviews(igdbData.name);
-    Object.assign(dbData, steamData);
+    const steamReviewSummary = await fetchSteamReviewSummary(igdbData.name);
+    const steamTags = await fetchSteamTags(igdbData.name);
+    Object.assign(dbData, steamReviewSummary, steamTags);
 
     // Check if the game already exists
     const existingGame = await this.checkGameExists(igdbData.id);
