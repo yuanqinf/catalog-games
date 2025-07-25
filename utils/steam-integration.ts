@@ -19,7 +19,7 @@ export async function fetchSteamReviewSummary(
     console.log(`🎮 Fetching Steam reviews for: ${gameName}`);
 
     const response = await fetch(
-      `/api/steam/reviews?q=${encodeURIComponent(gameName)}`,
+      `/api/steam/review-summary?q=${encodeURIComponent(gameName)}`,
     );
 
     if (!response.ok) {

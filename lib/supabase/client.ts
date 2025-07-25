@@ -82,7 +82,7 @@ export class GameService {
       }
     }
 
-    // Fetch Steam reviews via API route
+    // Fetch Steam data via API route
     const steamReviewSummary = await fetchSteamReviewSummary(igdbData.name);
     const steamTags = await fetchSteamTags(igdbData.name);
     Object.assign(dbData, steamReviewSummary, steamTags);
