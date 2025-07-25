@@ -149,7 +149,6 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
               if (!tags || tags.length === 0) return '';
 
               const displayTags = tags.slice(0, 3);
-              const hasMore = tags.length > 3;
 
               return displayTags.join(', ');
             })()}

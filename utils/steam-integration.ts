@@ -3,10 +3,23 @@
  */
 
 export interface SteamData {
-  steam_app_id?: number | null;
-  steam_all_review?: string | null;
-  steam_recent_review?: string | null;
-  steam_popular_tags?: string[] | null;
+  steam_app_id?: number;
+  steam_all_review?: string;
+  steam_recent_review?: string;
+  steam_popular_tags?: string[];
+}
+
+// Steam Reviews Interface (importing from the reviews utility)
+export interface SteamReviewsData {
+  steamAppId: number | null;
+  steamName: string | null;
+  reviews: Array<{
+    review_id: string;
+    game_id: number | null;
+    source: string;
+    content: string;
+    original_published_at: string;
+  }>;
 }
 
 /**
@@ -97,5 +110,39 @@ export async function fetchSteamTags(gameName: string): Promise<SteamData> {
       error,
     );
     return {};
+  }
+}
+
+/**
+ * Fetch Steam reviews data from our API route
+ */
+export async function fetchSteamReviewsData(
+  gameName: string,
+): Promise<SteamReviewsData> {
+  try {
+    const response = await fetch(
+      `/api/steam/reviews-detail?q=${encodeURIComponent(gameName)}`,
+    );
+
+    if (!response.ok) {
+      console.error(
+        `Steam reviews API responded with status: ${response.status}`,
+      );
+      return {
+        steamAppId: null,
+        steamName: null,
+        reviews: [],
+      };
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch Steam reviews:', error);
+    return {
+      steamAppId: null,
+      steamName: null,
+      reviews: [],
+    };
   }
 }

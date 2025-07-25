@@ -1,11 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { useSession } from '@clerk/nextjs';
-import type { GameDbData, IgdbGameData } from '@/types';
+import type { GameDbData, IgdbGameData, ExternalGameReview } from '@/types';
 import { transformIgdbData } from '@/utils/igdb-transform';
 import { uploadBanner } from '@/utils/banner-upload';
 import {
   fetchSteamReviewSummary,
   fetchSteamTags,
+  fetchSteamReviewsData,
 } from '@/utils/steam-integration';
 
 type ClerkSession = ReturnType<typeof useSession>['session'];
@@ -57,7 +58,65 @@ export class GameService {
   }
 
   /**
-   * Add or update a game from IGDB data with optional banner and Steam reviews
+   * Add external reviews for a game
+   */
+  async addGameReviews(
+    gameId: number,
+    reviews: Omit<ExternalGameReview, 'game_id'>[],
+  ) {
+    // Set the game_id for each review
+    const reviewsWithGameId = reviews.map((review) => ({
+      ...review,
+      game_id: gameId,
+    }));
+
+    const { data, error } = await this.supabase
+      .from('external_game_reviews')
+      .insert(reviewsWithGameId);
+
+    if (error) {
+      throw new Error(error.message || 'Failed to insert game reviews');
+    }
+
+    return data;
+  }
+
+  /**
+   * Get reviews for a specific game
+   */
+  async getGameReviews(gameId: number) {
+    const { data, error } = await this.supabase
+      .from('external_game_reviews')
+      .select('*')
+      .eq('game_id', gameId)
+      .order('original_published_at', { ascending: false });
+
+    if (error) {
+      throw new Error(error.message || 'Failed to fetch game reviews');
+    }
+
+    return data;
+  }
+
+  /**
+   * Check if a review already exists (to avoid duplicates)
+   */
+  async checkReviewExists(reviewId: string) {
+    const { data, error } = await this.supabase
+      .from('external_game_reviews')
+      .select('id')
+      .eq('review_id', reviewId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message || 'Failed to check if review exists');
+    }
+
+    return data;
+  }
+
+  /**
+   * Add or update a game from IGDB data with optional banner, Steam data, and reviews
    */
   async addOrUpdateGame(igdbData: IgdbGameData, bannerFile?: File) {
     const dbData = transformIgdbData(igdbData);
@@ -77,8 +136,7 @@ export class GameService {
           'Banner upload failed, but continuing with game data save:',
           error,
         );
-        // Continue with game data save even if banner upload fails
-        throw error; // Re-throw to let the caller handle it
+        throw error;
       }
     }
 
@@ -91,21 +149,73 @@ export class GameService {
     const existingGame = await this.checkGameExists(igdbData.id);
 
     let result;
+    let gameId: number;
+
     if (existingGame) {
       // Update existing game
       console.log(`🔄 Updating existing game: ${igdbData.name}`);
       result = await this.supabase
         .from('games')
         .update(dbData)
-        .eq('igdb_id', igdbData.id);
+        .eq('igdb_id', igdbData.id)
+        .select('id')
+        .single();
+
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to update game data');
+      }
+
+      gameId = result.data.id;
     } else {
       // Insert new game
       console.log(`➕ Creating new game: ${igdbData.name}`);
-      result = await this.supabase.from('games').insert([dbData]);
+      result = await this.supabase
+        .from('games')
+        .insert([dbData])
+        .select('id')
+        .single();
+
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to create game data');
+      }
+
+      gameId = result.data.id;
     }
 
-    if (result.error) {
-      throw new Error(result.error.message || 'Failed to save game data');
+    // Fetch and add Steam reviews if Steam data was found
+    if (steamReviewSummary.steam_app_id) {
+      try {
+        console.log(`📝 Fetching Steam reviews for: ${igdbData.name}`);
+        const steamReviewsData = await fetchSteamReviewsData(igdbData.name);
+        if (steamReviewsData.reviews && steamReviewsData.reviews.length > 0) {
+          // Check for duplicates and filter out existing reviews
+          const newReviews = [];
+          for (const review of steamReviewsData.reviews) {
+            const exists = await this.checkReviewExists(review.review_id);
+            if (!exists) {
+              newReviews.push({
+                review_id: review.review_id,
+                source: review.source,
+                content: review.content,
+                original_published_at: review.original_published_at,
+              });
+            }
+          }
+
+          if (newReviews.length > 0) {
+            await this.addGameReviews(gameId, newReviews);
+            console.log(`📝 Added ${newReviews.length} new Steam reviews`);
+          } else {
+            console.log(`📝 No new reviews to add (all reviews already exist)`);
+          }
+        }
+      } catch (reviewError) {
+        console.warn(
+          'Failed to fetch/save Steam reviews, but game data was saved:',
+          reviewError,
+        );
+        // Don't throw here - we want game data to be saved even if reviews fail
+      }
     }
 
     return result;
