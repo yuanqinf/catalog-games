@@ -7,6 +7,8 @@ import {
   RATING_BLOCK_COLORS,
   EMPTY_BLOCK_COLOR,
 } from '@/constants/colors';
+import DynamicTrendChart from './dynamic-trend-chart';
+
 import styled from 'styled-components';
 
 const mockRating = {
@@ -170,24 +172,9 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
           </div>
         </div>
       )}
-      {/* Featured Comments */}
-      {game.featured_comment_tags && game.featured_comment_tags.length > 0 && (
-        <div className="highlight-card-section mb-4">
-          <div className="flex h-full flex-wrap gap-1.5 overflow-hidden">
-            {game.featured_comment_tags.map(
-              (comment: string, index: number) => (
-                <span
-                  key={index}
-                  className="highlight-card-comment-tag"
-                  title={comment}
-                >
-                  {comment}
-                </span>
-              ),
-            )}
-          </div>
-        </div>
-      )}
+      <div className="mb-4">
+        <DynamicTrendChart keyword={game.name} hideYAxis hideXAxis />
+      </div>
 
       {/* Catalog Rating Section */}
       <div className="highlight-card-section mb-4">
