@@ -29,7 +29,7 @@ interface DynamicTrendChartProps {
 export default function DynamicTrendChart({
   keyword,
   title,
-  description = 'Last 7 days',
+  description,
   hideXAxis = false,
   hideYAxis = false,
 }: DynamicTrendChartProps) {
@@ -87,7 +87,7 @@ export default function DynamicTrendChart({
     return (
       <TrendChart
         title={title || `${keyword} Trends`}
-        description="Loading..."
+        description={description}
         data={[{ date: 'Loading...', value: 0 }]}
         dataKey="value"
         xKey="date"
@@ -103,7 +103,7 @@ export default function DynamicTrendChart({
     return (
       <TrendChart
         title={title || `${keyword} Trends`}
-        description="Failed to load trends"
+        description={description}
         data={[{ date: 'Error', value: 0 }]}
         dataKey="value"
         xKey="date"

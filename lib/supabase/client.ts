@@ -240,11 +240,11 @@ export class GameService {
   /**
    * Get a game by IGDB ID
    */
-  async getGameByIgdbId(igdbId: number) {
+  async getGameBySlugId(slug: string) {
     const { data, error } = await this.supabase
       .from('games')
       .select('*')
-      .eq('igdb_id', igdbId)
+      .eq('slug', slug)
       .maybeSingle();
 
     if (error) {

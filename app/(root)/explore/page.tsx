@@ -24,6 +24,7 @@ const GameExplorePage = () => {
         const dbGames = await gameService.getAllGames();
         console.log(`📊 Loaded ${dbGames.length} games from database`);
         setGames(dbGames);
+        setSelectedGame(dbGames[0]);
       } catch (error) {
         console.error('❌ Failed to fetch games:', error);
         setGames([]);

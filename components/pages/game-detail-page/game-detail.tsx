@@ -27,8 +27,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-import { GameData } from '@/constants/mock-game-data';
 import HighlightGameCard from '@/components/shared/cards/highlight-game-card';
+import { GameDbData } from '@/types';
 
 // Mock Data for sections that need it
 const mockReviews = [
@@ -58,7 +58,7 @@ const mockReviews = [
   },
 ];
 
-const GameDetail = ({ game }: { game: GameData }) => {
+const GameDetail = ({ game }: { game: GameDbData }) => {
   const formatPlayerCount = (count?: number) => {
     if (count === undefined || count === null) return 'N/A';
     if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
@@ -66,14 +66,17 @@ const GameDetail = ({ game }: { game: GameData }) => {
     return count.toString();
   };
 
-  const getYouTubeEmbedUrl = (url: string) => {
-    const videoId = url.split('v=')[1];
-    return `https://www.youtube.com/embed/${videoId}`;
+  const getYouTubeEmbedUrl = (id: string) => {
+    if (!id) return '';
+    return `https://www.youtube.com/embed/${id}`;
   };
 
   const mediaItems = [
-    { type: 'image', url: game.images.banner },
-    ...(game.videos?.map((v) => ({ type: 'video', url: v })) || []),
+    { type: 'image', url: game.banner_url },
+    ...(game.videos?.map((v) => ({
+      type: 'video',
+      url: getYouTubeEmbedUrl(v),
+    })) || []),
   ];
 
   return (
@@ -83,7 +86,7 @@ const GameDetail = ({ game }: { game: GameData }) => {
         <section className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg shadow-2xl lg:col-span-2">
             <Image
-              src={game.images.banner}
+              src={game.banner_url ?? ''}
               alt={`${game.name} banner`}
               fill
               className="object-cover"
@@ -99,11 +102,11 @@ const GameDetail = ({ game }: { game: GameData }) => {
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 md:col-span-2">
             <Card className="flex flex-col items-center justify-center p-6">
               <Clock className="text-primary mb-2 h-10 w-10" />
-              <p className="text-2xl font-bold">
+              {/* <p className="text-2xl font-bold">
                 {game.average_play_time
                   ? `${game.average_play_time} hrs`
                   : 'N/A'}
-              </p>
+              </p> */}
               <p className="text-muted-foreground">Avg. Play Time</p>
             </Card>
             <Card className="flex flex-col items-center justify-center p-6">
@@ -145,14 +148,14 @@ const GameDetail = ({ game }: { game: GameData }) => {
                       <div className="bg-muted relative aspect-video overflow-hidden rounded-md">
                         {media.type === 'image' ? (
                           <Image
-                            src={media.url}
+                            src={media.url ?? ''}
                             alt={`Media ${index + 1}`}
                             fill
                             className="object-cover"
                           />
                         ) : (
                           <iframe
-                            src={getYouTubeEmbedUrl(media.url)}
+                            src={media.url ?? ''}
                             title={`Video ${index + 1}`}
                             allowFullScreen
                             className="h-full w-full"
@@ -195,13 +198,6 @@ const GameDetail = ({ game }: { game: GameData }) => {
               <div className="space-y-6">
                 {mockReviews.map((review) => (
                   <div key={review.id} className="flex gap-4">
-                    <Image
-                      src={review.avatar}
-                      alt={review.username}
-                      width={40}
-                      height={40}
-                      className="bg-muted rounded-full"
-                    />
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <p className="font-semibold">{review.username}</p>
@@ -246,14 +242,14 @@ const GameDetail = ({ game }: { game: GameData }) => {
               <h3 className="text-muted-foreground mb-2 font-bold uppercase">
                 Developer
               </h3>
-              <Badge variant="outline">{game.developer}</Badge>
+              <Badge variant="outline">{game.developers?.[0]}</Badge>
             </div>
             <div>
               <h3 className="text-muted-foreground mb-2 font-bold uppercase">
                 Platforms
               </h3>
               <div className="flex flex-wrap gap-2">
-                {game.platforms.map((p) => (
+                {game.platforms?.map((p) => (
                   <Badge key={p} variant="secondary">
                     {p.toUpperCase()}
                   </Badge>
