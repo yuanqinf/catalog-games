@@ -131,7 +131,13 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
 
       {/* Catalog Rating Section */}
       <div className="highlight-card-section mb-4">
-        <CatalogRating rating={mockRating} />
+        <CatalogRating
+          rating={mockRating}
+          onEdit={() => {
+            // TODO: Add edit functionality
+            console.log('Edit rating for:', game.name);
+          }}
+        />
       </div>
 
       {/* Footer Row */}

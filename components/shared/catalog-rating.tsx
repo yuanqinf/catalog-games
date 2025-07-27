@@ -1,6 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
+import { SquarePen } from 'lucide-react';
 import { RATING_BLOCK_COLORS, EMPTY_BLOCK_COLOR } from '@/constants/colors';
+import { Button } from '@/components/ui/button';
 
 const RatingBlock = styled.div<{
   $fillColor: string;
@@ -32,6 +34,8 @@ interface CatalogRatingProps {
   className?: string;
   showLabels?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  onEdit?: () => void;
+  showEditButton?: boolean;
 }
 
 const defaultRating: GameRating = {
@@ -48,6 +52,8 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
   className = '',
   showLabels = true,
   size = 'md',
+  onEdit,
+  showEditButton = true,
 }) => {
   /**
    * Generates the appropriate style object for a rating block based on the rating value
@@ -103,7 +109,19 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
   const mergedRating = { ...defaultRating, ...rating };
 
   return (
-    <div className={`${config.container} ${className}`}>
+    <div className={`${config.container} ${className} relative`}>
+      {/* Edit Button */}
+      {showEditButton && (
+        <Button
+          onClick={onEdit}
+          variant="ghost"
+          size="icon"
+          className="absolute -top-6 -right-6 z-20 size-auto bg-neutral-800 p-1 text-neutral-400 opacity-70 transition-colors duration-200 hover:bg-neutral-700 hover:text-white hover:opacity-100"
+          title="Edit ratings"
+        >
+          <SquarePen size={20} />
+        </Button>
+      )}
       {Object.entries(mergedRating).map(([category, categoryRating]) => (
         <div key={category} className="group relative flex items-center">
           {showLabels && (
