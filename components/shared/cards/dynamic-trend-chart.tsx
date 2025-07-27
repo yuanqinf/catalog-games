@@ -20,7 +20,6 @@ interface TrendsResponse {
 
 interface DynamicTrendChartProps {
   keyword: string;
-  title?: string;
   description?: string;
   hideXAxis?: boolean;
   hideYAxis?: boolean;
@@ -28,7 +27,6 @@ interface DynamicTrendChartProps {
 
 export default function DynamicTrendChart({
   keyword,
-  title,
   description,
   hideXAxis = false,
   hideYAxis = false,
@@ -86,7 +84,6 @@ export default function DynamicTrendChart({
   if (loading) {
     return (
       <TrendChart
-        title={title || `${keyword} Trends`}
         description={description}
         data={[{ date: 'Loading...', value: 0 }]}
         dataKey="value"
@@ -102,7 +99,6 @@ export default function DynamicTrendChart({
   if (error) {
     return (
       <TrendChart
-        title={title || `${keyword} Trends`}
         description={description}
         data={[{ date: 'Error', value: 0 }]}
         dataKey="value"
@@ -117,7 +113,6 @@ export default function DynamicTrendChart({
   // Show actual data
   return (
     <TrendChart
-      title={title || `${keyword} Trends`}
       description={description}
       data={chartData}
       dataKey="value"

@@ -4,36 +4,17 @@ import { Star, Ghost, Gamepad2, ThumbsUp, ThumbsDown, Meh } from 'lucide-react';
 import {
   TAILWIND_TEXT_COLORS,
   TAILWIND_BORDER_COLORS,
-  RATING_BLOCK_COLORS,
-  EMPTY_BLOCK_COLOR,
 } from '@/constants/colors';
 import DynamicTrendChart from './dynamic-trend-chart';
-
-import styled from 'styled-components';
+import CatalogRating from '@/components/shared/catalog-rating';
 
 const mockRating = {
-  story: 0,
-  music: 0,
-  graphics: 0,
-  gameplay: 0,
-  longevity: 0,
+  story: 2,
+  music: 2.5,
+  graphics: 4,
+  gameplay: 3.9,
+  longevity: 4.8,
 };
-
-const RatingBlock = styled.div<{
-  $fillColor: string;
-  $bgColor: string;
-  $fillPercent: number;
-}>`
-  background: ${(props) =>
-    props.$fillPercent === 100
-      ? props.$fillColor
-      : props.$fillPercent === 0
-        ? props.$bgColor
-        : `linear-gradient(to right, ${props.$fillColor} ${props.$fillPercent}%, ${props.$bgColor} ${props.$fillPercent}%)`};
-  height: 0.75rem;
-  flex: 1;
-  border-radius: 0.125rem;
-`;
 
 type SteamReviewPresentation = {
   IconComponent: React.ElementType;
@@ -73,34 +54,6 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
       'border-',
     );
   }
-
-  /**
-   * Generates the appropriate style object for a rating block based on the rating value
-   * @param blockIndex - The index of the block (0-4, representing rating levels 1-5)
-   * @param categoryRating - The actual rating value (can be a float like 3.5)
-   * @returns A React inline style object with the appropriate background color or gradient
-   */
-  const getBlockFillStyle = (blockIndex: number, categoryRating: number) => {
-    const fullValue = Math.floor(categoryRating);
-    const fractionalPart = categoryRating - fullValue;
-
-    // Get the appropriate colors for this block
-    const fillColor = RATING_BLOCK_COLORS[blockIndex] || EMPTY_BLOCK_COLOR;
-    const bgColor = EMPTY_BLOCK_COLOR; // Empty/unfilled portion color
-
-    // Calculate how much of this block should be filled (0-100%)
-    let fillPercent = 0;
-    if (blockIndex < fullValue) {
-      // Blocks before the current rating level are completely filled
-      fillPercent = 100;
-    } else if (blockIndex === fullValue) {
-      // The current level block is partially filled based on the decimal part
-      fillPercent = Math.round(fractionalPart * 100);
-    }
-    // Blocks after the current level remain at 0% fill
-
-    return { fillColor, bgColor, fillPercent };
-  };
 
   return (
     <div className="highlight-card">
@@ -178,31 +131,7 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
 
       {/* Catalog Rating Section */}
       <div className="highlight-card-section mb-4">
-        <div className="space-y-2 text-sm">
-          {Object.entries(mockRating).map(([category, rating]) => (
-            <div key={category} className="flex items-center">
-              <span className="w-20 flex-shrink-0 text-neutral-400 capitalize">
-                {category}
-              </span>
-              <div className="flex flex-grow gap-1.5">
-                {[...Array(5)].map((_, i) => {
-                  const { fillColor, bgColor, fillPercent } = getBlockFillStyle(
-                    i,
-                    rating,
-                  );
-                  return (
-                    <RatingBlock
-                      key={i}
-                      $fillColor={fillColor}
-                      $bgColor={bgColor}
-                      $fillPercent={fillPercent}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+        <CatalogRating rating={mockRating} />
       </div>
 
       {/* Footer Row */}

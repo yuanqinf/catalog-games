@@ -36,7 +36,7 @@ interface ReusableTrendChartProps {
 }
 
 export function TrendChart({
-  title = 'Search Trend',
+  title = 'Search Trends',
   description = 'Last 7 days',
   data,
   dataKey,
