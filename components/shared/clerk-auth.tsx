@@ -1,11 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 
 const ClerkAuth = () => {
   const [isMounted, setIsMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setIsMounted(true);
@@ -46,6 +48,7 @@ const ClerkAuth = () => {
               },
             },
           }}
+          afterSignOutUrl={pathname === '/profile' ? '/' : pathname}
         />
       </SignedIn>
     </>

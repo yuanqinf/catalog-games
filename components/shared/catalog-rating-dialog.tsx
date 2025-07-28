@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
 import { RATING_BLOCK_COLORS, EMPTY_BLOCK_COLOR } from '@/constants/colors';
 import {
   Dialog,
@@ -12,7 +13,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { MessageSquarePlus, ThumbsDown } from 'lucide-react';
+import { MessageSquarePlus, ThumbsDown, LogIn } from 'lucide-react';
 
 const RatingBlock = styled.div<{
   $fillColor: string;
@@ -51,6 +52,7 @@ interface CatalogRatingDialogProps {
   onSave?: (rating: GameRating) => void;
   trigger?: React.ReactNode;
   className?: string;
+  gameId?: string;
 }
 
 const defaultRating: GameRating = {
@@ -75,6 +77,7 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
   onSave,
   trigger,
   className = '',
+  gameId,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentRating, setCurrentRating] = useState<GameRating>(defaultRating);
@@ -148,91 +151,111 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
           <DialogTitle>My ratings for this game</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {ratingCategories.map(({ key, label }) => (
-            <div key={key} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-neutral-700 capitalize">
-                  {label}
-                </span>
-                <span className="text-sm text-neutral-500">
-                  {hoverRating[key as keyof GameRating]}/{maxRating}
-                </span>
-              </div>
+        <SignedIn>
+          <div className="space-y-4 py-4">
+            {ratingCategories.map(({ key, label }) => (
+              <div key={key} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-neutral-700 capitalize">
+                    {label}
+                  </span>
+                  <span className="text-sm text-neutral-500">
+                    {hoverRating[key as keyof GameRating]}/{maxRating}
+                  </span>
+                </div>
 
-              <div className="flex items-center gap-1.5">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    const currentValue = currentRating[key as keyof GameRating];
-                    handleRatingChange(
-                      key as keyof GameRating,
-                      currentValue === 0 ? 1 : 0,
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      const currentValue =
+                        currentRating[key as keyof GameRating];
+                      handleRatingChange(
+                        key as keyof GameRating,
+                        currentValue === 0 ? 1 : 0,
+                      );
+                    }}
+                    onMouseEnter={() =>
+                      handleMouseEnter(key as keyof GameRating, 0)
+                    }
+                    onMouseLeave={() =>
+                      handleMouseLeave(key as keyof GameRating)
+                    }
+                    className={`h-6 w-6 p-0 transition-colors ${
+                      currentRating[key as keyof GameRating] === 0
+                        ? 'bg-red-100 text-red-500 hover:text-red-600'
+                        : 'text-neutral-500 hover:text-neutral-700'
+                    }`}
+                    title={`${currentRating[key as keyof GameRating] === 0 ? 'Unselect' : 'Reset'} ${label} to 0`}
+                  >
+                    <ThumbsDown size={14} />
+                  </Button>
+                  {[...Array(maxRating)].map((_, i) => {
+                    const ratingValue = i + 1;
+                    const { fillColor, bgColor, fillPercent } =
+                      getBlockFillStyle(
+                        i,
+                        hoverRating[key as keyof GameRating],
+                      );
+
+                    return (
+                      <RatingBlock
+                        key={i}
+                        $fillColor={fillColor}
+                        $bgColor={bgColor}
+                        $fillPercent={fillPercent}
+                        onClick={() =>
+                          handleRatingChange(
+                            key as keyof GameRating,
+                            ratingValue,
+                          )
+                        }
+                        onMouseEnter={() =>
+                          handleMouseEnter(key as keyof GameRating, ratingValue)
+                        }
+                        onMouseLeave={() =>
+                          handleMouseLeave(key as keyof GameRating)
+                        }
+                        title={`${label}: ${ratingValue}/${maxRating}`}
+                      />
                     );
-                  }}
-                  onMouseEnter={() =>
-                    handleMouseEnter(key as keyof GameRating, 0)
-                  }
-                  onMouseLeave={() => handleMouseLeave(key as keyof GameRating)}
-                  className={`h-6 w-6 p-0 transition-colors ${
-                    currentRating[key as keyof GameRating] === 0
-                      ? 'bg-red-100 text-red-500 hover:text-red-600'
-                      : 'text-neutral-500 hover:text-neutral-700'
-                  }`}
-                  title={`${currentRating[key as keyof GameRating] === 0 ? 'Unselect' : 'Reset'} ${label} to 0`}
-                >
-                  <ThumbsDown size={14} />
-                </Button>
-                {[...Array(maxRating)].map((_, i) => {
-                  const ratingValue = i + 1;
-                  const { fillColor, bgColor, fillPercent } = getBlockFillStyle(
-                    i,
-                    hoverRating[key as keyof GameRating],
-                  );
-
-                  return (
-                    <RatingBlock
-                      key={i}
-                      $fillColor={fillColor}
-                      $bgColor={bgColor}
-                      $fillPercent={fillPercent}
-                      onClick={() =>
-                        handleRatingChange(key as keyof GameRating, ratingValue)
-                      }
-                      onMouseEnter={() =>
-                        handleMouseEnter(key as keyof GameRating, ratingValue)
-                      }
-                      onMouseLeave={() =>
-                        handleMouseLeave(key as keyof GameRating)
-                      }
-                      title={`${label}: ${ratingValue}/${maxRating}`}
-                    />
-                  );
-                })}
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        <DialogFooter className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setCurrentRating(defaultRating);
-              setHoverRating(defaultRating);
-            }}
-            className="text-xs"
-          >
-            Reset All
-          </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>Save Ratings</Button>
+            ))}
           </div>
-        </DialogFooter>
+
+          <DialogFooter className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCurrentRating(defaultRating);
+                setHoverRating(defaultRating);
+              }}
+              className="text-xs"
+            >
+              Reset All
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave}>Save Ratings</Button>
+            </div>
+          </DialogFooter>
+        </SignedIn>
+
+        <SignedOut>
+          <div className="space-y-4 py-6 text-center">
+            <h3 className="text-base font-medium text-white">
+              Sign in to rate this game
+            </h3>
+            <SignInButton>
+              <Button>Sign In</Button>
+            </SignInButton>
+          </div>
+        </SignedOut>
       </DialogContent>
     </Dialog>
   );

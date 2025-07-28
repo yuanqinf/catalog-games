@@ -37,6 +37,7 @@ interface CatalogRatingProps {
   size?: 'sm' | 'md' | 'lg';
   showEditButton?: boolean;
   onRatingChange?: (rating: GameRating) => void;
+  gameId?: string;
 }
 
 const defaultRating: GameRating = {
@@ -55,6 +56,7 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
   size = 'md',
   showEditButton = true,
   onRatingChange,
+  gameId,
 }) => {
   /**
    * Generates the appropriate style object for a rating block based on the rating value
@@ -117,6 +119,7 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
           rating={mergedRating}
           maxRating={maxRating}
           onSave={onRatingChange}
+          gameId={gameId}
           trigger={
             <Button
               variant="ghost"
