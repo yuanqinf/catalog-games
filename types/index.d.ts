@@ -1,5 +1,6 @@
 // Type for game data to insert/update in Supabase
 export interface GameDbData {
+  id: number;
   igdb_id: number;
   name: string;
   storyline?: string;

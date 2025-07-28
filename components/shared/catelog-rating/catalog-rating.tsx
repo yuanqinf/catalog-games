@@ -36,7 +36,6 @@ interface CatalogRatingProps {
   showLabels?: boolean;
   size?: 'sm' | 'md' | 'lg';
   showEditButton?: boolean;
-  onRatingChange?: (rating: GameRating) => void;
   gameId?: string;
 }
 
@@ -55,7 +54,6 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
   showLabels = true,
   size = 'md',
   showEditButton = true,
-  onRatingChange,
   gameId,
 }) => {
   /**
@@ -114,11 +112,9 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
   return (
     <div className={`${config.container} ${className} relative`}>
       {/* Edit Button */}
-      {showEditButton && onRatingChange ? (
+      {showEditButton ? (
         <CatalogRatingDialog
-          rating={mergedRating}
           maxRating={maxRating}
-          onSave={onRatingChange}
           gameId={gameId}
           trigger={
             <Button

@@ -6,7 +6,7 @@ import {
   TAILWIND_BORDER_COLORS,
 } from '@/constants/colors';
 import DynamicTrendChart from './dynamic-trend-chart';
-import CatalogRating from '@/components/shared/catalog-rating';
+import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 
 const mockRating = {
   story: 2,
@@ -131,13 +131,7 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
 
       {/* Catalog Rating Section */}
       <div className="highlight-card-section mb-4">
-        <CatalogRating
-          rating={mockRating}
-          onRatingChange={() => {
-            // TODO: Add rating change functionality
-            console.log('Rating changed for:', game.name);
-          }}
-        />
+        <CatalogRating rating={mockRating} gameId={game.id?.toString()} />
       </div>
 
       {/* Footer Row */}

@@ -253,4 +253,85 @@ export class GameService {
 
     return data;
   }
+
+  /**
+   * Get user rating for a specific game
+   */
+  async getUserRating(gameId: number, userId: string) {
+    const { data, error } = await this.supabase
+      .from('game_ratings')
+      .select('*')
+      .eq('game_id', gameId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message || 'Failed to fetch user rating');
+    }
+
+    return data;
+  }
+
+  /**
+   * Save or update user rating for a game
+   */
+  async saveUserRating(
+    gameId: number,
+    userId: string,
+    rating: {
+      story: number;
+      music: number;
+      graphics: number;
+      gameplay: number;
+      longevity: number;
+    },
+  ) {
+    // Check if rating already exists
+    const existingRating = await this.getUserRating(gameId, userId);
+
+    if (existingRating) {
+      // Update existing rating
+      const { data, error } = await this.supabase
+        .from('game_ratings')
+        .update({
+          story: rating.story,
+          music: rating.music,
+          graphics: rating.graphics,
+          gameplay: rating.gameplay,
+          longevity: rating.longevity,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('game_id', gameId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(error.message || 'Failed to update rating');
+      }
+
+      return data;
+    } else {
+      // Insert new rating
+      const { data, error } = await this.supabase
+        .from('game_ratings')
+        .insert({
+          game_id: gameId,
+          user_id: userId,
+          story: rating.story,
+          music: rating.music,
+          graphics: rating.graphics,
+          gameplay: rating.gameplay,
+          longevity: rating.longevity,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(error.message || 'Failed to save rating');
+      }
+
+      return data;
+    }
+  }
 }
