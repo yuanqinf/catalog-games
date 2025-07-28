@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { MessageSquarePlus } from 'lucide-react';
 import { RATING_BLOCK_COLORS, EMPTY_BLOCK_COLOR } from '@/constants/colors';
 import { Button } from '@/components/ui/button';
+import CatalogRatingDialog from './catalog-rating-dialog';
 
 const RatingBlock = styled.div<{
   $fillColor: string;
@@ -34,8 +35,8 @@ interface CatalogRatingProps {
   className?: string;
   showLabels?: boolean;
   size?: 'sm' | 'md' | 'lg';
-  onEdit?: () => void;
   showEditButton?: boolean;
+  onRatingChange?: (rating: GameRating) => void;
 }
 
 const defaultRating: GameRating = {
@@ -52,8 +53,8 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
   className = '',
   showLabels = true,
   size = 'md',
-  onEdit,
   showEditButton = true,
+  onRatingChange,
 }) => {
   /**
    * Generates the appropriate style object for a rating block based on the rating value
@@ -111,17 +112,23 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
   return (
     <div className={`${config.container} ${className} relative`}>
       {/* Edit Button */}
-      {showEditButton && (
-        <Button
-          onClick={onEdit}
-          variant="ghost"
-          size="icon"
-          className="absolute -top-6 -right-6 z-20 size-auto bg-neutral-800 p-1 text-neutral-400 opacity-70 transition-colors duration-200 hover:bg-neutral-700 hover:text-white hover:opacity-100"
-          title="Edit ratings"
-        >
-          <MessageSquarePlus size={16} />
-        </Button>
-      )}
+      {showEditButton && onRatingChange ? (
+        <CatalogRatingDialog
+          rating={mergedRating}
+          maxRating={maxRating}
+          onSave={onRatingChange}
+          trigger={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute -top-6 -right-6 z-20 size-auto bg-neutral-800 p-1 text-neutral-400 opacity-70 transition-colors duration-200 hover:bg-neutral-700 hover:text-white hover:opacity-100"
+              title="Edit ratings"
+            >
+              <MessageSquarePlus size={16} />
+            </Button>
+          }
+        />
+      ) : null}
       {Object.entries(mergedRating).map(([category, categoryRating]) => (
         <div key={category} className="group relative flex items-center">
           {showLabels && (
@@ -159,7 +166,7 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
                   {/* Hover tooltip positioned above the target block */}
                   {isTargetBlock && (
                     <div className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                      {categoryRating.toFixed(1)}/{maxRating}
+                      {categoryRating}/{maxRating}
                       {/* Arrow pointing down */}
                       <div className="absolute top-full left-1/2 h-0 w-0 -translate-x-1/2 border-t-4 border-r-4 border-l-4 border-transparent border-t-gray-900"></div>
                     </div>
@@ -170,7 +177,7 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
           </div>
           {!showLabels && (
             <span className="ml-2 text-xs font-medium text-neutral-500">
-              {categoryRating.toFixed(1)}
+              {categoryRating}
             </span>
           )}
         </div>
