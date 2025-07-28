@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { MessageSquarePlus, ThumbsDown, LogIn } from 'lucide-react';
 import { GameService } from '@/lib/supabase/client';
 import { toast } from 'sonner';
+import { RatingSkeleton } from './rating-skeleton';
 
 const RatingBlock = styled.div<{
   $fillColor: string;
@@ -97,6 +98,22 @@ const setCachedRating = (
   }
 };
 
+const getBlockFillStyle = (blockIndex: number, categoryRating: number) => {
+  const fullValue = Math.floor(categoryRating);
+  const fractionalPart = categoryRating - fullValue;
+  const fillColor = RATING_BLOCK_COLORS[blockIndex] || EMPTY_BLOCK_COLOR;
+  const bgColor = EMPTY_BLOCK_COLOR;
+
+  let fillPercent = 0;
+  if (blockIndex < fullValue) {
+    fillPercent = 100;
+  } else if (blockIndex === fullValue) {
+    fillPercent = Math.round(fractionalPart * 100);
+  }
+
+  return { fillColor, bgColor, fillPercent };
+};
+
 const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
   className = '',
   maxRating = 5,
@@ -148,7 +165,6 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
         };
         setCurrentRating(rating);
         setHoverRating(rating);
-        // Cache the rating
         setCachedRating(gameId, user.id, rating);
       }
     } catch (error) {
@@ -170,10 +186,7 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
         user.id,
         currentRating,
       );
-
-      // Cache the rating after successful save
       setCachedRating(gameId, user.id, currentRating);
-
       toast.success('Rating saved successfully!');
       setIsOpen(false);
     } catch (error) {
@@ -190,30 +203,6 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
     setIsOpen(false);
   };
 
-  // Load user rating when dialog opens
-  useEffect(() => {
-    if (isOpen && user && gameId) {
-      loadUserRating();
-    }
-  }, [isOpen, user, gameId]);
-
-  const getBlockFillStyle = (blockIndex: number, categoryRating: number) => {
-    const fullValue = Math.floor(categoryRating);
-    const fractionalPart = categoryRating - fullValue;
-
-    const fillColor = RATING_BLOCK_COLORS[blockIndex] || EMPTY_BLOCK_COLOR;
-    const bgColor = EMPTY_BLOCK_COLOR;
-
-    let fillPercent = 0;
-    if (blockIndex < fullValue) {
-      fillPercent = 100;
-    } else if (blockIndex === fullValue) {
-      fillPercent = Math.round(fractionalPart * 100);
-    }
-
-    return { fillColor, bgColor, fillPercent };
-  };
-
   const handleMouseEnter = (category: keyof GameRating, value: number) => {
     setHoverRating((prev) => ({
       ...prev,
@@ -228,6 +217,13 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
     }));
   };
 
+  // Load user rating when dialog opens
+  useEffect(() => {
+    if (isOpen && user && gameId) {
+      loadUserRating();
+    }
+  }, [isOpen, user, gameId]);
+
   const defaultTrigger = (
     <Button
       variant="ghost"
@@ -237,6 +233,97 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
     >
       <MessageSquarePlus size={16} />
     </Button>
+  );
+
+  const renderRatingContent = () => (
+    <>
+      <div className="space-y-4 py-4">
+        {ratingCategories.map(({ key, label }) => (
+          <div key={key} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-neutral-700 capitalize">
+                {label}
+              </span>
+              <span className="text-sm text-neutral-500">
+                {hoverRating[key as keyof GameRating]}/{maxRating}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const currentValue = currentRating[key as keyof GameRating];
+                  handleRatingChange(
+                    key as keyof GameRating,
+                    currentValue === 0 ? 1 : 0,
+                  );
+                }}
+                onMouseEnter={() =>
+                  handleMouseEnter(key as keyof GameRating, 0)
+                }
+                onMouseLeave={() => handleMouseLeave(key as keyof GameRating)}
+                className={`h-6 w-6 p-0 transition-colors ${
+                  currentRating[key as keyof GameRating] === 0
+                    ? 'bg-red-100 text-red-500 hover:text-red-600'
+                    : 'text-neutral-500 hover:text-neutral-700'
+                }`}
+                title={`${currentRating[key as keyof GameRating] === 0 ? 'Unselect' : 'Reset'} ${label} to 0`}
+              >
+                <ThumbsDown size={14} />
+              </Button>
+              {[...Array(maxRating)].map((_, i) => {
+                const ratingValue = i + 1;
+                const { fillColor, bgColor, fillPercent } = getBlockFillStyle(
+                  i,
+                  hoverRating[key as keyof GameRating],
+                );
+
+                return (
+                  <RatingBlock
+                    key={i}
+                    $fillColor={fillColor}
+                    $bgColor={bgColor}
+                    $fillPercent={fillPercent}
+                    onClick={() =>
+                      handleRatingChange(key as keyof GameRating, ratingValue)
+                    }
+                    onMouseEnter={() =>
+                      handleMouseEnter(key as keyof GameRating, ratingValue)
+                    }
+                    onMouseLeave={() =>
+                      handleMouseLeave(key as keyof GameRating)
+                    }
+                    title={`${label}: ${ratingValue}/${maxRating}`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <DialogFooter className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={() => {
+            setCurrentRating(defaultRating);
+            setHoverRating(defaultRating);
+          }}
+          className="text-xs"
+          disabled={isSaving}
+        >
+          Reset All
+        </Button>
+        <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
+          Cancel
+        </Button>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save Ratings'}
+        </Button>
+      </DialogFooter>
+    </>
   );
 
   return (
@@ -249,143 +336,12 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
             Rate this game to help others find the best games.
           </DialogDescription>
         </DialogHeader>
+
         <SignedIn>
           {isLoading ? (
-            <>
-              <div className="space-y-4 py-4">
-                {ratingCategories.map(({ key, label }) => (
-                  <div key={key} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-neutral-700 capitalize">
-                        {label}
-                      </span>
-                      <span className="text-sm text-neutral-500">
-                        0/{maxRating}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-6 w-6 animate-pulse rounded bg-neutral-200" />
-                      <div className="flex flex-1 gap-1">
-                        {[...Array(maxRating)].map((_, i) => (
-                          <div
-                            key={i}
-                            className="h-5 flex-1 animate-pulse rounded bg-neutral-200"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-end gap-2">
-                <div className="h-8 w-16 animate-pulse rounded bg-neutral-200" />
-                <div className="h-8 w-16 animate-pulse rounded bg-neutral-200" />
-                <div className="h-9 w-24 animate-pulse rounded bg-neutral-200" />
-              </div>
-            </>
+            <RatingSkeleton maxRating={maxRating} />
           ) : (
-            <>
-              <div className="space-y-4 py-4">
-                {ratingCategories.map(({ key, label }) => (
-                  <div key={key} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-neutral-700 capitalize">
-                        {label}
-                      </span>
-                      <span className="text-sm text-neutral-500">
-                        {hoverRating[key as keyof GameRating]}/{maxRating}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          const currentValue =
-                            currentRating[key as keyof GameRating];
-                          handleRatingChange(
-                            key as keyof GameRating,
-                            currentValue === 0 ? 1 : 0,
-                          );
-                        }}
-                        onMouseEnter={() =>
-                          handleMouseEnter(key as keyof GameRating, 0)
-                        }
-                        onMouseLeave={() =>
-                          handleMouseLeave(key as keyof GameRating)
-                        }
-                        className={`h-6 w-6 p-0 transition-colors ${
-                          currentRating[key as keyof GameRating] === 0
-                            ? 'bg-red-100 text-red-500 hover:text-red-600'
-                            : 'text-neutral-500 hover:text-neutral-700'
-                        }`}
-                        title={`${currentRating[key as keyof GameRating] === 0 ? 'Unselect' : 'Reset'} ${label} to 0`}
-                      >
-                        <ThumbsDown size={14} />
-                      </Button>
-                      {[...Array(maxRating)].map((_, i) => {
-                        const ratingValue = i + 1;
-                        const { fillColor, bgColor, fillPercent } =
-                          getBlockFillStyle(
-                            i,
-                            hoverRating[key as keyof GameRating],
-                          );
-
-                        return (
-                          <RatingBlock
-                            key={i}
-                            $fillColor={fillColor}
-                            $bgColor={bgColor}
-                            $fillPercent={fillPercent}
-                            onClick={() =>
-                              handleRatingChange(
-                                key as keyof GameRating,
-                                ratingValue,
-                              )
-                            }
-                            onMouseEnter={() =>
-                              handleMouseEnter(
-                                key as keyof GameRating,
-                                ratingValue,
-                              )
-                            }
-                            onMouseLeave={() =>
-                              handleMouseLeave(key as keyof GameRating)
-                            }
-                            title={`${label}: ${ratingValue}/${maxRating}`}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <DialogFooter className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setCurrentRating(defaultRating);
-                    setHoverRating(defaultRating);
-                  }}
-                  className="text-xs"
-                  disabled={isSaving}
-                >
-                  Reset All
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleCancel}
-                  disabled={isSaving}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleSave} disabled={isSaving}>
-                  {isSaving ? 'Saving...' : 'Save Ratings'}
-                </Button>
-              </DialogFooter>
-            </>
+            renderRatingContent()
           )}
         </SignedIn>
 
