@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { SquarePen } from 'lucide-react';
+import { MessageSquarePlus } from 'lucide-react';
 import { RATING_BLOCK_COLORS, EMPTY_BLOCK_COLOR } from '@/constants/colors';
 import { Button } from '@/components/ui/button';
 
@@ -119,7 +119,7 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
           className="absolute -top-6 -right-6 z-20 size-auto bg-neutral-800 p-1 text-neutral-400 opacity-70 transition-colors duration-200 hover:bg-neutral-700 hover:text-white hover:opacity-100"
           title="Edit ratings"
         >
-          <SquarePen size={20} />
+          <MessageSquarePlus size={16} />
         </Button>
       )}
       {Object.entries(mergedRating).map(([category, categoryRating]) => (
