@@ -1,20 +1,23 @@
+'use client';
+
 import Image from 'next/image';
 import type { GameDbData } from '@/types';
-import { Star, Ghost, Gamepad2, ThumbsUp, ThumbsDown, Meh } from 'lucide-react';
+import {
+  Star,
+  Ghost,
+  Gamepad2,
+  ThumbsUp,
+  ThumbsDown,
+  Meh,
+  Loader2,
+} from 'lucide-react';
 import {
   TAILWIND_TEXT_COLORS,
   TAILWIND_BORDER_COLORS,
 } from '@/constants/colors';
 import DynamicTrendChart from './dynamic-trend-chart';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
-
-const mockRating = {
-  story: 2,
-  music: 2.5,
-  graphics: 4,
-  gameplay: 3.9,
-  longevity: 4.8,
-};
+import { useGameRatingCache } from '@/hooks/useGameRatingCache';
 
 type SteamReviewPresentation = {
   IconComponent: React.ElementType;
@@ -23,6 +26,12 @@ type SteamReviewPresentation = {
 };
 
 export default function HighlightGameCard({ game }: { game: GameDbData }) {
+  const {
+    rating,
+    overallAverage,
+    isLoading: isLoadingRating,
+  } = useGameRatingCache(game.id);
+
   const getSteamReviewPresentation = (
     review?: string,
   ): SteamReviewPresentation | null => {
@@ -80,8 +89,13 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
         <div className="ml-2 flex flex-shrink-0 items-center text-yellow-400">
           <Star size={18} className="mr-1 fill-current" />
           <span className="text-md font-bold">
-            {/* TODO: Add rating */}
-            {'N/A'}
+            {isLoadingRating ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : overallAverage > 0 ? (
+              overallAverage
+            ) : (
+              'N/A'
+            )}
           </span>
         </div>
       </div>
@@ -131,7 +145,11 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
 
       {/* Catalog Rating Section */}
       <div className="highlight-card-section mb-4">
-        <CatalogRating rating={mockRating} gameId={game.id?.toString()} />
+        <CatalogRating
+          rating={rating}
+          gameId={game.id?.toString()}
+          isLoading={isLoadingRating}
+        />
       </div>
 
       {/* Footer Row */}

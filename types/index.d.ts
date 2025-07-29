@@ -91,3 +91,12 @@ export interface IgdbGame {
   rating?: number;
   first_release_date?: number; // Unix timestamp
 }
+
+// Type for average game ratings
+export interface GameRating {
+  story: number;
+  music: number;
+  graphics: number;
+  gameplay: number;
+  longevity: number;
+}

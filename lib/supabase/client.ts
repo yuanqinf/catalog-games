@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { useSession } from '@clerk/nextjs';
-import type { GameDbData, IgdbGameData, ExternalGameReview } from '@/types';
+import type { IgdbGameData, ExternalGameReview, GameRating } from '@/types';
 import { transformIgdbData } from '@/utils/igdb-transform';
 import { uploadBanner } from '@/utils/banner-upload';
 import {
@@ -333,5 +333,57 @@ export class GameService {
 
       return data;
     }
+  }
+
+  /**
+   * Get averaged user ratings for each rating type for a specific game
+   */
+  async getAverageGameRatingsByGameId(gameId: number): Promise<GameRating> {
+    const { data, error } = await this.supabase
+      .from('game_ratings')
+      .select('story, music, graphics, gameplay, longevity')
+      .eq('game_id', gameId);
+
+    if (error) {
+      throw new Error(error.message || 'Failed to fetch game ratings');
+    }
+
+    if (!data || data.length === 0) {
+      return {
+        story: 0,
+        music: 0,
+        graphics: 0,
+        gameplay: 0,
+        longevity: 0,
+      };
+    }
+
+    // Calculate averages for each rating type
+    const totalRatings = data.length;
+    const averages = {
+      story: 0,
+      music: 0,
+      graphics: 0,
+      gameplay: 0,
+      longevity: 0,
+    };
+
+    // Sum up all ratings for each category
+    data.forEach((rating) => {
+      averages.story += rating.story || 0;
+      averages.music += rating.music || 0;
+      averages.graphics += rating.graphics || 0;
+      averages.gameplay += rating.gameplay || 0;
+      averages.longevity += rating.longevity || 0;
+    });
+
+    // Calculate averages
+    Object.keys(averages).forEach((key) => {
+      averages[key as keyof typeof averages] = Number(
+        (averages[key as keyof typeof averages] / totalRatings).toFixed(1),
+      );
+    });
+
+    return averages;
   }
 }

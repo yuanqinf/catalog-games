@@ -2,7 +2,9 @@ import React from 'react';
 import styled from 'styled-components';
 import { MessageSquarePlus } from 'lucide-react';
 import { RATING_BLOCK_COLORS, EMPTY_BLOCK_COLOR } from '@/constants/colors';
+import { ratingCategories } from '@/constants/rating-categories';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import CatalogRatingDialog from './catalog-rating-dialog';
 
 const RatingBlock = styled.div<{
@@ -37,6 +39,7 @@ interface CatalogRatingProps {
   size?: 'sm' | 'md' | 'lg';
   showEditButton?: boolean;
   gameId?: string;
+  isLoading?: boolean;
 }
 
 const defaultRating: GameRating = {
@@ -92,9 +95,32 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
   size = 'md',
   showEditButton = true,
   gameId,
+  isLoading = false,
 }) => {
   const config = sizeConfig[size];
   const mergedRating = { ...defaultRating, ...rating };
+
+  // Show skeleton while loading
+  if (isLoading) {
+    return (
+      <div className={`${config.container} ${className} relative`}>
+        <div className="space-y-2">
+          {ratingCategories.map(({ key, label }) => (
+            <div key={key} className="flex items-center">
+              <span className="w-20 flex-shrink-0 text-sm text-neutral-400 capitalize">
+                {label}
+              </span>
+              <div className="flex flex-grow gap-1.5">
+                {[...Array(maxRating)].map((_, i) => (
+                  <Skeleton key={i} className="h-3 flex-1" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`${config.container} ${className} relative`}>

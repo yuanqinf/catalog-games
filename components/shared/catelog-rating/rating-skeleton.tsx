@@ -1,16 +1,9 @@
 import { Skeleton } from '@/components/ui/skeleton';
+import { ratingCategories } from '@/constants/rating-categories';
 
 interface RatingSkeletonProps {
   maxRating?: number;
 }
-
-const ratingCategories = [
-  { key: 'story', label: 'Story' },
-  { key: 'music', label: 'Music' },
-  { key: 'graphics', label: 'Graphics' },
-  { key: 'gameplay', label: 'Gameplay' },
-  { key: 'longevity', label: 'Longevity' },
-] as const;
 
 export const RatingSkeleton: React.FC<RatingSkeletonProps> = ({
   maxRating = 5,

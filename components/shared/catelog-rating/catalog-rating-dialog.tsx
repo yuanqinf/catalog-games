@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';
 import { RATING_BLOCK_COLORS, EMPTY_BLOCK_COLOR } from '@/constants/colors';
+import { ratingCategories } from '@/constants/rating-categories';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +15,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { MessageSquarePlus, ThumbsDown, LogIn } from 'lucide-react';
+import { MessageSquarePlus, ThumbsDown } from 'lucide-react';
 import { GameService } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { RatingSkeleton } from './rating-skeleton';
@@ -64,14 +65,6 @@ const defaultRating: GameRating = {
   gameplay: 0,
   longevity: 0,
 };
-
-const ratingCategories = [
-  { key: 'story', label: 'Story' },
-  { key: 'music', label: 'Music' },
-  { key: 'graphics', label: 'Graphics' },
-  { key: 'gameplay', label: 'Gameplay' },
-  { key: 'longevity', label: 'Longevity' },
-] as const;
 
 // Local storage utilities
 const getCachedRating = (gameId: string, userId: string): GameRating | null => {
