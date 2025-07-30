@@ -1,16 +1,20 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { Gamepad2, Bookmark, Calendar, Star } from 'lucide-react';
 import type { GameDbData } from '@/types';
 import { formatPlatformsForDisplay } from '@/utils/platform-utils';
+import { useGameRatingCache } from '@/hooks/useGameRatingCache';
 
 const MiniGameCard = ({ game }: { game: GameDbData }) => {
+  const { overallAverage } = useGameRatingCache(game.id);
+
   return (
     <div className="p-1">
       <div className="relative flex flex-col rounded-lg bg-zinc-800 p-4">
         <Bookmark
           size={20}
           className="absolute top-6 right-6 z-10 cursor-pointer text-white hover:text-yellow-400"
-          // TODO: Add onClick handler for bookmark functionality
+        // TODO: Add onClick handler for bookmark functionality
         />
         <div
           className="relative mb-2 overflow-hidden rounded bg-zinc-700"
@@ -33,7 +37,9 @@ const MiniGameCard = ({ game }: { game: GameDbData }) => {
         </div>
 
         <div className="mt-2 flex flex-col gap-1">
-          <h3 className="truncate font-medium">{game.name}</h3>
+          <Link href={`/detail/${game.slug}`} className="hover:underline">
+            <h3 className="truncate font-medium">{game.name}</h3>
+          </Link>
           {game.developers && (
             <h4 className="truncate text-sm text-zinc-300">
               {game.developers[0]}
@@ -42,7 +48,7 @@ const MiniGameCard = ({ game }: { game: GameDbData }) => {
           <div className="flex justify-between gap-2">
             <p className="text-sm text-zinc-400">
               {game.first_release_date &&
-              new Date(game.first_release_date).getTime() > Date.now() ? (
+                new Date(game.first_release_date).getTime() > Date.now() ? (
                 <span className="flex items-center">
                   <Calendar size={14} className="mr-1.5 flex-shrink-0" />
                   {`Release: ${game.first_release_date}`}
@@ -56,8 +62,7 @@ const MiniGameCard = ({ game }: { game: GameDbData }) => {
             </p>
             <p className="flex items-center text-sm text-zinc-400">
               <Star size={14} className="mr-1 flex-shrink-0 text-yellow-400" />
-              {/* TODO: Add rating */}
-              {'N/A'}
+              {overallAverage ? overallAverage : 'N/A'}
             </p>
           </div>
         </div>
