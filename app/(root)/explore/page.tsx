@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useSession } from '@clerk/nextjs';
 import MiniGameCard from '@/components/shared/cards/mini-game-card';
 import HighlightGameCard from '@/components/shared/cards/highlight-game-card';
 import { GameService } from '@/lib/supabase/client';
@@ -11,7 +10,6 @@ const GameExplorePage = () => {
   const [selectedGame, setSelectedGame] = useState<GameDbData>();
   const [games, setGames] = useState<GameDbData[]>([]);
   const [loading, setLoading] = useState(false);
-  const { isLoaded, isSignedIn, session } = useSession();
 
   const gameService = useMemo(() => new GameService(), []);
 

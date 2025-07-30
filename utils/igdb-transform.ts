@@ -3,11 +3,14 @@
  */
 
 import type { GameDbData, IgdbGameData } from '@/types';
+import { filterAgeRestrictedVideos } from './youtube-validation';
 
 /**
  * Transform IGDB game data to database format
  */
-export function transformIgdbData(data: IgdbGameData): GameDbData {
+export async function transformIgdbData(
+  data: IgdbGameData,
+): Promise<GameDbData> {
   return {
     igdb_id: data.id,
     name: data.name,
@@ -31,7 +34,9 @@ export function transformIgdbData(data: IgdbGameData): GameDbData {
     cover_url: data.cover?.url || null,
     screenshots: data.screenshots ? data.screenshots.map((s) => s.url) : null,
     artworks: data.artworks ? data.artworks.map((a) => a.url) : null,
-    videos: data.videos ? data.videos.map((v) => v.video_id) : null,
+    videos: data.videos
+      ? await filterAgeRestrictedVideos(data.videos.map((v) => v.video_id))
+      : null,
     updated_at: new Date().toISOString(),
     publishers: data.involved_companies
       ? data.involved_companies

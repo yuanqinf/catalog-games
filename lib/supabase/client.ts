@@ -119,7 +119,7 @@ export class GameService {
    * Add or update a game from IGDB data with optional banner, Steam data, and reviews
    */
   async addOrUpdateGame(igdbData: IgdbGameData, bannerFile?: File) {
-    const dbData = transformIgdbData(igdbData);
+    const dbData = await transformIgdbData(igdbData);
 
     // Upload banner if provided
     if (bannerFile) {

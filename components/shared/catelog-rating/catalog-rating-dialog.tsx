@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';
 import { RATING_BLOCK_COLORS, EMPTY_BLOCK_COLOR } from '@/constants/colors';
@@ -108,7 +108,6 @@ const getBlockFillStyle = (blockIndex: number, categoryRating: number) => {
 };
 
 const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
-  className = '',
   maxRating = 5,
   trigger,
   gameId,
@@ -127,7 +126,7 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
     }));
   };
 
-  const loadUserRating = async () => {
+  const loadUserRating = useCallback(async () => {
     if (!user || !gameId) return;
 
     setIsLoading(true);
@@ -166,7 +165,7 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, gameId]);
 
   const handleSave = async () => {
     if (!user || !gameId) return;
@@ -215,7 +214,7 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
     if (isOpen && user && gameId) {
       loadUserRating();
     }
-  }, [isOpen, user, gameId]);
+  }, [isOpen, user, gameId, loadUserRating]);
 
   const defaultTrigger = (
     <Button

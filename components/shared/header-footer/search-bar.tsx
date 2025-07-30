@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 import { RECENT_ITEMS, TRENDING_ITEMS } from '@/constants/mock-search-result';
-import type { IgdbGame } from '@/lib/igdb/client';
+import { GameDbData } from '@/types';
 
 // --- TYPE DEFINITIONS ---
 type InputRef = React.RefObject<HTMLInputElement | null>;
@@ -36,7 +36,7 @@ interface InputProps {
 // --- CUSTOM HOOK for Search Logic ---
 const useSearchBar = () => {
   const [inputValue, setInputValue] = useState('');
-  const [searchResults, setSearchResults] = useState<IgdbGame[]>([]);
+  const [searchResults, setSearchResults] = useState<GameDbData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isInputActive, setIsInputActive] = useState(false);
@@ -78,7 +78,7 @@ const useSearchBar = () => {
       try {
         const response = await fetch(`/api/search?query=${inputValue.trim()}`);
         if (response.ok) {
-          const data: IgdbGame[] = await response.json();
+          const data: GameDbData[] = await response.json();
           setSearchResults(data);
         } else {
           setSearchResults([]);
@@ -197,7 +197,7 @@ const SearchSuggestions = ({
 }: {
   inputValue: string;
   onSelectSuggestion: (value: string) => void;
-  searchResults: IgdbGame[];
+  searchResults: GameDbData[];
   isLoading: boolean;
 }) => {
   const showDefaultSuggestions = !inputValue.trim();

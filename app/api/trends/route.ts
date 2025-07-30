@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const googleTrends = require('google-trends-api');
 
 // Types
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
     }
 
     const timeline: TrendDataPoint[] = parsed.default.timelineData.map(
-      (d: any) => ({
+      (d: { time: string; value: number[] }) => ({
         date: new Date(parseInt(d.time) * 1000),
         value: d.value?.[0] ?? 0,
       }),
