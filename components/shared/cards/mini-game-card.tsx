@@ -14,7 +14,7 @@ const MiniGameCard = ({ game }: { game: GameDbData }) => {
         <Bookmark
           size={20}
           className="absolute top-6 right-6 z-10 cursor-pointer text-white hover:text-yellow-400"
-        // TODO: Add onClick handler for bookmark functionality
+          // TODO: Add onClick handler for bookmark functionality
         />
         <div
           className="relative mb-2 overflow-hidden rounded bg-zinc-700"
@@ -48,7 +48,7 @@ const MiniGameCard = ({ game }: { game: GameDbData }) => {
           <div className="flex justify-between gap-2">
             <p className="text-sm text-zinc-400">
               {game.first_release_date &&
-                new Date(game.first_release_date).getTime() > Date.now() ? (
+              new Date(game.first_release_date).getTime() > Date.now() ? (
                 <span className="flex items-center">
                   <Calendar size={14} className="mr-1.5 flex-shrink-0" />
                   {`Release: ${game.first_release_date}`}

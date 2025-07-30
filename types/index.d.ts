@@ -1,6 +1,6 @@
 // Type for game data to insert/update in Supabase
 export interface GameDbData {
-  id: number;
+  id?: number; // Optional since Supabase auto-generates this
   igdb_id: number;
   name: string;
   storyline?: string;
@@ -45,7 +45,7 @@ export interface ExternalGameReview {
 
 // Type for IGDB game data from API
 export interface IgdbGameData {
-  id: number;
+  id: number; // IGDB id
   name: string;
   storyline?: string;
   summary?: string;
