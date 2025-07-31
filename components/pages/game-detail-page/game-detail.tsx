@@ -1,12 +1,14 @@
 'use client';
 
 import Image from 'next/image';
+import { useState, useRef } from 'react';
 import {
   Star,
   Clock,
   MessageSquarePlus,
   ThumbsUp,
   ThumbsDown,
+  Play,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +61,9 @@ const mockReviews = [
 ];
 
 const GameDetail = ({ game }: { game: GameDbData }) => {
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
+
   const formatPlayerCount = (count?: number) => {
     if (count === undefined || count === null) return 'N/A';
     if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
@@ -72,25 +77,92 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
   };
 
   const mediaItems = [
-    { type: 'image', url: game.banner_url },
-    ...(game.videos?.map((v) => ({
-      type: 'video',
+    ...(game.videos?.map((v, index) => ({
+      title: `${game.name} Video ${index + 1}`,
       url: getYouTubeEmbedUrl(v),
     })) || []),
   ];
+
+  const handleVideoChange = (index: number) => {
+    // Pause current video if it's playing
+    if (iframeRefs.current[currentVideoIndex]) {
+      const currentIframe = iframeRefs.current[currentVideoIndex];
+      if (currentIframe && currentIframe.src) {
+        // Remove autoplay and other parameters to pause
+        const baseUrl = currentIframe.src.split('?')[0];
+        currentIframe.src = baseUrl;
+      }
+    }
+
+    setCurrentVideoIndex(index);
+  };
+
+  const currentMedia = mediaItems[currentVideoIndex];
 
   return (
     <div className="bg-background text-foreground min-h-screen w-full">
       <main className="container mx-auto px-4 py-8">
         {/* Top Section */}
         <section className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg shadow-2xl lg:col-span-2">
-            <Image
-              src={game.banner_url ?? ''}
-              alt={`${game.name} banner`}
-              fill
-              className="object-cover"
-            />
+          <div className="lg:col-span-2">
+            {/* Video Player Section */}
+            <Card className="rounded-t-none pt-0 pb-4">
+              <CardContent className="space-y-6 p-0">
+                {/* Main Video Player */}
+                <div className="relative aspect-video w-full overflow-hidden bg-black">
+                  <iframe
+                    ref={(el) => {
+                      iframeRefs.current[currentVideoIndex] = el;
+                    }}
+                    src={currentMedia.url ?? ''}
+                    title={currentMedia.title}
+                    allowFullScreen
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  />
+                </div>
+
+                {/* Thumbnail Navigation */}
+                <div className="relative mx-4">
+                  <Carousel className="mx-auto w-[90%]">
+                    <CarouselContent>
+                      {mediaItems.map((media, index) => (
+                        <CarouselItem
+                          key={index}
+                          className="basis-1/3 px-3 md:basis-1/4 lg:basis-1/5"
+                        >
+                          <Button
+                            onClick={() => handleVideoChange(index)}
+                            variant="ghost"
+                            className={`relative mx-2 mt-2 aspect-video h-auto w-full overflow-hidden rounded-md p-0 transition-all duration-200 ${
+                              index === currentVideoIndex
+                                ? 'ring-primary ring-2 ring-offset-1'
+                                : 'hover:opacity-80'
+                            }`}
+                          >
+                            <div className="bg-muted relative h-full w-full">
+                              <Image
+                                src={`https://img.youtube.com/vi/${media.url?.split('/').pop()}/mqdefault.jpg`}
+                                alt={`${media.title} thumbnail`}
+                                fill
+                                className="object-cover"
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="rounded-full bg-black/60 p-2">
+                                  <Play className="h-6 w-6 text-white" />
+                                </div>
+                              </div>
+                            </div>
+                          </Button>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="left-[-32px] md:left-[-40px] lg:left-[-48px]" />
+                    <CarouselNext className="right-[-32px] md:right-[-40px] lg:right-[-48px]" />
+                  </Carousel>
+                </div>
+              </CardContent>
+            </Card>
           </div>
           <div className="lg:col-span-1">
             <HighlightGameCard game={game} />
@@ -129,47 +201,6 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
               </CardContent>
             </Card>
           </div>
-        </section>
-
-        {/* Media Section */}
-        <section className="mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Media</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Carousel className="w-full">
-                <CarouselContent>
-                  {mediaItems.map((media, index) => (
-                    <CarouselItem
-                      key={index}
-                      className="md:basis-1/2 lg:basis-1/3"
-                    >
-                      <div className="bg-muted relative aspect-video overflow-hidden rounded-md">
-                        {media.type === 'image' ? (
-                          <Image
-                            src={media.url ?? ''}
-                            alt={`Media ${index + 1}`}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <iframe
-                            src={media.url ?? ''}
-                            title={`Video ${index + 1}`}
-                            allowFullScreen
-                            className="h-full w-full"
-                          ></iframe>
-                        )}
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="ml-14" />
-                <CarouselNext className="mr-14" />
-              </Carousel>
-            </CardContent>
-          </Card>
         </section>
 
         {/* User Reviews Section */}
