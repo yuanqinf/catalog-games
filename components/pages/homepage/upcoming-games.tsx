@@ -17,7 +17,7 @@ const UpcomingGames = () => {
 
   return (
     <section>
-      <h2 className="mb-6 text-2xl font-bold">Popular Upcomings...</h2>
+      <h2 className="mb-6 text-2xl font-bold">Coming Soon</h2>
       <Carousel
         setApi={(apiInstance) => {
           setCarouselApi(apiInstance);
