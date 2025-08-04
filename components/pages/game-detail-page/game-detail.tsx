@@ -113,7 +113,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
   return (
     <div className="bg-background text-foreground min-h-screen w-full">
-      <main className="container mx-auto px-4 py-8">
+      <main className="container-3xl container mx-auto px-4 py-8">
         {/* Top Section */}
         <section className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">

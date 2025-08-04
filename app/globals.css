@@ -114,6 +114,13 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Custom 3xl breakpoint utilities */
+  @media (min-width: 1920px) {
+    .container-3xl {
+      max-width: 1920px;
+    }
+  }
 }
 
 @layer components {
