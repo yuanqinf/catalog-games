@@ -9,6 +9,12 @@ import {
   ThumbsUp,
   ThumbsDown,
   Play,
+  Gamepad2,
+  Ghost,
+  BriefcaseBusiness,
+  Tag,
+  Monitor,
+  Calendar,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +37,7 @@ import {
 
 import HighlightGameCard from '@/components/shared/cards/highlight-game-card';
 import { GameDbData } from '@/types';
+import { getAvatarBorderColor } from '@/utils/steam-utils';
 
 // Mock Data for sections that need it
 const mockReviews = [
@@ -62,7 +69,12 @@ const mockReviews = [
 
 const GameDetail = ({ game }: { game: GameDbData }) => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
+
+  const avatarBorderColorClass = getAvatarBorderColor(
+    game.steam_all_review ?? undefined,
+  );
 
   const formatPlayerCount = (count?: number) => {
     if (count === undefined || count === null) return 'N/A';
@@ -103,7 +115,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     <div className="bg-background text-foreground min-h-screen w-full">
       <main className="container mx-auto px-4 py-8">
         {/* Top Section */}
-        <section className="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <section className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
             {/* Video Player Section */}
             <Card className="rounded-t-none pt-0 pb-4">
@@ -166,6 +178,175 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
           </div>
           <div className="lg:col-span-1">
             <HighlightGameCard game={game} />
+          </div>
+        </section>
+
+        {/* Game Information Section */}
+        <section className="mb-8 space-y-6">
+          {/* Title and Release Date */}
+          <div className="flex items-start gap-4">
+            {/* Game Avatar */}
+            <div
+              className={`flex-shrink-0 rounded-full border-2 p-1 ${avatarBorderColorClass}`}
+            >
+              <div className="relative h-16 w-16 overflow-hidden rounded-full">
+                <Image
+                  src={game.cover_url ?? ''}
+                  alt={`${game.name} avatar`}
+                  fill
+                  sizes="64px"
+                  className="rounded-full object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Title and Date */}
+            <div className="flex-grow">
+              <h1 className="mb-2 text-4xl font-bold">{game.name}</h1>
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-4 w-4" />
+                <p className="text-muted-foreground">
+                  {game.first_release_date
+                    ? (() => {
+                        const releaseDate = new Date(game.first_release_date);
+                        const now = new Date();
+                        const isFuture = releaseDate > now;
+                        return isFuture
+                          ? `Expected to release on ${releaseDate.toLocaleDateString()}`
+                          : `Released on ${releaseDate.toLocaleDateString()}`;
+                      })()
+                    : 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Summary */}
+          {game.summary && (
+            <div>
+              <h4
+                className={`leading-relaxed ${
+                  isSummaryExpanded ? '' : 'line-clamp-3'
+                }`}
+              >
+                {game.summary}
+              </h4>
+              {game.summary.length > 200 && (
+                <Button
+                  onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                  variant="link"
+                  className="text-muted-foreground mt-2 h-auto p-0 text-sm"
+                >
+                  {isSummaryExpanded ? 'Show less' : 'Show all'}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Game Details */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {game.game_engines && game.game_engines.length > 0 && (
+              <div>
+                <h4 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
+                  <Gamepad2 className="h-4 w-4" />
+                  Game Engine
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {game.game_engines.map((engine) => (
+                    <Badge
+                      variant="outline"
+                      key={engine}
+                      className="px-3 py-1 text-sm"
+                    >
+                      {engine}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {game.developers && game.developers.length > 0 && (
+              <div>
+                <h4 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
+                  <Ghost className="h-4 w-4" />
+                  Developers
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {game.developers.map((developer) => (
+                    <Badge
+                      variant="outline"
+                      key={developer}
+                      className="px-3 py-1 text-sm"
+                    >
+                      {developer}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {game.publishers && game.publishers.length > 0 && (
+              <div>
+                <h4 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
+                  <BriefcaseBusiness className="h-4 w-4" />
+                  Publishers
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {game.publishers.map((publisher) => (
+                    <Badge
+                      variant="outline"
+                      key={publisher}
+                      className="px-3 py-1 text-sm"
+                    >
+                      {publisher}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Genres and Platforms */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {game.genres && game.genres.length > 0 && (
+              <div>
+                <h4 className="text-muted-foreground mb-3 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
+                  <Tag className="h-4 w-4" />
+                  Genres
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {game.genres.map((genre) => (
+                    <Badge
+                      variant="outline"
+                      key={genre}
+                      className="px-3 py-1 text-sm"
+                    >
+                      {genre}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {game.platforms && game.platforms.length > 0 && (
+              <div>
+                <h4 className="text-muted-foreground mb-3 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
+                  <Monitor className="h-4 w-4" />
+                  Platforms
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {game.platforms.map((platform) => (
+                    <Badge
+                      variant="outline"
+                      key={platform}
+                      className="px-3 py-1 text-sm"
+                    >
+                      {platform}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

@@ -12,7 +12,6 @@ export interface GameDbData {
   total_rating_count?: number;
   genres?: string[] | null;
   platforms?: string[] | null;
-  involved_companies?: string[] | null;
   game_engines?: string[] | null;
   game_modes?: string[] | null;
   cover_url?: string | null;

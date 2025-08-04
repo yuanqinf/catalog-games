@@ -11,10 +11,8 @@ import {
   Meh,
   Loader2,
 } from 'lucide-react';
-import {
-  TAILWIND_TEXT_COLORS,
-  TAILWIND_BORDER_COLORS,
-} from '@/constants/colors';
+import { TAILWIND_TEXT_COLORS } from '@/constants/colors';
+import { getAvatarBorderColor } from '@/utils/steam-utils';
 import DynamicTrendChart from './dynamic-trend-chart';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 import { useGameRatingCache } from '@/hooks/useGameRatingCache';
@@ -56,13 +54,9 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
   const steamPresentation = getSteamReviewPresentation(
     game.steam_all_review ?? undefined,
   );
-  let avatarBorderColorClass: string = TAILWIND_BORDER_COLORS.neutral; // Default border
-  if (steamPresentation && steamPresentation.colorClass) {
-    avatarBorderColorClass = steamPresentation.colorClass.replace(
-      'text-',
-      'border-',
-    );
-  }
+  const avatarBorderColorClass = getAvatarBorderColor(
+    game.steam_all_review ?? undefined,
+  );
 
   return (
     <div className="highlight-card">
