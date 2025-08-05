@@ -2,26 +2,12 @@
 
 import Image from 'next/image';
 import type { GameDbData } from '@/types';
-import {
-  Star,
-  Ghost,
-  Gamepad2,
-  ThumbsUp,
-  ThumbsDown,
-  Meh,
-  Loader2,
-} from 'lucide-react';
-import { TAILWIND_TEXT_COLORS } from '@/constants/colors';
+import { Star, Ghost, Gamepad2, Loader2 } from 'lucide-react';
 import { getAvatarBorderColor } from '@/utils/steam-utils';
+import { getSteamReviewPresentation } from '@/utils/game-utils';
 import DynamicTrendChart from './dynamic-trend-chart';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 import { useGameRatingCache } from '@/hooks/useGameRatingCache';
-
-type SteamReviewPresentation = {
-  IconComponent: React.ElementType;
-  colorClass: string;
-  label: string;
-};
 
 export default function HighlightGameCard({ game }: { game: GameDbData }) {
   const {
@@ -29,27 +15,6 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
     overallAverage,
     isLoading: isLoadingRating,
   } = useGameRatingCache(game.id);
-
-  const getSteamReviewPresentation = (
-    review?: string,
-  ): SteamReviewPresentation | null => {
-    if (!review?.trim()) return null;
-
-    const lowerReview = review.toLowerCase();
-    let IconComponent: React.ElementType = ThumbsUp;
-    let colorClass: string = TAILWIND_TEXT_COLORS.neutral;
-
-    if (lowerReview.includes('positive')) {
-      colorClass = TAILWIND_TEXT_COLORS.positive;
-    } else if (lowerReview.includes('negative')) {
-      colorClass = TAILWIND_TEXT_COLORS.negative;
-      IconComponent = ThumbsDown;
-    } else if (lowerReview.includes('mixed')) {
-      colorClass = TAILWIND_TEXT_COLORS.mixed;
-      IconComponent = Meh;
-    }
-    return { IconComponent, colorClass, label: review };
-  };
 
   const steamPresentation = getSteamReviewPresentation(
     game.steam_all_review ?? undefined,
@@ -148,13 +113,6 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
 
       {/* Footer Row */}
       <div className="highlight-card-footer">
-        {/* TODO: Google Trend Score*/}
-        {/* <div className="truncate">
-          <p className="truncate font-medium text-neutral-300">
-            {"Google Trend: 123"}
-          </p>
-        </div> */}
-
         {/* Steam Review */}
         {steamPresentation && (
           <div
