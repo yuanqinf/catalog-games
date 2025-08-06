@@ -12,7 +12,6 @@ import {
   Calendar,
 } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -22,6 +21,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+import GameDetailSection from '@/components/pages/game-detail-page/game-detail-section';
 
 import GameDetailHighlight from './game-detail-highlight';
 
@@ -196,108 +196,37 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
               {/* Game Details */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                {game.game_engines && game.game_engines.length > 0 && (
-                  <div>
-                    <h4 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
-                      <Gamepad2 className="h-4 w-4" />
-                      Game Engine
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {game.game_engines.map((engine) => (
-                        <Badge
-                          variant="outline"
-                          key={engine}
-                          className="px-3 py-1 text-sm"
-                        >
-                          {engine}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {game.developers && game.developers.length > 0 && (
-                  <div>
-                    <h4 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
-                      <Ghost className="h-4 w-4" />
-                      Developers
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {game.developers.map((developer) => (
-                        <Badge
-                          variant="outline"
-                          key={developer}
-                          className="px-3 py-1 text-sm"
-                        >
-                          {developer}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {game.publishers && game.publishers.length > 0 && (
-                  <div>
-                    <h4 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
-                      <BriefcaseBusiness className="h-4 w-4" />
-                      Publishers
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {game.publishers.map((publisher) => (
-                        <Badge
-                          variant="outline"
-                          key={publisher}
-                          className="px-3 py-1 text-sm"
-                        >
-                          {publisher}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <GameDetailSection
+                  title="Game Engine"
+                  items={game.game_engines ?? undefined}
+                  icon={Gamepad2}
+                />
+                <GameDetailSection
+                  title="Developers"
+                  items={game.developers ?? undefined}
+                  icon={Ghost}
+                />
+                <GameDetailSection
+                  title="Publishers"
+                  items={game.publishers ?? undefined}
+                  icon={BriefcaseBusiness}
+                />
               </div>
 
               {/* Genres and Platforms */}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {game.genres && game.genres.length > 0 && (
-                  <div>
-                    <h4 className="text-muted-foreground mb-3 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
-                      <Tag className="h-4 w-4" />
-                      Genres
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {game.genres.map((genre) => (
-                        <Badge
-                          variant="outline"
-                          key={genre}
-                          className="px-3 py-1 text-sm"
-                        >
-                          {genre}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {game.platforms && game.platforms.length > 0 && (
-                  <div>
-                    <h4 className="text-muted-foreground mb-3 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
-                      <Monitor className="h-4 w-4" />
-                      Platforms
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {game.platforms.map((platform) => (
-                        <Badge
-                          variant="outline"
-                          key={platform}
-                          className="px-3 py-1 text-sm"
-                        >
-                          {platform}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <GameDetailSection
+                  title="Genres"
+                  items={game.genres ?? undefined}
+                  icon={Tag}
+                  className="mb-3"
+                />
+                <GameDetailSection
+                  title="Platforms"
+                  items={game.platforms ?? undefined}
+                  icon={Monitor}
+                  className="mb-3"
+                />
               </div>
             </div>
           </div>

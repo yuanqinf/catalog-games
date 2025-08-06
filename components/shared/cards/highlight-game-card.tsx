@@ -4,10 +4,11 @@ import Image from 'next/image';
 import type { GameDbData } from '@/types';
 import { Star, Ghost, Gamepad2, Loader2 } from 'lucide-react';
 import { getAvatarBorderColor } from '@/utils/steam-utils';
-import { getSteamReviewPresentation } from '@/utils/game-utils';
-import DynamicTrendChart from './dynamic-trend-chart';
+import SteamReviewBadge from '@/components/shared/steam-review-badge';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 import { useGameRatingCache } from '@/hooks/useGameRatingCache';
+
+import DynamicTrendChart from './dynamic-trend-chart';
 
 export default function HighlightGameCard({ game }: { game: GameDbData }) {
   const {
@@ -16,9 +17,6 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
     isLoading: isLoadingRating,
   } = useGameRatingCache(game.id);
 
-  const steamPresentation = getSteamReviewPresentation(
-    game.steam_all_review ?? undefined,
-  );
   const avatarBorderColorClass = getAvatarBorderColor(
     game.steam_all_review ?? undefined,
   );
@@ -114,21 +112,7 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
       {/* Footer Row */}
       <div className="highlight-card-footer">
         {/* Steam Review */}
-        {steamPresentation && (
-          <div
-            className="flex items-center"
-            title={`Steam: ${steamPresentation.label}`}
-          >
-            <steamPresentation.IconComponent
-              className={`mr-1.5 h-4 w-4 flex-shrink-0 ${steamPresentation.colorClass}`}
-            />
-            <span
-              className={`hidden truncate font-semibold xl:inline-block ${steamPresentation.colorClass} capitalize`}
-            >
-              {steamPresentation.label}
-            </span>
-          </div>
-        )}
+        <SteamReviewBadge review={game.steam_all_review ?? undefined} />
 
         {/* IGDB Score */}
         <div title={`IGDB User Rating: ${game.igdb_user_rating}`}>

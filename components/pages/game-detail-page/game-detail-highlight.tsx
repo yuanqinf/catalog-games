@@ -3,9 +3,10 @@
 import Image from 'next/image';
 import DynamicTrendChart from '@/components/shared/cards/dynamic-trend-chart';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
+import SteamReviewBadge from '@/components/shared/steam-review-badge';
+
 import { useGameRatingCache } from '@/hooks/useGameRatingCache';
 import { GameDbData } from '@/types';
-import { getSteamReviewPresentation } from '@/utils/game-utils';
 
 interface GameDetailHighlightProps {
   game: GameDbData;
@@ -15,10 +16,6 @@ export default function GameDetailHighlight({
   game,
 }: GameDetailHighlightProps) {
   const { rating, isLoading: isLoadingRating } = useGameRatingCache(game.id);
-
-  const steamPresentation = getSteamReviewPresentation(
-    game.steam_all_review ?? undefined,
-  );
 
   return (
     <div className="space-y-6 lg:col-span-1">
@@ -50,21 +47,7 @@ export default function GameDetailHighlight({
 
       <div className="highlight-card-footer">
         {/* Steam Review */}
-        {steamPresentation && (
-          <div
-            className="flex items-center"
-            title={`Steam: ${steamPresentation.label}`}
-          >
-            <steamPresentation.IconComponent
-              className={`mr-1.5 h-4 w-4 flex-shrink-0 ${steamPresentation.colorClass}`}
-            />
-            <span
-              className={`hidden truncate font-semibold xl:inline-block ${steamPresentation.colorClass} capitalize`}
-            >
-              {steamPresentation.label}
-            </span>
-          </div>
-        )}
+        <SteamReviewBadge review={game.steam_all_review ?? undefined} />
 
         {/* IGDB Score */}
         <div title={`IGDB User Rating: ${game.igdb_user_rating}`}>
