@@ -83,6 +83,18 @@ const GameDetail = ({
 
   const currentMedia = mediaItems[currentVideoIndex];
 
+  // Filter sections with data
+  const detailsSections = [
+    { title: 'Game Engine', items: game.game_engines, icon: Gamepad2 },
+    { title: 'Developers', items: game.developers, icon: Ghost },
+    { title: 'Publishers', items: game.publishers, icon: BriefcaseBusiness },
+  ].filter((section) => section.items?.length);
+
+  const metaSections = [
+    { title: 'Genres', items: game.genres, icon: Tag },
+    { title: 'Platforms', items: game.platforms, icon: Monitor },
+  ].filter((section) => section.items?.length);
+
   return (
     <div className="bg-background text-foreground min-h-screen w-full">
       <main className="container-3xl container mx-auto px-8">
@@ -213,39 +225,33 @@ const GameDetail = ({
               )}
 
               {/* Game Details */}
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <GameDetailSection
-                  title="Game Engine"
-                  items={game.game_engines ?? undefined}
-                  icon={Gamepad2}
-                />
-                <GameDetailSection
-                  title="Developers"
-                  items={game.developers ?? undefined}
-                  icon={Ghost}
-                />
-                <GameDetailSection
-                  title="Publishers"
-                  items={game.publishers ?? undefined}
-                  icon={BriefcaseBusiness}
-                />
-              </div>
+              {detailsSections.length > 0 && (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  {detailsSections.map((section) => (
+                    <GameDetailSection
+                      key={section.title}
+                      title={section.title}
+                      items={section.items || undefined}
+                      icon={section.icon}
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Genres and Platforms */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <GameDetailSection
-                  title="Genres"
-                  items={game.genres ?? undefined}
-                  icon={Tag}
-                  className="mb-3"
-                />
-                <GameDetailSection
-                  title="Platforms"
-                  items={game.platforms ?? undefined}
-                  icon={Monitor}
-                  className="mb-3"
-                />
-              </div>
+              {metaSections.length > 0 && (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  {metaSections.map((section) => (
+                    <GameDetailSection
+                      key={section.title}
+                      title={section.title}
+                      items={section.items || undefined}
+                      icon={section.icon}
+                      className="mb-3"
+                    />
+                  ))}
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 md:col-span-2">
               <Card className="flex flex-col items-center justify-center p-6">
