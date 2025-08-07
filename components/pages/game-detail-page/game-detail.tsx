@@ -10,10 +10,20 @@ import {
   Tag,
   Monitor,
   Calendar,
+  Clock,
+  UsersRound,
+  Star,
+  Info,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   Carousel,
   CarouselContent,
@@ -28,7 +38,15 @@ import GameDetailHighlight from './game-detail-highlight';
 import { GameDbData } from '@/types';
 import { getAvatarBorderColor } from '@/utils/steam-utils';
 
-const GameDetail = ({ game }: { game: GameDbData }) => {
+const GameDetail = ({
+  game,
+  shippedUnits,
+  asOfDate,
+}: {
+  game: GameDbData;
+  shippedUnits?: number | null;
+  asOfDate?: string | null;
+}) => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
@@ -229,6 +247,53 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                 />
               </div>
             </div>
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 md:col-span-2">
+              <Card className="flex flex-col items-center justify-center p-6">
+                <UsersRound className="text-primary mb-2 h-10 w-10" />
+                <div className="relative">
+                  <p className="text-2xl font-bold">
+                    ~ {shippedUnits ? shippedUnits.toLocaleString() : 'N/A'}
+                  </p>
+                  <div className="absolute -top-1 -right-6">
+                    <TooltipProvider>
+                      <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <Info className="text-muted-foreground h-4 w-4 cursor-pointer" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Data as of: {asOfDate || 'Unknown'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+                <p className="text-muted-foreground">Approx. Sales Volume</p>
+              </Card>
+              <Card className="flex flex-col items-center justify-center p-6">
+                <Clock className="text-primary mb-2 h-10 w-10" />
+                <p className="text-2xl font-bold">{'N/A'}</p>
+                <p className="text-muted-foreground">Avg. Play Time</p>
+              </Card>
+              <Card className="flex flex-col items-center justify-center p-6">
+                <Star className="text-primary mb-2 h-10 w-10" />
+                <p className="text-2xl font-bold">
+                  {game.igdb_user_rating ?? 'N/A'}
+                </p>
+                <p className="text-muted-foreground">Catalog Player Rating</p>
+              </Card>
+            </div>
+            {/* <div className="md:col-span-1">
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle>Rating Analysis</CardTitle>
+                </CardHeader>
+                <CardContent className="flex h-48 items-center justify-center">
+                  <p className="text-muted-foreground text-center">
+                    Radar chart placeholder.
+                  </p>
+                </CardContent>
+              </Card>
+            </div> */}
           </div>
 
           {/* Right Column */}
@@ -236,36 +301,6 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
         </section>
 
         {/* Stats & Radar Chart Section */}
-        {/* <section className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-3">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 md:col-span-2">
-            <Card className="flex flex-col items-center justify-center p-6">
-              <Clock className="text-primary mb-2 h-10 w-10" />
-              <p className="text-2xl font-bold">
-                {"N/A"}
-              </p>
-              <p className="text-muted-foreground">Avg. Play Time</p>
-            </Card>
-            <Card className="flex flex-col items-center justify-center p-6">
-              <Star className="mb-2 h-10 w-10 text-yellow-400" />
-              <p className="text-2xl font-bold">
-                {game.igdb_user_rating ?? 'N/A'}
-              </p>
-              <p className="text-muted-foreground">Metacritic Score</p>
-            </Card>
-          </div>
-          <div className="md:col-span-1">
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle>Rating Analysis</CardTitle>
-              </CardHeader>
-              <CardContent className="flex h-48 items-center justify-center">
-                <p className="text-muted-foreground text-center">
-                  Radar chart placeholder.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </section> */}
 
         {/* User Reviews Section */}
         {/* <section className="mb-8">

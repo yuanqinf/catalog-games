@@ -18,7 +18,7 @@ export default function GameDetailHighlight({
   const { rating, isLoading: isLoadingRating } = useGameRatingCache(game.id);
 
   return (
-    <div className="space-y-6 lg:col-span-1 lg:sticky lg:top-4 lg:self-start">
+    <div className="space-y-6 lg:sticky lg:top-4 lg:col-span-1 lg:self-start">
       {game.banner_url && (
         <div className="aspect-[16/9] overflow-hidden rounded-md bg-neutral-800">
           <div className="relative h-full w-full">
