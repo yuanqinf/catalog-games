@@ -4,6 +4,13 @@ import Image from 'next/image';
 import DynamicTrendChart from '@/components/shared/cards/dynamic-trend-chart';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 import SteamReviewBadge from '@/components/shared/steam-review-badge';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 
 import { useGameRatingCache } from '@/hooks/useGameRatingCache';
 import { GameDbData } from '@/types';
@@ -17,19 +24,46 @@ export default function GameDetailHighlight({
 }: GameDetailHighlightProps) {
   const { rating, isLoading: isLoadingRating } = useGameRatingCache(game.id);
 
+  // Build image carousel: banner first, then screenshots
+  const carouselImages = [
+    ...(game.banner_url
+      ? [{ url: game.banner_url, alt: `${game.name} banner` }]
+      : []),
+    ...(game.screenshots?.map((screenshot, index) => ({
+      url: screenshot,
+      alt: `${game.name} screenshot ${index + 1}`,
+    })) || []),
+  ];
+
   return (
     <div className="space-y-6 lg:sticky lg:top-4 lg:col-span-1 lg:self-start">
-      {game.banner_url && (
-        <div className="aspect-[16/9] overflow-hidden rounded-md bg-neutral-800">
-          <div className="relative h-full w-full">
-            <Image
-              src={game.banner_url}
-              alt={`${game.name} banner`}
-              fill
-              sizes="(max-width: 768px) 100vw, 800px"
-              className="object-cover"
-            />
-          </div>
+      {carouselImages.length > 0 && (
+        <div className="relative">
+          <Carousel className="w-full">
+            <CarouselContent>
+              {carouselImages.map((image, index) => (
+                <CarouselItem key={index}>
+                  <div className="aspect-[16/9] overflow-hidden rounded-md bg-neutral-800">
+                    <div className="relative h-full w-full">
+                      <Image
+                        src={image.url}
+                        alt={image.alt}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 800px"
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            {carouselImages.length > 1 && (
+              <>
+                <CarouselPrevious className="left-2" />
+                <CarouselNext className="right-2" />
+              </>
+            )}
+          </Carousel>
         </div>
       )}
 
