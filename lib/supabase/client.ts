@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { useSession } from '@clerk/nextjs';
 import type { IgdbGameData, ExternalGameReview, GameRating } from '@/types';
 import { transformIgdbData } from '@/utils/igdb-transform';
@@ -11,26 +11,50 @@ import {
 
 type ClerkSession = ReturnType<typeof useSession>['session'];
 
+// Singleton pattern for Supabase client
+let supabaseInstance: SupabaseClient | null = null;
+
 export function createClerkSupabaseClient(session?: ClerkSession | null) {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      global: {
-        fetch: async (url, options = {}) => {
-          // Only add auth header if session exists
-          if (session) {
-            const clerkToken = await session.getToken({ template: 'supabase' });
-            const headers = new Headers(options?.headers);
-            headers.set('Authorization', `Bearer ${clerkToken}`);
-            return fetch(url, { ...options, headers });
-          }
-          // Use default fetch for unauthenticated requests
-          return fetch(url, options);
+  // For server-side usage without session, create a new instance
+  if (typeof window === 'undefined' || session !== undefined) {
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          fetch: async (url, options = {}) => {
+            // Only add auth header if session exists
+            if (session) {
+              const clerkToken = await session.getToken({ template: 'supabase' });
+              const headers = new Headers(options?.headers);
+              headers.set('Authorization', `Bearer ${clerkToken}`);
+              return fetch(url, { ...options, headers });
+            }
+            // Use default fetch for unauthenticated requests
+            return fetch(url, options);
+          },
         },
       },
-    },
-  );
+    );
+  }
+
+  // For client-side, use singleton pattern
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          fetch: async (url, options = {}) => {
+            // Use default fetch for unauthenticated requests
+            return fetch(url, options);
+          },
+        },
+      },
+    );
+  }
+
+  return supabaseInstance;
 }
 
 export class GameService {
