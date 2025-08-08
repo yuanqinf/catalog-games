@@ -25,7 +25,9 @@ export function createClerkSupabaseClient(session?: ClerkSession | null) {
           fetch: async (url, options = {}) => {
             // Only add auth header if session exists
             if (session) {
-              const clerkToken = await session.getToken({ template: 'supabase' });
+              const clerkToken = await session.getToken({
+                template: 'supabase',
+              });
               const headers = new Headers(options?.headers);
               headers.set('Authorization', `Bearer ${clerkToken}`);
               return fetch(url, { ...options, headers });

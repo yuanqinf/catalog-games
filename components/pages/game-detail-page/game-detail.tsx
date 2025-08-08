@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Play,
   Gamepad2,
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Tooltip,
   TooltipContent,
@@ -38,18 +38,39 @@ import GameDetailHighlight from './game-detail-highlight';
 import { GameDbData } from '@/types';
 import { getAvatarBorderColor } from '@/utils/steam-utils';
 
-const GameDetail = ({
-  game,
-  shippedUnits,
-  asOfDate,
-}: {
-  game: GameDbData;
-  shippedUnits?: number | null;
-  asOfDate?: string | null;
-}) => {
+const GameDetail = ({ game }: { game: GameDbData }) => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+  const [vgchartzData, setVgchartzData] = useState<{
+    shippedUnits: number | null;
+    asOfDate: string | null;
+  } | null>(null);
+  const [isLoadingVgchartz, setIsLoadingVgchartz] = useState(false);
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
+
+  // Fetch VGChartz data on client side
+  useEffect(() => {
+    const fetchVgchartzData = async () => {
+      if (!game.slug) return;
+
+      setIsLoadingVgchartz(true);
+      try {
+        const response = await fetch(
+          `/api/vgchartz?slug=${encodeURIComponent(game.slug)}`,
+        );
+        if (response.ok) {
+          const result = await response.json();
+          setVgchartzData(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch VGChartz data:', error);
+      } finally {
+        setIsLoadingVgchartz(false);
+      }
+    };
+
+    fetchVgchartzData();
+  }, [game.slug]);
 
   const avatarBorderColorClass = getAvatarBorderColor(
     game.steam_all_review ?? undefined,
@@ -142,6 +163,7 @@ const GameDetail = ({
                                 src={`https://img.youtube.com/vi/${media.url?.split('/').pop()}/mqdefault.jpg`}
                                 alt={`${media.title} thumbnail`}
                                 fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                 className="object-cover"
                               />
                               <div className="absolute inset-0 flex items-center justify-center">
@@ -258,7 +280,9 @@ const GameDetail = ({
                 <UsersRound className="text-primary mb-2 h-10 w-10" />
                 <div className="relative">
                   <p className="text-2xl font-bold">
-                    ~ {shippedUnits ? shippedUnits.toLocaleString() : 'N/A'}
+                    {isLoadingVgchartz
+                      ? 'Loading...'
+                      : `~ ${vgchartzData?.shippedUnits ? vgchartzData.shippedUnits.toLocaleString() : 'N/A'}`}
                   </p>
                   <div className="absolute -top-1 -right-6">
                     <TooltipProvider>
@@ -267,7 +291,9 @@ const GameDetail = ({
                           <Info className="text-muted-foreground h-4 w-4 cursor-pointer" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Data as of: {asOfDate || 'Unknown'}</p>
+                          <p>
+                            Data as of: {vgchartzData?.asOfDate || 'Unknown'}
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
