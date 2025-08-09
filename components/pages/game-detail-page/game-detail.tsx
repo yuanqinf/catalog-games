@@ -10,9 +10,9 @@ import {
   Tag,
   Monitor,
   Calendar,
-  Clock,
+  ChartColumnIncreasing,
   UsersRound,
-  Star,
+  Trophy,
   Info,
 } from 'lucide-react';
 
@@ -37,40 +37,42 @@ import GameDetailHighlight from './game-detail-highlight';
 
 import { GameDbData } from '@/types';
 import { getAvatarBorderColor } from '@/utils/steam-utils';
+import {
+  fetchSalesData,
+  formatSalesValue,
+  getSalesLabel,
+  getSourceName,
+  type SalesData,
+} from '@/lib/sales/get-sales-data';
 
 const GameDetail = ({ game }: { game: GameDbData }) => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
-  const [vgchartzData, setVgchartzData] = useState<{
-    shippedUnits: number | null;
-    asOfDate: string | null;
-  } | null>(null);
-  const [isLoadingVgchartz, setIsLoadingVgchartz] = useState(false);
+  const [salesData, setSalesData] = useState<SalesData>({
+    value: null,
+    source: null,
+  });
+  const [isLoadingSales, setIsLoadingSales] = useState(false);
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
-  // Fetch VGChartz data on client side
+  // Fetch sales data with fallback logic
   useEffect(() => {
-    const fetchVgchartzData = async () => {
-      if (!game.slug) return;
+    const loadSalesData = async () => {
+      setIsLoadingSales(true);
 
-      setIsLoadingVgchartz(true);
       try {
-        const response = await fetch(
-          `/api/vgchartz?slug=${encodeURIComponent(game.slug)}`,
-        );
-        if (response.ok) {
-          const result = await response.json();
-          setVgchartzData(result.data);
-        }
+        const data = await fetchSalesData(game.slug, game.name);
+        setSalesData(data);
       } catch (error) {
-        console.error('Failed to fetch VGChartz data:', error);
+        console.error('Failed to fetch sales data:', error);
+        setSalesData({ value: null, source: null });
       } finally {
-        setIsLoadingVgchartz(false);
+        setIsLoadingSales(false);
       }
     };
 
-    fetchVgchartzData();
-  }, [game.slug]);
+    loadSalesData();
+  }, [game.slug, game.name]);
 
   const avatarBorderColorClass = getAvatarBorderColor(
     game.steam_all_review ?? undefined,
@@ -280,9 +282,9 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                 <UsersRound className="text-primary mb-2 h-10 w-10" />
                 <div className="relative">
                   <p className="text-2xl font-bold">
-                    {isLoadingVgchartz
+                    {isLoadingSales
                       ? 'Loading...'
-                      : `~ ${vgchartzData?.shippedUnits ? vgchartzData.shippedUnits.toLocaleString() : 'N/A'}`}
+                      : formatSalesValue(salesData.value, salesData.source)}
                   </p>
                   <div className="absolute -top-1 -right-6">
                     <TooltipProvider>
@@ -291,27 +293,30 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                           <Info className="text-muted-foreground h-4 w-4 cursor-pointer" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>
-                            Data as of: {vgchartzData?.asOfDate || 'Unknown'}
-                          </p>
+                          <div className="text-sm">
+                            <p>Source: {getSourceName(salesData.source)}</p>
+                            {salesData.asOfDate && (
+                              <p>Data as of: {salesData.asOfDate}</p>
+                            )}
+                          </div>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </div>
                 </div>
-                <p className="text-muted-foreground">Approx. Sales Volume</p>
-              </Card>
-              <Card className="flex flex-col items-center justify-center p-6">
-                <Clock className="text-primary mb-2 h-10 w-10" />
-                <p className="text-2xl font-bold">{'N/A'}</p>
-                <p className="text-muted-foreground">Avg. Play Time</p>
-              </Card>
-              <Card className="flex flex-col items-center justify-center p-6">
-                <Star className="text-primary mb-2 h-10 w-10" />
-                <p className="text-2xl font-bold">
-                  {game.igdb_user_rating ?? 'N/A'}
+                <p className="text-muted-foreground">
+                  {getSalesLabel(salesData.source)}
                 </p>
-                <p className="text-muted-foreground">Catalog Player Rating</p>
+              </Card>
+              <Card className="flex flex-col items-center justify-center p-6">
+                <ChartColumnIncreasing className="text-primary mb-2 h-10 w-10" />
+                <p className="text-2xl font-bold">{'N/A'}</p>
+                <p className="text-muted-foreground">Avg. Player</p>
+              </Card>
+              <Card className="flex flex-col items-center justify-center p-6">
+                <Trophy className="text-primary mb-2 h-10 w-10" />
+                <p className="text-2xl font-bold">33%</p>
+                <p className="text-muted-foreground">Average Completion Rate</p>
               </Card>
             </div>
             {/* <div className="md:col-span-1">
