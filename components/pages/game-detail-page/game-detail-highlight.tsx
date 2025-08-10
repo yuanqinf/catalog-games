@@ -22,7 +22,11 @@ interface GameDetailHighlightProps {
 export default function GameDetailHighlight({
   game,
 }: GameDetailHighlightProps) {
-  const { rating, isLoading: isLoadingRating } = useGameRating(game.id);
+  const {
+    rating,
+    overallAverage,
+    isLoading: isLoadingRating,
+  } = useGameRating(game.id);
 
   // Build image carousel: banner first, then screenshots
   const carouselImages = [
@@ -82,6 +86,24 @@ export default function GameDetailHighlight({
       <div className="highlight-card-footer">
         {/* Steam Review */}
         <SteamReviewBadge review={game.steam_all_review ?? undefined} />
+
+        {/* Catalog User Rating */}
+        <div
+          title={`Catalog User Rating: ${overallAverage}`}
+          className="flex items-center"
+        >
+          <Image
+            src="/images/logo.png"
+            alt="Catalog Logo"
+            width={24}
+            height={24}
+            className="mr-1"
+          />
+          <span className="mr-2 hidden sm:inline-block">Catalog Rating: </span>
+          <span className="font-semibold text-neutral-200">
+            {overallAverage ? overallAverage : 'N/A'}
+          </span>
+        </div>
 
         {/* IGDB Score */}
         <div title={`IGDB User Rating: ${game.igdb_user_rating}`}>
