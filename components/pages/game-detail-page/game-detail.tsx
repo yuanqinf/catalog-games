@@ -40,6 +40,10 @@ import {
   getSourceName,
   type SalesData,
 } from '@/lib/sales/get-sales-data';
+import {
+  fetchSteamSalesDataFromSteamSpy,
+  SteamSpyData,
+} from '@/lib/steam/steamspy';
 
 const GameDetail = ({ game }: { game: GameDbData }) => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -53,6 +57,10 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     null,
   );
   const [isLoadingTwitch, setIsLoadingTwitch] = useState(true);
+
+  const [steamSpyData, setSteamSpyData] = useState<SteamSpyData | null>(null);
+  const [isLoadingSteamSpy, setIsLoadingSteamSpy] = useState(true);
+
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
   // Fetch sales data with fallback logic
@@ -91,8 +99,23 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
       }
     };
 
+    const loadSteamSpyData = async () => {
+      if (!game.name) return;
+      setIsLoadingSteamSpy(true);
+      try {
+        const data = await fetchSteamSalesDataFromSteamSpy(game.name);
+        setSteamSpyData(data);
+      } catch (error) {
+        console.error('Failed to fetch Steam Spy data:', error);
+        setSteamSpyData(null);
+      } finally {
+        setIsLoadingSteamSpy(false);
+      }
+    };
+
     loadSalesData();
     loadTwitchData();
+    loadSteamSpyData();
   }, [game.slug, game.name]);
 
   const avatarBorderColorClass = getAvatarBorderColor(
@@ -175,11 +198,10 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                           <Button
                             onClick={() => handleVideoChange(index)}
                             variant="ghost"
-                            className={`relative mx-2 mt-2 aspect-video h-auto w-full overflow-hidden rounded-md p-0 transition-all duration-200 ${
-                              index === currentVideoIndex
+                            className={`relative mx-2 mt-2 aspect-video h-auto w-full overflow-hidden rounded-md p-0 transition-all duration-200 ${index === currentVideoIndex
                                 ? 'ring-primary ring-2 ring-offset-1'
                                 : 'hover:opacity-80'
-                            }`}
+                              }`}
                           >
                             <div className="bg-muted relative h-full w-full">
                               <Image
@@ -232,15 +254,15 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                     <p className="text-muted-foreground">
                       {game.first_release_date
                         ? (() => {
-                            const releaseDate = new Date(
-                              game.first_release_date,
-                            );
-                            const now = new Date();
-                            const isFuture = releaseDate > now;
-                            return isFuture
-                              ? `Expected to release on ${releaseDate.toLocaleDateString()}`
-                              : `Released on ${releaseDate.toLocaleDateString()}`;
-                          })()
+                          const releaseDate = new Date(
+                            game.first_release_date,
+                          );
+                          const now = new Date();
+                          const isFuture = releaseDate > now;
+                          return isFuture
+                            ? `Expected to release on ${releaseDate.toLocaleDateString()}`
+                            : `Released on ${releaseDate.toLocaleDateString()}`;
+                        })()
                         : 'N/A'}
                     </p>
                   </div>
@@ -251,9 +273,8 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
               {game.summary && (
                 <div>
                   <h4
-                    className={`leading-relaxed ${
-                      isSummaryExpanded ? '' : 'line-clamp-3'
-                    }`}
+                    className={`leading-relaxed ${isSummaryExpanded ? '' : 'line-clamp-3'
+                      }`}
                   >
                     {game.summary}
                   </h4>
@@ -309,7 +330,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                 label={getSalesLabel(salesData.source)}
                 valueColor="text-yellow-500"
                 isLoading={isLoadingSales}
-                showTooltip={true}
+                showTooltip={!!salesData.value}
                 tooltipContent={
                   <div className="text-sm">
                     <p>Source: {getSourceName(salesData.source)}</p>
@@ -334,9 +355,20 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
               />
               <GameDetailCard
                 icon={Trophy}
-                value="33%"
-                label="Average Completion Rate"
-                valueColor="text-foreground"
+                value={getDisplayValue(
+                  isLoadingSteamSpy,
+                  steamSpyData?.averagePlaytime,
+                  (value) => `~ ${value} hours`,
+                )}
+                label="Average Playtime"
+                valueColor="text-blue-500"
+                isLoading={isLoadingSteamSpy}
+                showTooltip={!!steamSpyData?.averagePlaytime}
+                tooltipContent={
+                  <div className="text-sm">
+                    <p>Source: Steam Spy</p>
+                  </div>
+                }
               />
             </div>
           </div>

@@ -1,3 +1,5 @@
+import { fetchSteamSalesDataFromSteamSpy } from '@/lib/steam/steamspy';
+
 /**
  * Sales data fetching utility
  * Handles VGChartz primary data with Steam sales fallback
@@ -48,36 +50,6 @@ async function fetchVGChartzData(gameSlug: string): Promise<{
 }
 
 /**
- * Fetch Steam sales data by game name
- */
-async function fetchSteamSalesData(gameName: string): Promise<{
-  ownersLowerBound: number | null;
-} | null> {
-  try {
-    const response = await fetch(
-      `/api/steam/sales?name=${encodeURIComponent(gameName)}`,
-    );
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const result = await response.json();
-    const ownersLowerBound = result.data?.ownersLowerBound;
-
-    // Check if Steam has valid ownership data
-    if (ownersLowerBound && ownersLowerBound > 0) {
-      return { ownersLowerBound };
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Failed to fetch Steam sales data:', error);
-    return null;
-  }
-}
-
-/**
  * Fetch sales data with fallback logic:
  * 1. Try VGChartz first (primary source)
  * 2. If VGChartz fails or has no valid data, try Steam (fallback)
@@ -102,10 +74,10 @@ export async function fetchSalesData(
 
     // If VGChartz data is not valid, try Steam sales as fallback
     if (gameName) {
-      const steamData = await fetchSteamSalesData(gameName);
-      if (steamData) {
+      const steamspyData = await fetchSteamSalesDataFromSteamSpy(gameName);
+      if (steamspyData) {
         return {
-          value: steamData.ownersLowerBound,
+          value: steamspyData.ownersLowerBound,
           source: 'steam',
         };
       }
@@ -143,7 +115,7 @@ export function formatSalesValue(
 
   // Add tilde prefix for VGChartz (approximate values)
   if (source === 'vgchartz') {
-    return `~${formattedValue}`;
+    return `~ ${formattedValue}`;
   } else if (source === 'steam') {
     return `> ${formattedValue}`;
   }

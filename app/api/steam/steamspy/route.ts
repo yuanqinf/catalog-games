@@ -5,6 +5,7 @@ interface SteamSpyResponse {
   appid: number;
   name: string;
   owners: string;
+  average_forever: number; // Average playtime per user in minutes
 }
 
 /**
@@ -90,12 +91,15 @@ export async function GET(req: NextRequest) {
     // Parse the owners data to get the lower bound
     const ownersLowerBound = parseOwnersLowerBound(steamSpyData.owners);
 
+    const averagePlaytime = Math.round(steamSpyData.average_forever / 60);
+
     return NextResponse.json({
       source: 'SteamSpy',
       steamAppId: steamSpyData.appid,
       steamName: steamSpyData.name,
       data: {
         ownersLowerBound,
+        averagePlaytime,
       },
     });
   } catch (error) {
