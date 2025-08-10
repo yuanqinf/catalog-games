@@ -1,6 +1,7 @@
 import useSWR from 'swr';
 import { GameService } from '@/lib/supabase/client';
 import type { GameRating } from '@/types';
+import type { ExternalGameReview } from '@/types';
 
 interface UseGameRatingReturn {
   rating: GameRating;
@@ -126,4 +127,36 @@ export function useGameRating(
       mutate: averageRatingResult.mutate,
     };
   }
+}
+
+/**
+ * Hook for fetching external game reviews
+ */
+export function useGameReviews(gameId: number | string | undefined) {
+  const numericGameId = typeof gameId === 'string' ? parseInt(gameId) : gameId;
+
+  const { data, error, isLoading, mutate } = useSWR(
+    numericGameId ? ['game-reviews', numericGameId] : null,
+    async ([, gId]) => {
+      const gameService = new GameService();
+      return await gameService.getGameReviews(gId as number);
+    },
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 5 * 60 * 1000, // 5 minutes
+      errorRetryCount: 2,
+      errorRetryInterval: 1000,
+      onSuccess: () =>
+        console.log(`💾 Cached reviews for game ${numericGameId}`),
+      onError: (err) => console.error('Failed to fetch game reviews:', err),
+    },
+  );
+
+  return {
+    reviews: (data as ExternalGameReview[]) || [],
+    isLoading,
+    error,
+    mutate,
+  };
 }

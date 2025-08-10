@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import DynamicTrendChart from '@/components/shared/cards/dynamic-trend-chart';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 import SteamReviewBadge from '@/components/shared/steam-review-badge';
 import {
@@ -70,10 +69,6 @@ export default function GameDetailHighlight({
           </Carousel>
         </div>
       )}
-
-      <div>
-        <DynamicTrendChart keyword={game.name} hideYAxis hideXAxis />
-      </div>
 
       <div className="highlight-card-section">
         <CatalogRating

@@ -44,6 +44,7 @@ import {
   fetchSteamSalesDataFromSteamSpy,
   SteamSpyData,
 } from '@/lib/steam/steamspy';
+import FeaturedUserReviews from './game-detail-featured-review';
 
 const GameDetail = ({ game }: { game: GameDbData }) => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -373,15 +374,15 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                 }
               />
             </div>
+
+            {/* Featured User Reviews Section */}
+            {game.id && <FeaturedUserReviews gameId={game.id} />}
           </div>
 
           {/* Right Column */}
           <GameDetailHighlight game={game} />
         </section>
 
-        {/* Stats & Radar Chart Section */}
-
-        {/* User Reviews Section */}
         {/* <section className="mb-8">
           <Card>
             <CardHeader className="flex-row items-center justify-between">
