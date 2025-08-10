@@ -6,7 +6,7 @@ import { Star, Ghost, Gamepad2, Loader2 } from 'lucide-react';
 import { getAvatarBorderColor } from '@/utils/steam-utils';
 import SteamReviewBadge from '@/components/shared/steam-review-badge';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
-import { useGameRatingCache } from '@/hooks/useGameRatingCache';
+import { useGameRating } from '@/hooks/useGameRating';
 
 import DynamicTrendChart from './dynamic-trend-chart';
 
@@ -15,7 +15,7 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
     rating,
     overallAverage,
     isLoading: isLoadingRating,
-  } = useGameRatingCache(game.id);
+  } = useGameRating(game.id);
 
   const avatarBorderColorClass = getAvatarBorderColor(
     game.steam_all_review ?? undefined,
@@ -48,8 +48,8 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
           <span className="text-md font-bold">
             {isLoadingRating ? (
               <Loader2 size={18} className="animate-spin" />
-            ) : overallAverage > 0 ? (
-              overallAverage
+            ) : (overallAverage || 0) > 0 ? (
+              overallAverage || 0
             ) : (
               'N/A'
             )}

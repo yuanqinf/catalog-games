@@ -12,7 +12,7 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 
-import { useGameRatingCache } from '@/hooks/useGameRatingCache';
+import { useGameRating } from '@/hooks/useGameRating';
 import { GameDbData } from '@/types';
 
 interface GameDetailHighlightProps {
@@ -22,7 +22,7 @@ interface GameDetailHighlightProps {
 export default function GameDetailHighlight({
   game,
 }: GameDetailHighlightProps) {
-  const { rating, isLoading: isLoadingRating } = useGameRatingCache(game.id);
+  const { rating, isLoading: isLoadingRating } = useGameRating(game.id);
 
   // Build image carousel: banner first, then screenshots
   const carouselImages = [

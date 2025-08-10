@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';
 import { RATING_BLOCK_COLORS, EMPTY_BLOCK_COLOR } from '@/constants/colors';
@@ -19,6 +19,7 @@ import { MessageSquarePlus, ThumbsDown } from 'lucide-react';
 import { GameService } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { RatingSkeleton } from './rating-skeleton';
+import { useGameRating } from '@/hooks/useGameRating';
 
 const RatingBlock = styled.div<{
   $fillColor: string;
@@ -66,31 +67,6 @@ const defaultRating: GameRating = {
   longevity: 0,
 };
 
-// Local storage utilities
-const getCachedRating = (gameId: string, userId: string): GameRating | null => {
-  try {
-    const key = `rating_${gameId}_${userId}`;
-    const cached = localStorage.getItem(key);
-    return cached ? JSON.parse(cached) : null;
-  } catch (error) {
-    console.error('Failed to get cached rating:', error);
-    return null;
-  }
-};
-
-const setCachedRating = (
-  gameId: string,
-  userId: string,
-  rating: GameRating,
-) => {
-  try {
-    const key = `rating_${gameId}_${userId}`;
-    localStorage.setItem(key, JSON.stringify(rating));
-  } catch (error) {
-    console.error('Failed to cache rating:', error);
-  }
-};
-
 const getBlockFillStyle = (blockIndex: number, categoryRating: number) => {
   const fullValue = Math.floor(categoryRating);
   const fractionalPart = categoryRating - fullValue;
@@ -116,8 +92,14 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [currentRating, setCurrentRating] = useState<GameRating>(defaultRating);
   const [hoverRating, setHoverRating] = useState<GameRating>(defaultRating);
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Use SWR hook for user rating data
+  const {
+    rating: userRating,
+    isLoading,
+    mutate,
+  } = useGameRating(gameId, user?.id);
 
   const handleRatingChange = (category: keyof GameRating, value: number) => {
     setCurrentRating((prev) => ({
@@ -126,46 +108,13 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
     }));
   };
 
-  const loadUserRating = useCallback(async () => {
-    if (!user || !gameId) return;
-
-    setIsLoading(true);
-    try {
-      // First try to load from cache
-      const cachedRating = getCachedRating(gameId, user.id);
-      if (cachedRating) {
-        setCurrentRating(cachedRating);
-        setHoverRating(cachedRating);
-        setIsLoading(false);
-        return;
-      }
-
-      // If no cache, load from database
-      const gameService = new GameService();
-      const userRating = await gameService.getUserRating(
-        parseInt(gameId),
-        user.id,
-      );
-
-      if (userRating) {
-        const rating: GameRating = {
-          story: userRating.story,
-          music: userRating.music,
-          graphics: userRating.graphics,
-          gameplay: userRating.gameplay,
-          longevity: userRating.longevity,
-        };
-        setCurrentRating(rating);
-        setHoverRating(rating);
-        setCachedRating(gameId, user.id, rating);
-      }
-    } catch (error) {
-      console.error('Failed to load user rating:', error);
-      toast.error('Failed to load previous rating.');
-    } finally {
-      setIsLoading(false);
+  // Update current rating when user rating is loaded
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentRating(userRating);
+      setHoverRating(userRating);
     }
-  }, [user, gameId]);
+  }, [userRating, isOpen]);
 
   const handleSave = async () => {
     if (!user || !gameId) return;
@@ -178,7 +127,8 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
         user.id,
         currentRating,
       );
-      setCachedRating(gameId, user.id, currentRating);
+      // Revalidate the SWR cache
+      mutate();
       toast.success('Rating saved successfully!');
       setIsOpen(false);
     } catch (error) {
@@ -208,13 +158,6 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
       [category]: currentRating[category],
     }));
   };
-
-  // Load user rating when dialog opens
-  useEffect(() => {
-    if (isOpen && user && gameId) {
-      loadUserRating();
-    }
-  }, [isOpen, user, gameId, loadUserRating]);
 
   const defaultTrigger = (
     <Button

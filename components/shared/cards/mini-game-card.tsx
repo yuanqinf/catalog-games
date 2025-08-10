@@ -3,10 +3,10 @@ import Link from 'next/link';
 import { Gamepad2, Bookmark, Calendar, Star } from 'lucide-react';
 import type { GameDbData } from '@/types';
 import { formatPlatformsForDisplay } from '@/utils/platform-utils';
-import { useGameRatingCache } from '@/hooks/useGameRatingCache';
+import { useGameRating } from '@/hooks/useGameRating';
 
 const MiniGameCard = ({ game }: { game: GameDbData }) => {
-  const { overallAverage } = useGameRatingCache(game.id);
+  const { overallAverage } = useGameRating(game.id);
 
   return (
     <div className="p-1">
