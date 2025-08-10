@@ -1,4 +1,4 @@
-import { LucideIcon, Info } from 'lucide-react';
+import { LucideIcon, Info, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import {
   Tooltip,
@@ -17,6 +17,30 @@ interface GameDetailCardProps {
   showTooltip?: boolean;
 }
 
+/**
+ * Helper function to compute the display value properly
+ * @param isLoading - Whether data is currently loading
+ * @param value - The actual value (can be null/undefined)
+ * @param formatter - Function to format the value when it exists
+ * @param fallback - Fallback value when no data (defaults to 'N/A')
+ */
+export function getDisplayValue<T>(
+  isLoading: boolean,
+  value: T | null | undefined,
+  formatter: (value: T) => string | React.ReactNode,
+  fallback: string | React.ReactNode = 'N/A',
+): string | React.ReactNode {
+  if (isLoading) {
+    return '';
+  }
+
+  if (value !== null && value !== undefined) {
+    return formatter(value);
+  }
+
+  return fallback;
+}
+
 export default function GameDetailCard({
   icon: Icon,
   value,
@@ -31,7 +55,13 @@ export default function GameDetailCard({
       <Icon className="text-primary mb-2 h-10 w-10" />
       <div className="relative">
         <p className={`text-2xl font-bold ${valueColor}`}>
-          {isLoading ? 'Loading...' : value}
+          {isLoading ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </span>
+          ) : (
+            value
+          )}
         </p>
         {showTooltip && tooltipContent && (
           <div className="absolute -top-1 -right-6">

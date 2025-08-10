@@ -25,7 +25,9 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import GameDetailSection from '@/components/pages/game-detail-page/game-detail-section';
-import GameDetailCard from '@/components/pages/game-detail-page/game-detail-card';
+import GameDetailCard, {
+  getDisplayValue,
+} from '@/components/pages/game-detail-page/game-detail-card';
 
 import GameDetailHighlight from './game-detail-highlight';
 
@@ -46,11 +48,11 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     value: null,
     source: null,
   });
-  const [isLoadingSales, setIsLoadingSales] = useState(false);
+  const [isLoadingSales, setIsLoadingSales] = useState(true);
   const [twitchLiveViewers, setTwitchLiveViewers] = useState<number | null>(
     null,
   );
-  const [isLoadingTwitch, setIsLoadingTwitch] = useState(false);
+  const [isLoadingTwitch, setIsLoadingTwitch] = useState(true);
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
   // Fetch sales data with fallback logic
@@ -299,7 +301,11 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 md:col-span-2">
               <GameDetailCard
                 icon={UsersRound}
-                value={formatSalesValue(salesData.value, salesData.source)}
+                value={getDisplayValue(
+                  isLoadingSales,
+                  salesData.value,
+                  (value) => formatSalesValue(value, salesData.source),
+                )}
                 label={getSalesLabel(salesData.source)}
                 valueColor="text-yellow-500"
                 isLoading={isLoadingSales}
@@ -315,11 +321,11 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
               />
               <GameDetailCard
                 icon={ChartColumnIncreasing}
-                value={(() => {
-                  if (twitchLiveViewers)
-                    return '~ ' + twitchLiveViewers.toLocaleString();
-                  return 'N/A';
-                })()}
+                value={getDisplayValue(
+                  isLoadingTwitch,
+                  twitchLiveViewers,
+                  (viewers) => '~ ' + viewers.toLocaleString(),
+                )}
                 label="Live viewers"
                 valueColor="text-purple-500"
                 isLoading={isLoadingTwitch}
@@ -333,18 +339,6 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                 valueColor="text-foreground"
               />
             </div>
-            {/* <div className="md:col-span-1">
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle>Rating Analysis</CardTitle>
-                </CardHeader>
-                <CardContent className="flex h-48 items-center justify-center">
-                  <p className="text-muted-foreground text-center">
-                    Radar chart placeholder.
-                  </p>
-                </CardContent>
-              </Card>
-            </div> */}
           </div>
 
           {/* Right Column */}
