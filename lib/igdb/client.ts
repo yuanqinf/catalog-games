@@ -158,6 +158,104 @@ class IgdbClient {
 
     return game;
   }
+
+  public async getTwitchGameIdByName(gameName: string): Promise<string | null> {
+    const token = await this.getAccessToken();
+
+    const url = new URL('https://api.twitch.tv/helix/games');
+    url.searchParams.set('name', gameName);
+
+    const res = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Client-ID': this.clientId,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      console.error(`Twitch Games API error: ${res.status} ${res.statusText}`);
+      return null;
+    }
+
+    const data = await res.json();
+
+    if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
+      return null;
+    }
+
+    // Return the first game's ID
+    return data.data[0].id;
+  }
+
+  public async getGameViewersFromTwitchByGameId(
+    gameId: string,
+  ): Promise<number> {
+    const token = await this.getAccessToken();
+
+    let allStreams: any[] = [];
+    let cursor: string | undefined;
+    const maxRequests = 5; // Get 500 streams total (100 per request)
+
+    // Make multiple API calls to get more streams
+    for (let i = 0; i < maxRequests; i++) {
+      const url = new URL('https://api.twitch.tv/helix/streams');
+      url.searchParams.set('game_id', gameId);
+      url.searchParams.set('first', '100');
+
+      if (cursor) {
+        url.searchParams.set('after', cursor);
+      }
+
+      const res = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Client-ID': this.clientId,
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        console.error(`Twitch API error: ${res.status} ${res.statusText}`);
+        break; // Stop on error but return what we have so far
+      }
+
+      const data = await res.json();
+
+      if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
+        break; // No more data available
+      }
+
+      allStreams.push(...data.data);
+
+      // Get cursor for next page
+      cursor = data.pagination?.cursor;
+
+      // If no cursor, we've reached the end
+      if (!cursor) {
+        break;
+      }
+
+      console.log(
+        `Fetched ${data.data.length} streams (batch ${i + 1}), total so far: ${allStreams.length}`,
+      );
+    }
+
+    if (allStreams.length === 0) {
+      return 0;
+    }
+
+    // Sum up all viewers from all live streams to get total live viewers
+    const totalLiveViewers = allStreams.reduce((sum: number, stream: any) => {
+      return sum + (stream.viewer_count || 0);
+    }, 0);
+
+    console.log(
+      `Total streams fetched: ${allStreams.length}, Total viewers: ${totalLiveViewers}`,
+    );
+
+    return totalLiveViewers;
+  }
 }
 
 export const igdbClient = new IgdbClient();

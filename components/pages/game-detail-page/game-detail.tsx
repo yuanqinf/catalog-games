@@ -13,17 +13,10 @@ import {
   ChartColumnIncreasing,
   UsersRound,
   Trophy,
-  Info,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import {
   Carousel,
   CarouselContent,
@@ -32,6 +25,7 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import GameDetailSection from '@/components/pages/game-detail-page/game-detail-section';
+import GameDetailCard from '@/components/pages/game-detail-page/game-detail-card';
 
 import GameDetailHighlight from './game-detail-highlight';
 
@@ -53,6 +47,10 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     source: null,
   });
   const [isLoadingSales, setIsLoadingSales] = useState(false);
+  const [twitchLiveViewers, setTwitchLiveViewers] = useState<number | null>(
+    null,
+  );
+  const [isLoadingTwitch, setIsLoadingTwitch] = useState(false);
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
   // Fetch sales data with fallback logic
@@ -71,7 +69,28 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
       }
     };
 
+    const loadTwitchData = async () => {
+      if (!game.name) return;
+
+      setIsLoadingTwitch(true);
+      try {
+        const response = await fetch(
+          `/api/twitch?name=${encodeURIComponent(game.name)}`,
+        );
+        if (response.ok) {
+          const result = await response.json();
+          setTwitchLiveViewers(result.data?.liveViewers || null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch Twitch data:', error);
+        setTwitchLiveViewers(null);
+      } finally {
+        setIsLoadingTwitch(false);
+      }
+    };
+
     loadSalesData();
+    loadTwitchData();
   }, [game.slug, game.name]);
 
   const avatarBorderColorClass = getAvatarBorderColor(
@@ -278,46 +297,41 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
               )}
             </div>
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 md:col-span-2">
-              <Card className="flex flex-col items-center justify-center p-6">
-                <UsersRound className="text-primary mb-2 h-10 w-10" />
-                <div className="relative">
-                  <p className="text-2xl font-bold">
-                    {isLoadingSales
-                      ? 'Loading...'
-                      : formatSalesValue(salesData.value, salesData.source)}
-                  </p>
-                  <div className="absolute -top-1 -right-6">
-                    <TooltipProvider>
-                      <Tooltip delayDuration={0}>
-                        <TooltipTrigger asChild>
-                          <Info className="text-muted-foreground h-4 w-4 cursor-pointer" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <div className="text-sm">
-                            <p>Source: {getSourceName(salesData.source)}</p>
-                            {salesData.asOfDate && (
-                              <p>Data as of: {salesData.asOfDate}</p>
-                            )}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+              <GameDetailCard
+                icon={UsersRound}
+                value={formatSalesValue(salesData.value, salesData.source)}
+                label={getSalesLabel(salesData.source)}
+                valueColor="text-yellow-500"
+                isLoading={isLoadingSales}
+                showTooltip={true}
+                tooltipContent={
+                  <div className="text-sm">
+                    <p>Source: {getSourceName(salesData.source)}</p>
+                    {salesData.asOfDate && (
+                      <p>Data as of: {salesData.asOfDate}</p>
+                    )}
                   </div>
-                </div>
-                <p className="text-muted-foreground">
-                  {getSalesLabel(salesData.source)}
-                </p>
-              </Card>
-              <Card className="flex flex-col items-center justify-center p-6">
-                <ChartColumnIncreasing className="text-primary mb-2 h-10 w-10" />
-                <p className="text-2xl font-bold">{'N/A'}</p>
-                <p className="text-muted-foreground">Avg. Player</p>
-              </Card>
-              <Card className="flex flex-col items-center justify-center p-6">
-                <Trophy className="text-primary mb-2 h-10 w-10" />
-                <p className="text-2xl font-bold">33%</p>
-                <p className="text-muted-foreground">Average Completion Rate</p>
-              </Card>
+                }
+              />
+              <GameDetailCard
+                icon={ChartColumnIncreasing}
+                value={(() => {
+                  if (twitchLiveViewers)
+                    return '~ ' + twitchLiveViewers.toLocaleString();
+                  return 'N/A';
+                })()}
+                label="Live viewers"
+                valueColor="text-purple-500"
+                isLoading={isLoadingTwitch}
+                showTooltip={!!twitchLiveViewers}
+                tooltipContent={<p>Source: Twitch</p>}
+              />
+              <GameDetailCard
+                icon={Trophy}
+                value="33%"
+                label="Average Completion Rate"
+                valueColor="text-foreground"
+              />
             </div>
             {/* <div className="md:col-span-1">
               <Card className="h-full">
