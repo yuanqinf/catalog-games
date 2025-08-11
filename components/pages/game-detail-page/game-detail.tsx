@@ -44,6 +44,10 @@ import {
   fetchSteamSalesDataFromSteamSpy,
   SteamSpyData,
 } from '@/lib/steam/steamspy';
+import {
+  getPlaytrackerData,
+  PlaytimeData,
+} from '@/lib/playernet/get-playernet-data';
 import FeaturedUserReviews from './game-detail-featured-review';
 
 const GameDetail = ({ game }: { game: GameDbData }) => {
@@ -61,6 +65,11 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
   const [steamSpyData, setSteamSpyData] = useState<SteamSpyData | null>(null);
   const [isLoadingSteamSpy, setIsLoadingSteamSpy] = useState(true);
+
+  const [playtrackerData, setPlaytrackerData] = useState<PlaytimeData | null>(
+    null,
+  );
+  const [isLoadingPlaytracker, setIsLoadingPlaytracker] = useState(true);
 
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
@@ -114,9 +123,24 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
       }
     };
 
+    const loadPlaytrackerData = async () => {
+      if (!game.name) return;
+      setIsLoadingPlaytracker(true);
+      try {
+        const data = await getPlaytrackerData(game.name);
+        setPlaytrackerData(data);
+      } catch (error) {
+        console.error('Failed to fetch Playtracker data:', error);
+        setPlaytrackerData(null);
+      } finally {
+        setIsLoadingPlaytracker(false);
+      }
+    };
+
     loadSalesData();
     loadTwitchData();
     loadSteamSpyData();
+    loadPlaytrackerData();
   }, [game.slug, game.name]);
 
   const avatarBorderColorClass = getAvatarBorderColor(
@@ -359,17 +383,29 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
               <GameDetailCard
                 icon={Trophy}
                 value={getDisplayValue(
-                  isLoadingSteamSpy,
-                  steamSpyData?.averagePlaytime,
-                  (value) => `~ ${value} hours`,
+                  isLoadingSteamSpy && isLoadingPlaytracker,
+                  steamSpyData?.averagePlaytime ||
+                    playtrackerData?.averagePlaytime,
+                  (value) =>
+                    steamSpyData?.averagePlaytime ? `~ ${value} hours` : value,
                 )}
                 label="Average Playtime"
                 valueColor="text-blue-500"
-                isLoading={isLoadingSteamSpy}
-                showTooltip={!!steamSpyData?.averagePlaytime}
+                isLoading={isLoadingSteamSpy && isLoadingPlaytracker}
+                showTooltip={
+                  !!(
+                    steamSpyData?.averagePlaytime ||
+                    playtrackerData?.averagePlaytime
+                  )
+                }
                 tooltipContent={
                   <div className="text-sm">
-                    <p>Source: Steam Spy</p>
+                    <p>
+                      Source:{' '}
+                      {steamSpyData?.averagePlaytime
+                        ? 'Steam Spy'
+                        : 'Playtracker.net'}
+                    </p>
                   </div>
                 }
               />
@@ -382,62 +418,6 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
           {/* Right Column */}
           <GameDetailHighlight game={game} />
         </section>
-
-        {/* <section className="mb-8">
-          <Card>
-            <CardHeader className="flex-row items-center justify-between">
-              <CardTitle>User Reviews</CardTitle>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button>
-                    <MessageSquarePlus className="mr-2 h-4 w-4" /> Write a
-                    Review
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Submit Your Review</DialogTitle>
-                  </DialogHeader>
-                  <p className="text-muted-foreground py-8 text-center">
-                    Review form placeholder.
-                  </p>
-                </DialogContent>
-              </Dialog>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {mockReviews.map((review) => (
-                  <div key={review.id} className="flex gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold">{review.username}</p>
-                        <div className="flex items-center gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-muted-foreground mt-1 text-sm">
-                        {review.comment}
-                      </p>
-                      <div className="text-muted-foreground mt-2 flex items-center gap-4 text-xs">
-                        <button className="hover:text-primary flex items-center gap-1">
-                          <ThumbsUp className="h-3 w-3" /> Helpful
-                        </button>
-                        <button className="hover:text-primary flex items-center gap-1">
-                          <ThumbsDown className="h-3 w-3" /> Not Helpful
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </section> */}
       </main>
     </div>
   );

@@ -40,7 +40,7 @@ export default function GameDetailHighlight({
   ];
 
   return (
-    <div className="space-y-6 lg:sticky lg:top-4 lg:col-span-1 lg:self-start">
+    <div className="space-y-6 lg:sticky lg:top-8 lg:col-span-1 lg:self-start">
       {carouselImages.length > 0 && (
         <div className="relative">
           <Carousel className="w-full">
