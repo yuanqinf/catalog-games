@@ -413,6 +413,23 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
             {/* Featured User Reviews Section */}
             {game.id && <FeaturedUserReviews gameId={game.id} />}
+
+            {/* Similar Games Section */}
+            {playtrackerData?.playersAlsoLiked && (
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 md:col-span-2">
+                {playtrackerData.playersAlsoLiked.map((game) => (
+                  <div key={game.name}>
+                    <h3>{game.name}</h3>
+                    <Image
+                      src={game.imageUrl ?? ''}
+                      alt={game.name}
+                      width={100}
+                      height={100}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right Column */}
