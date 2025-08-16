@@ -42,11 +42,15 @@ export default function AddGamePage() {
   // Form states
   const [gameNames, setGameNames] = useState('');
   const [searchResults, setSearchResults] = useState<GameResult[]>([]);
+  const [igdbId, setIgdbId] = useState('');
+  const [idSearchResult, setIdSearchResult] = useState<GameResult | null>(null);
 
   // Loading states
   const [isSearching, setIsSearching] = useState(false);
   const [batchProcessing, setBatchProcessing] = useState(false);
   const [batchStopped, setBatchStopped] = useState(false);
+  const [isSearchingById, setIsSearchingById] = useState(false);
+  const [isAddingById, setIsAddingById] = useState(false);
 
   // Progress tracking
   const [progress, setProgress] = useState(0);
@@ -119,6 +123,107 @@ export default function AddGamePage() {
       setIsSearching(false);
     }
   }, [gameNames]);
+
+  // Handle search by IGDB ID
+  const handleSearchById = useCallback(async () => {
+    if (!igdbId.trim() || isNaN(Number(igdbId))) {
+      toast.error('Please enter a valid IGDB ID');
+      return;
+    }
+
+    setIsSearchingById(true);
+    setIdSearchResult(null);
+
+    try {
+      const id = Number(igdbId);
+      console.log(`🔍 Searching for game with ID: ${id}`);
+
+      // Check if game already exists in database
+      const existsResponse = await fetch(`/api/igdb/games/${id}`);
+      let existsInDb = false;
+      let igdbData = null;
+
+      if (existsResponse.ok) {
+        igdbData = await existsResponse.json();
+        // For now, assume game doesn't exist in our DB (we'll let the add function handle duplicates)
+        existsInDb = false;
+      } else {
+        throw new Error('Game not found in IGDB');
+      }
+
+      const result: GameResult = {
+        name: igdbData?.name || `Game ID ${id}`,
+        igdbId: id,
+        existsInDb,
+        igdbData,
+        selected: !existsInDb,
+        status: 'pending',
+      };
+
+      setIdSearchResult(result);
+
+      if (existsInDb) {
+        toast.info(`Game "${result.name}" already exists in database`);
+      } else {
+        toast.success(`Found game: "${result.name}"`);
+      }
+    } catch (error) {
+      console.error('ID search failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      setIdSearchResult({
+        name: `Game ID ${igdbId}`,
+        igdbId: Number(igdbId),
+        existsInDb: false,
+        error: errorMessage,
+        selected: false,
+        status: 'pending',
+      });
+
+      toast.error(`Failed to find game: ${errorMessage}`);
+    } finally {
+      setIsSearchingById(false);
+    }
+  }, [igdbId, gameService]);
+
+  // Handle add single game by ID
+  const handleAddById = useCallback(async () => {
+    if (!idSearchResult || idSearchResult.error || idSearchResult.existsInDb) {
+      return;
+    }
+
+    setIsAddingById(true);
+
+    try {
+      console.log(`🚀 Adding game: ${idSearchResult.name} (ID: ${idSearchResult.igdbId})`);
+
+      // Add the game to database
+      await gameService.addOrUpdateGame(idSearchResult.igdbData, idSearchResult.bannerFile || undefined);
+
+      // Update the result to show it's completed
+      setIdSearchResult(prev => prev ? { ...prev, status: 'completed', existsInDb: true } : null);
+
+      toast.success(`Successfully added "${idSearchResult.name}" to database`);
+    } catch (error) {
+      console.error('Failed to add game:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      setIdSearchResult(prev => prev ? {
+        ...prev,
+        status: 'failed',
+        errorMessage
+      } : null);
+
+      toast.error(`Failed to add game: ${errorMessage}`);
+    } finally {
+      setIsAddingById(false);
+    }
+  }, [idSearchResult, gameService]);
+
+  // Handle banner upload for ID search result
+  const handleIdBannerUpload = useCallback((file: File | null) => {
+    setIdSearchResult(prev => prev ? { ...prev, bannerFile: file } : null);
+  }, []);
 
   // Handle individual game selection
   const handleGameSelection = useCallback(
@@ -238,10 +343,10 @@ export default function AddGamePage() {
             prev.map((r) =>
               r.igdbId === game.igdbId
                 ? {
-                    ...r,
-                    status: 'failed',
-                    errorMessage,
-                  }
+                  ...r,
+                  status: 'failed',
+                  errorMessage,
+                }
                 : r,
             ),
           );
@@ -304,14 +409,14 @@ export default function AddGamePage() {
             placeholder="Zelda&#10;Mario&#10;Final Fantasy"
             value={gameNames}
             onChange={(e) => setGameNames(e.target.value)}
-            disabled={isSearching || batchProcessing}
+            disabled={isSearching || batchProcessing || isSearchingById || isAddingById}
             className="mt-1 min-h-32 w-full rounded-md border px-3 py-2 text-sm"
           />
         </div>
 
         <Button
           onClick={handleBatchSearch}
-          disabled={isSearching || batchProcessing || !gameNames.trim()}
+          disabled={isSearching || batchProcessing || isSearchingById || isAddingById || !gameNames.trim()}
           className="w-full"
         >
           {isSearching ? (
@@ -326,6 +431,121 @@ export default function AddGamePage() {
             </>
           )}
         </Button>
+      </div>
+
+      {/* Search by IGDB ID */}
+      <div className="mb-6 space-y-4 rounded-lg border p-6">
+        <div>
+          <label className="text-sm font-medium">
+            Add Game by IGDB ID
+          </label>
+          <div className="mt-1 flex gap-2">
+            <input
+              type="number"
+              placeholder="Enter IGDB ID (e.g. 1234)"
+              value={igdbId}
+              onChange={(e) => setIgdbId(e.target.value)}
+              disabled={isSearchingById || isAddingById || isSearching || batchProcessing}
+              className="flex-1 rounded-md border px-3 py-2 text-sm"
+            />
+            <Button
+              onClick={handleSearchById}
+              disabled={isSearchingById || isAddingById || isSearching || batchProcessing || !igdbId.trim()}
+              variant="outline"
+            >
+              {isSearchingById ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-2 h-4 w-4" />
+                  Search
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* ID Search Result */}
+        {idSearchResult && (
+          <div className="rounded-lg border p-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">
+                    {idSearchResult.igdbData?.name || idSearchResult.name}
+                  </span>
+
+                  {idSearchResult.existsInDb && (
+                    <Badge variant="secondary">Already in DB</Badge>
+                  )}
+                  {idSearchResult.error && (
+                    <Badge variant="destructive">Error</Badge>
+                  )}
+                  {idSearchResult.status === 'completed' && (
+                    <Badge variant="outline" className="text-green-600">
+                      <CheckCircle className="mr-1 h-3 w-3" />
+                      Added
+                    </Badge>
+                  )}
+                  {idSearchResult.status === 'failed' && (
+                    <Badge variant="destructive">
+                      <XCircle className="mr-1 h-3 w-3" />
+                      Failed
+                    </Badge>
+                  )}
+                </div>
+
+                <p className="text-muted-foreground text-sm">
+                  IGDB ID: {idSearchResult.igdbId}
+                </p>
+
+                {(idSearchResult.error || idSearchResult.errorMessage) && (
+                  <p className="text-sm text-red-500">
+                    {idSearchResult.error || idSearchResult.errorMessage}
+                  </p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2">
+                {!idSearchResult.error && !idSearchResult.existsInDb && (
+                  <>
+                    <FileUpload
+                      label=""
+                      onFileSelect={handleIdBannerUpload}
+                      accept="image/jpeg,image/png,image/webp"
+                      maxSize={5 * 1024 * 1024}
+                      className="w-32"
+                    />
+                    {idSearchResult.bannerFile && (
+                      <span className="text-xs text-green-600">✓ Banner</span>
+                    )}
+                    <Button
+                      onClick={handleAddById}
+                      disabled={isAddingById || idSearchResult.status === 'completed'}
+                      size="sm"
+                    >
+                      {isAddingById ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Add Game
+                        </>
+                      )}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Results */}
@@ -352,7 +572,7 @@ export default function AddGamePage() {
                     onCheckedChange={(checked: boolean) =>
                       handleGameSelection(index, checked)
                     }
-                    disabled={!!result.error || batchProcessing}
+                    disabled={!!result.error || batchProcessing || isSearchingById || isAddingById}
                   />
 
                   <div className="space-y-1">
