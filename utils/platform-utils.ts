@@ -280,39 +280,3 @@ export function unifyPlatforms(
   ];
   return order.filter((platform) => unified.has(platform));
 }
-
-/**
- * Gets platform styling
- */
-export function getPlatformStyling(platform: UnifiedPlatform): string {
-  const styles: Record<UnifiedPlatform, string> = {
-    PC: 'text-blue-400',
-    MAC: 'text-gray-400',
-    PS: 'text-blue-500',
-    XBOX: 'text-green-500',
-    NINTENDO: 'text-red-500',
-    SWITCH: 'text-red-400',
-    GAMEBOY: 'text-orange-500',
-    MOBILE: 'text-purple-500',
-  };
-
-  return styles[platform] || 'text-gray-400';
-}
-
-/**
- * Gets platform icon
- */
-export function getPlatformIcon(platform: UnifiedPlatform): string {
-  const icons: Record<UnifiedPlatform, string> = {
-    PC: '🖥️',
-    MAC: '🍎',
-    PS: '🎮',
-    XBOX: '🎯',
-    NINTENDO: '🎮',
-    SWITCH: '🔄',
-    GAMEBOY: '🎒',
-    MOBILE: '📱',
-  };
-
-  return icons[platform] || '🎮';
-}
