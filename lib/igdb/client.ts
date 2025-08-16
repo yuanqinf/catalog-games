@@ -71,7 +71,7 @@ class IgdbClient {
       },
       body: `
         search "${query}";
-        fields id, name, slug;
+        fields id, name, slug, category;
         where first_release_date != null;
         limit 10;
       `,

@@ -2,20 +2,58 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@clerk/nextjs';
-import { Input } from '@/components/ui/input';
+
 import { Button } from '@/components/ui/button';
 import { FileUpload } from '@/components/ui/file-upload';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { GameService } from '@/lib/supabase/client';
-import type { IgdbGameData } from '@/types';
+
+import { Loader2, CheckCircle, XCircle, Upload, Search } from 'lucide-react';
 
 // TODO: Only allow admin users to access this page
 
+interface GameResult {
+  name: string;
+  igdbId: number;
+  existsInDb: boolean;
+  igdbData?: any;
+  error?: string;
+  selected?: boolean;
+  bannerFile?: File | null;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
+  errorMessage?: string;
+}
+
+interface BatchReport {
+  total: number;
+  successful: number;
+  failed: number;
+  details: Array<{
+    name: string;
+    status: 'success' | 'failed';
+    message: string;
+  }>;
+}
+
 export default function AddGamePage() {
-  const [igdbId, setIgdbId] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
-  const [formKey, setFormKey] = useState(0);
+  // Form states
+  const [gameNames, setGameNames] = useState('');
+  const [searchResults, setSearchResults] = useState<GameResult[]>([]);
+
+  // Loading states
+  const [isSearching, setIsSearching] = useState(false);
+  const [batchProcessing, setBatchProcessing] = useState(false);
+  const [batchStopped, setBatchStopped] = useState(false);
+
+  // Progress tracking
+  const [progress, setProgress] = useState(0);
+  const [currentBatch, setCurrentBatch] = useState(0);
+  const [totalBatches, setTotalBatches] = useState(0);
+  const [batchReport, setBatchReport] = useState<BatchReport | null>(null);
+
   const router = useRouter();
   const { isLoaded, isSignedIn, session } = useSession();
 
@@ -28,131 +66,436 @@ export default function AddGamePage() {
 
   const gameService = useMemo(() => new GameService(session), [session]);
 
-  // Handles form submission for adding/updating a game
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!igdbId) {
-        toast.error('Please enter an IGDB game ID');
+  // Handle batch game search
+  const handleBatchSearch = useCallback(async () => {
+    if (!gameNames.trim()) {
+      toast.error('Please enter game names');
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      // Parse game names (split by new lines and filter empty)
+      const names = gameNames
+        .split('\n')
+        .map((name) => name.trim())
+        .filter((name) => name.length > 0);
+
+      if (names.length === 0) {
+        toast.error('No valid game names found');
         return;
       }
-      setLoading(true);
-      try {
-        // Fetch IGDB game data from local API
-        const res = await fetch(`/api/igdb/games/${igdbId}`);
-        if (!res.ok) {
-          toast.error('Failed to fetch game data');
-          setLoading(false);
-          return;
-        }
-        const data: IgdbGameData = await res.json();
 
-        // Simplified unified approach
-        console.log(`📝 Processing game: ${data.name} (ID: ${data.id})`);
-        if (bannerFile) {
-          console.log(
-            `🖼️ Banner file: ${bannerFile.name} (${(bannerFile.size / 1024 / 1024).toFixed(2)}MB)`,
-          );
-        }
+      console.log(`🔍 Searching for ${names.length} games...`);
+
+      const response = await fetch('/api/igdb/search-multiple', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameNames: names }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
+
+      const data = await response.json();
+
+      // Add selection state to results
+      const resultsWithSelection = data.results.map((result: GameResult) => ({
+        ...result,
+        selected: !result.existsInDb && !result.error,
+        status: 'pending' as const,
+      }));
+
+      setSearchResults(resultsWithSelection);
+
+      toast.success(
+        `Found ${data.summary.found}/${data.summary.total} games. ${data.summary.new} new games available to add.`,
+      );
+    } catch (error) {
+      console.error('Batch search failed:', error);
+      toast.error('Failed to search games');
+    } finally {
+      setIsSearching(false);
+    }
+  }, [gameNames]);
+
+  // Handle individual game selection
+  const handleGameSelection = useCallback(
+    (index: number, selected: boolean) => {
+      setSearchResults((prev) =>
+        prev.map((result, i) =>
+          i === index ? { ...result, selected } : result,
+        ),
+      );
+    },
+    [],
+  );
+
+  // Handle banner upload for individual game
+  const handleBannerUpload = useCallback((index: number, file: File | null) => {
+    setSearchResults((prev) =>
+      prev.map((result, i) =>
+        i === index ? { ...result, bannerFile: file } : result,
+      ),
+    );
+  }, []);
+
+  // Handle batch processing
+  const handleBatchProcess = useCallback(async () => {
+    const selectedGames = searchResults.filter(
+      (game) => game.selected && !game.error,
+    );
+
+    if (selectedGames.length === 0) {
+      toast.error('No games selected for processing');
+      return;
+    }
+
+    setBatchProcessing(true);
+    setBatchStopped(false);
+    setProgress(0);
+
+    const batchSize = 5;
+    const batches = [];
+    for (let i = 0; i < selectedGames.length; i += batchSize) {
+      batches.push(selectedGames.slice(i, i + batchSize));
+    }
+
+    setTotalBatches(batches.length);
+    setCurrentBatch(0);
+
+    const report: BatchReport = {
+      total: selectedGames.length,
+      successful: 0,
+      failed: 0,
+      details: [],
+    };
+
+    console.log(
+      `🚀 Starting batch processing: ${selectedGames.length} games in ${batches.length} batches`,
+    );
+
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      if (batchStopped) {
+        console.log('🛑 Batch processing stopped by user');
+        break;
+      }
+
+      setCurrentBatch(batchIndex + 1);
+      const batch = batches[batchIndex];
+
+      console.log(
+        `📦 Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} games)`,
+      );
+
+      // Process games in current batch
+      for (const game of batch) {
+        if (batchStopped) break;
+
+        // Update game status to processing
+        setSearchResults((prev) =>
+          prev.map((r) =>
+            r.igdbId === game.igdbId ? { ...r, status: 'processing' } : r,
+          ),
+        );
 
         try {
-          await gameService.addOrUpdateGame(data, bannerFile ?? undefined); // Single method call!
-
-          const successMessage = bannerFile
-            ? `Game "${data.name}" and banner uploaded successfully!`
-            : `Game "${data.name}" added/updated successfully!`;
-          toast.success(successMessage);
-
-          // Reset form only on success
-          setIgdbId('');
-          setBannerFile(null);
-          setFormKey((prev) => prev + 1);
-        } catch (error) {
-          console.error('Operation failed:', error);
-          if (error instanceof Error) {
-            // More specific error messages based on the error content
-            if (error.message.includes('upload')) {
-              toast.error(`Failed to upload banner: ${error.message}`);
-            } else if (
-              error.message.includes('save') ||
-              error.message.includes('database')
-            ) {
-              toast.error(`Failed to save game: ${error.message}`);
-            } else {
-              toast.error(`Operation failed: ${error.message}`);
-            }
-          } else {
-            toast.error('Operation failed');
+          // Fetch full IGDB data
+          const igdbResponse = await fetch(`/api/igdb/games/${game.igdbId}`);
+          if (!igdbResponse.ok) {
+            throw new Error('Failed to fetch IGDB data');
           }
-          return; // Don't reset form on failure
+          const igdbData = await igdbResponse.json();
+
+          // Add/update game
+          await gameService.addOrUpdateGame(
+            igdbData,
+            game.bannerFile || undefined,
+          );
+
+          // Update status to completed
+          setSearchResults((prev) =>
+            prev.map((r) =>
+              r.igdbId === game.igdbId ? { ...r, status: 'completed' } : r,
+            ),
+          );
+
+          report.successful++;
+          report.details.push({
+            name: game.name,
+            status: 'success',
+            message: 'Successfully added to database',
+          });
+
+          console.log(`✅ Successfully processed: ${game.name}`);
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
+
+          // Update status to failed
+          setSearchResults((prev) =>
+            prev.map((r) =>
+              r.igdbId === game.igdbId
+                ? {
+                  ...r,
+                  status: 'failed',
+                  errorMessage,
+                }
+                : r,
+            ),
+          );
+
+          report.failed++;
+          report.details.push({
+            name: game.name,
+            status: 'failed',
+            message: errorMessage,
+          });
+
+          console.error(`❌ Failed to process ${game.name}:`, error);
         }
-      } catch (err: unknown) {
-        console.error(err);
-        if (err instanceof Error) {
-          toast.error(err.message || 'Operation failed');
-        } else if (typeof err === 'string') {
-          toast.error(err);
-        } else {
-          toast.error('Operation failed');
-        }
-      } finally {
-        setLoading(false);
+
+        // Update progress
+        const processed = report.successful + report.failed;
+        setProgress((processed / selectedGames.length) * 100);
       }
-    },
-    [igdbId, bannerFile, gameService],
-  );
+
+      // Small delay between batches to avoid overwhelming the system
+      if (batchIndex < batches.length - 1 && !batchStopped) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
+
+    setBatchProcessing(false);
+    setBatchReport(report);
+
+    const successMessage = batchStopped
+      ? `Batch processing stopped. Processed ${report.successful + report.failed}/${report.total} games.`
+      : `Batch processing complete! Successfully added ${report.successful}/${report.total} games.`;
+
+    toast.success(successMessage);
+    console.log('📊 Final Report:', report);
+  }, [searchResults, gameService, batchStopped]);
+
+  // Stop batch processing
+  const handleStopBatch = useCallback(() => {
+    setBatchStopped(true);
+    toast.info('Stopping batch processing...');
+  }, []);
 
   if (isLoaded && !isSignedIn) {
     return null;
   }
 
+  const selectedCount = searchResults.filter((game) => game.selected).length;
+
   return (
-    <div className="bg-card mx-auto mt-10 max-w-lg rounded-lg p-6 shadow">
-      <h1 className="mb-6 text-2xl font-bold">Add IGDB Game</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        {/* IGDB ID Input */}
+    <div className="mx-auto max-w-4xl p-6">
+      <h1 className="mb-8 text-3xl font-bold">Game Batch Upload</h1>
+
+      {/* Search Form */}
+      <div className="mb-6 space-y-4 rounded-lg border p-6">
         <div>
-          <label htmlFor="igdb-id" className="text-sm font-medium">
-            IGDB Game ID
+          <label className="text-sm font-medium">
+            Game Names (one per line)
           </label>
-          <Input
-            id="igdb-id"
-            placeholder="Enter IGDB game ID"
-            aria-label="IGDB game ID"
-            value={igdbId}
-            onChange={(e) => setIgdbId(e.target.value)}
-            disabled={loading}
-            className="mt-1"
+          <textarea
+            placeholder="Zelda&#10;Mario&#10;Final Fantasy"
+            value={gameNames}
+            onChange={(e) => setGameNames(e.target.value)}
+            disabled={isSearching || batchProcessing}
+            className="mt-1 min-h-32 w-full rounded-md border px-3 py-2 text-sm"
           />
         </div>
 
-        {/* Banner Upload */}
-        <FileUpload
-          key={`banner-${formKey}`}
-          label="Game Banner (Optional)"
-          onFileSelect={setBannerFile}
-          accept="image/jpeg,image/png,image/webp"
-          maxSize={5 * 1024 * 1024} // 5MB
-        />
-
-        {/* Submit Button */}
         <Button
-          type="submit"
-          disabled={loading}
-          aria-busy={loading}
-          aria-label="Add or update game"
+          onClick={handleBatchSearch}
+          disabled={isSearching || batchProcessing || !gameNames.trim()}
           className="w-full"
         >
-          {loading ? 'Submitting...' : 'Add/Update Game'}
+          {isSearching ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Searching...
+            </>
+          ) : (
+            <>
+              <Search className="mr-2 h-4 w-4" />
+              Search Games
+            </>
+          )}
         </Button>
+      </div>
 
-        {/* Upload Status */}
-        {bannerFile && (
-          <div className="text-muted-foreground text-sm">
-            <p>✓ Banner selected: {bannerFile.name}</p>
+      {/* Results */}
+      {searchResults.length > 0 && (
+        <div className="space-y-6">
+          {/* Results Header */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">
+              Found {searchResults.length} games
+            </h2>
+            <Badge variant="outline">{selectedCount} selected</Badge>
           </div>
-        )}
-      </form>
+
+          {/* Game List */}
+          <div className="space-y-3">
+            {searchResults.map((result, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between rounded-lg border p-4"
+              >
+                <div className="flex items-center space-x-4">
+                  <Checkbox
+                    checked={result.selected}
+                    onCheckedChange={(checked: boolean) =>
+                      handleGameSelection(index, checked)
+                    }
+                    disabled={!!result.error || batchProcessing}
+                  />
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">
+                        {result.igdbData?.name || result.name}
+                      </span>
+
+                      {result.existsInDb && (
+                        <Badge variant="secondary">In DB</Badge>
+                      )}
+                      {result.error && (
+                        <Badge variant="destructive">Error</Badge>
+                      )}
+                      {result.status === 'processing' && (
+                        <Badge variant="outline">
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          Processing
+                        </Badge>
+                      )}
+                      {result.status === 'completed' && (
+                        <Badge variant="outline" className="text-green-600">
+                          <CheckCircle className="mr-1 h-3 w-3" />
+                          Done
+                        </Badge>
+                      )}
+                      {result.status === 'failed' && (
+                        <Badge variant="destructive">
+                          <XCircle className="mr-1 h-3 w-3" />
+                          Failed
+                        </Badge>
+                      )}
+                    </div>
+
+                    {result.igdbId > 0 && (
+                      <p className="text-muted-foreground text-sm">
+                        ID: {result.igdbId}
+                      </p>
+                    )}
+
+                    {(result.error || result.errorMessage) && (
+                      <p className="text-sm text-red-500">
+                        {result.error || result.errorMessage}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Banner Upload */}
+                {result.selected && !result.error && (
+                  <div className="flex items-center gap-2">
+                    <FileUpload
+                      label=""
+                      onFileSelect={(file) => handleBannerUpload(index, file)}
+                      accept="image/jpeg,image/png,image/webp"
+                      maxSize={5 * 1024 * 1024}
+                      className="w-32"
+                    />
+                    {result.bannerFile && (
+                      <span className="text-xs text-green-600">✓ Banner</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Batch Controls */}
+          {selectedCount > 0 && (
+            <div className="space-y-4 border-t pt-6">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">
+                  Ready to upload {selectedCount} games
+                </span>
+
+                {!batchProcessing ? (
+                  <Button onClick={handleBatchProcess}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Start Upload
+                  </Button>
+                ) : (
+                  <Button onClick={handleStopBatch} variant="destructive">
+                    Stop
+                  </Button>
+                )}
+              </div>
+
+              {batchProcessing && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>
+                      Batch {currentBatch}/{totalBatches}
+                    </span>
+                    <span>{Math.round(progress)}%</span>
+                  </div>
+                  <Progress value={progress} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Report */}
+          {batchReport && (
+            <div className="rounded-lg border p-4">
+              <h3 className="mb-4 font-medium">Upload Complete</h3>
+
+              <div className="mb-4 grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {batchReport.successful}
+                  </div>
+                  <div className="text-muted-foreground text-sm">Success</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {batchReport.failed}
+                  </div>
+                  <div className="text-muted-foreground text-sm">Failed</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">{batchReport.total}</div>
+                  <div className="text-muted-foreground text-sm">Total</div>
+                </div>
+              </div>
+
+              <div className="max-h-48 space-y-1 overflow-y-auto">
+                {batchReport.details.map((detail, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    {detail.status === 'success' ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-red-600" />
+                    )}
+                    <span>
+                      {detail.name}: {detail.message}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
