@@ -238,10 +238,10 @@ export default function AddGamePage() {
             prev.map((r) =>
               r.igdbId === game.igdbId
                 ? {
-                  ...r,
-                  status: 'failed',
-                  errorMessage,
-                }
+                    ...r,
+                    status: 'failed',
+                    errorMessage,
+                  }
                 : r,
             ),
           );

@@ -1,12 +1,52 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Gamepad2, Bookmark, Calendar, Star } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGamepad } from '@fortawesome/free-solid-svg-icons';
+import {
+  faWindows,
+  faPlaystation,
+  faXbox,
+  faApple,
+  faSteam,
+  faAndroid,
+} from '@fortawesome/free-brands-svg-icons';
 import type { GameDbData } from '@/types';
-import { formatPlatformsForDisplay } from '@/utils/platform-utils';
+import { unifyPlatforms, type UnifiedPlatform } from '@/utils/platform-utils';
 import { useGameRating } from '@/hooks/useGameRating';
+
+type PlatformIconData = {
+  type: 'fontawesome';
+  icon: any;
+};
+
+// Map UnifiedPlatform to FontAwesome icons
+const getPlatformIcon = (
+  platform: UnifiedPlatform,
+  game: GameDbData,
+): PlatformIconData => {
+  const iconMap: Record<UnifiedPlatform, PlatformIconData> = {
+    PC: { type: 'fontawesome', icon: game.steam_app_id ? faSteam : faWindows },
+    MAC: { type: 'fontawesome', icon: faApple },
+    PS: { type: 'fontawesome', icon: faPlaystation },
+    XBOX: { type: 'fontawesome', icon: faXbox },
+    NINTENDO: { type: 'fontawesome', icon: faGamepad },
+    SWITCH: { type: 'fontawesome', icon: faGamepad },
+    GAMEBOY: { type: 'fontawesome', icon: faGamepad },
+    MOBILE: { type: 'fontawesome', icon: faAndroid },
+  };
+
+  return iconMap[platform] || { type: 'fontawesome', icon: faGamepad };
+};
 
 const MiniGameCard = ({ game }: { game: GameDbData }) => {
   const { overallAverage } = useGameRating(game.id);
+
+  // Get unified platforms and their icons
+  const unifiedPlatforms = unifyPlatforms(game.platforms);
+  const platformIconsData = unifiedPlatforms
+    .slice(0, 4)
+    .map((platform) => getPlatformIcon(platform, game));
 
   return (
     <div className="p-1">
@@ -45,21 +85,28 @@ const MiniGameCard = ({ game }: { game: GameDbData }) => {
               {game.developers[0]}
             </h4>
           )}
-          <div className="flex justify-between gap-2">
-            <p className="text-sm text-zinc-400">
+          <div className="flex items-center justify-between gap-2">
+            <div className="mt-1 text-sm text-zinc-400">
               {game.first_release_date &&
               new Date(game.first_release_date).getTime() > Date.now() ? (
                 <span className="flex items-center">
                   <Calendar size={14} className="mr-1.5 flex-shrink-0" />
-                  {`Release: ${game.first_release_date}`}
+                  {`Release: ${new Date(game.first_release_date).toLocaleDateString('en-CA')}`}
                 </span>
               ) : (
                 <span className="flex items-center">
-                  <Gamepad2 size={14} className="mr-1.5 flex-shrink-0" />
-                  {`Platforms: ${formatPlatformsForDisplay(game.platforms, 3)}`}
+                  <div className="flex gap-1">
+                    {platformIconsData.map((iconData, index) => (
+                      <FontAwesomeIcon
+                        key={index}
+                        icon={iconData.icon}
+                        className="text-sm"
+                      />
+                    ))}
+                  </div>
                 </span>
               )}
-            </p>
+            </div>
             <p className="flex items-center text-sm text-zinc-400">
               <Star size={14} className="mr-1 flex-shrink-0 text-yellow-400" />
               {overallAverage ? overallAverage : 'N/A'}

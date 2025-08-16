@@ -282,28 +282,6 @@ export function unifyPlatforms(
 }
 
 /**
- * Formats platforms for display
- */
-export function formatPlatformsForDisplay(
-  platforms: string[] | null | undefined,
-  maxDisplay: number = 3,
-): string {
-  const unified = unifyPlatforms(platforms);
-
-  if (unified.length === 0) {
-    return 'Unknown';
-  }
-
-  if (unified.length <= maxDisplay) {
-    return unified.join(', ');
-  }
-
-  const displayed = unified.slice(0, maxDisplay);
-  const remaining = unified.length - maxDisplay;
-  return `${displayed.join(', ')} +${remaining}`;
-}
-
-/**
  * Gets platform styling
  */
 export function getPlatformStyling(platform: UnifiedPlatform): string {

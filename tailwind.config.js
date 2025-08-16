@@ -19,6 +19,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      screens: {
+        '3xl': '1920px',
+      },
       gridTemplateRows: {
         dynamic: 'repeat(var(--grid-rows), minmax(0, 1fr))',
       },

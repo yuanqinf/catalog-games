@@ -37,7 +37,7 @@ const GameExplorePage = () => {
   const displayGames = games.length > 0 ? games : [];
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container-3xl container mx-auto p-4">
       {loading && (
         <div className="mb-4 text-center">
           <p className="text-muted-foreground">Loading games...</p>
@@ -54,7 +54,7 @@ const GameExplorePage = () => {
                 : 'No games found'}
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
             {displayGames.map((game) => (
               <div
                 key={game.igdb_id}
