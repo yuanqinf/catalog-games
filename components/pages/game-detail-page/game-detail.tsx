@@ -415,21 +415,48 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
             {game.id && <FeaturedUserReviews gameId={game.id} />}
 
             {/* Similar Games Section */}
-            {playtrackerData?.playersAlsoLiked && (
-              <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 md:col-span-2">
-                {playtrackerData.playersAlsoLiked.map((game) => (
-                  <div key={game.name}>
-                    <h3>{game.name}</h3>
-                    <Image
-                      src={game.imageUrl ?? ''}
-                      alt={game.name}
-                      width={100}
-                      height={100}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
+            {playtrackerData?.playersAlsoLiked &&
+              playtrackerData.playersAlsoLiked.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="mb-4 text-xl font-bold text-white">
+                    Players Also Liked
+                  </h3>
+                  <Carousel className="w-full">
+                    <CarouselContent className="-ml-2 md:-ml-4">
+                      {playtrackerData.playersAlsoLiked.map((similarGame) => (
+                        <CarouselItem
+                          key={similarGame.name}
+                          className="basis-1/2 pl-2 md:basis-1/3 md:pl-4 lg:basis-1/4"
+                        >
+                          <div className="group cursor-pointer">
+                            <div className="relative overflow-hidden rounded-lg bg-gray-900 transition-transform duration-200 group-hover:scale-105">
+                              {similarGame.imageUrl ? (
+                                <Image
+                                  src={similarGame.imageUrl}
+                                  alt={similarGame.name}
+                                  width={200}
+                                  height={120}
+                                  className="aspect-video w-full object-cover transition-opacity duration-200 group-hover:opacity-90"
+                                />
+                              ) : (
+                                <div className="flex aspect-video w-full items-center justify-center bg-gray-800">
+                                  <Gamepad2 className="h-8 w-8 text-gray-400" />
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+                            </div>
+                            <div className="mt-3 space-y-1">
+                              <h4 className="line-clamp-2 text-sm leading-tight font-medium text-white transition-colors group-hover:text-blue-400">
+                                {similarGame.name}
+                              </h4>
+                            </div>
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                  </Carousel>
+                </div>
+              )}
           </div>
 
           {/* Right Column */}
