@@ -74,7 +74,13 @@ export async function POST(request: NextRequest) {
         }
 
         // Filter for main games only (category === 0)
-        const mainGames = searchData.filter((game: any) => game.category === 0);
+        const mainGames = searchData.filter(
+          (game: any) =>
+            game.category === 0 ||
+            game.category === 8 ||
+            game.category === 9 ||
+            game.category === 10,
+        );
 
         if (mainGames.length === 0) {
           results.push({

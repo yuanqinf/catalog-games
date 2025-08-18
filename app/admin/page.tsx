@@ -169,7 +169,8 @@ export default function AddGamePage() {
       }
     } catch (error) {
       console.error('ID search failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
 
       setIdSearchResult({
         name: `Game ID ${igdbId}`,
@@ -195,24 +196,36 @@ export default function AddGamePage() {
     setIsAddingById(true);
 
     try {
-      console.log(`🚀 Adding game: ${idSearchResult.name} (ID: ${idSearchResult.igdbId})`);
+      console.log(
+        `🚀 Adding game: ${idSearchResult.name} (ID: ${idSearchResult.igdbId})`,
+      );
 
       // Add the game to database
-      await gameService.addOrUpdateGame(idSearchResult.igdbData, idSearchResult.bannerFile || undefined);
+      await gameService.addOrUpdateGame(
+        idSearchResult.igdbData,
+        idSearchResult.bannerFile || undefined,
+      );
 
       // Update the result to show it's completed
-      setIdSearchResult(prev => prev ? { ...prev, status: 'completed', existsInDb: true } : null);
+      setIdSearchResult((prev) =>
+        prev ? { ...prev, status: 'completed', existsInDb: true } : null,
+      );
 
       toast.success(`Successfully added "${idSearchResult.name}" to database`);
     } catch (error) {
       console.error('Failed to add game:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
 
-      setIdSearchResult(prev => prev ? {
-        ...prev,
-        status: 'failed',
-        errorMessage
-      } : null);
+      setIdSearchResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'failed',
+              errorMessage,
+            }
+          : null,
+      );
 
       toast.error(`Failed to add game: ${errorMessage}`);
     } finally {
@@ -222,7 +235,7 @@ export default function AddGamePage() {
 
   // Handle banner upload for ID search result
   const handleIdBannerUpload = useCallback((file: File | null) => {
-    setIdSearchResult(prev => prev ? { ...prev, bannerFile: file } : null);
+    setIdSearchResult((prev) => (prev ? { ...prev, bannerFile: file } : null));
   }, []);
 
   // Handle individual game selection
@@ -343,10 +356,10 @@ export default function AddGamePage() {
             prev.map((r) =>
               r.igdbId === game.igdbId
                 ? {
-                  ...r,
-                  status: 'failed',
-                  errorMessage,
-                }
+                    ...r,
+                    status: 'failed',
+                    errorMessage,
+                  }
                 : r,
             ),
           );
@@ -409,14 +422,22 @@ export default function AddGamePage() {
             placeholder="Zelda&#10;Mario&#10;Final Fantasy"
             value={gameNames}
             onChange={(e) => setGameNames(e.target.value)}
-            disabled={isSearching || batchProcessing || isSearchingById || isAddingById}
+            disabled={
+              isSearching || batchProcessing || isSearchingById || isAddingById
+            }
             className="mt-1 min-h-32 w-full rounded-md border px-3 py-2 text-sm"
           />
         </div>
 
         <Button
           onClick={handleBatchSearch}
-          disabled={isSearching || batchProcessing || isSearchingById || isAddingById || !gameNames.trim()}
+          disabled={
+            isSearching ||
+            batchProcessing ||
+            isSearchingById ||
+            isAddingById ||
+            !gameNames.trim()
+          }
           className="w-full"
         >
           {isSearching ? (
@@ -436,21 +457,30 @@ export default function AddGamePage() {
       {/* Search by IGDB ID */}
       <div className="mb-6 space-y-4 rounded-lg border p-6">
         <div>
-          <label className="text-sm font-medium">
-            Add Game by IGDB ID
-          </label>
+          <label className="text-sm font-medium">Add Game by IGDB ID</label>
           <div className="mt-1 flex gap-2">
             <input
               type="number"
               placeholder="Enter IGDB ID (e.g. 1234)"
               value={igdbId}
               onChange={(e) => setIgdbId(e.target.value)}
-              disabled={isSearchingById || isAddingById || isSearching || batchProcessing}
+              disabled={
+                isSearchingById ||
+                isAddingById ||
+                isSearching ||
+                batchProcessing
+              }
               className="flex-1 rounded-md border px-3 py-2 text-sm"
             />
             <Button
               onClick={handleSearchById}
-              disabled={isSearchingById || isAddingById || isSearching || batchProcessing || !igdbId.trim()}
+              disabled={
+                isSearchingById ||
+                isAddingById ||
+                isSearching ||
+                batchProcessing ||
+                !igdbId.trim()
+              }
               variant="outline"
             >
               {isSearchingById ? (
@@ -525,7 +555,9 @@ export default function AddGamePage() {
                     )}
                     <Button
                       onClick={handleAddById}
-                      disabled={isAddingById || idSearchResult.status === 'completed'}
+                      disabled={
+                        isAddingById || idSearchResult.status === 'completed'
+                      }
                       size="sm"
                     >
                       {isAddingById ? (
@@ -572,7 +604,12 @@ export default function AddGamePage() {
                     onCheckedChange={(checked: boolean) =>
                       handleGameSelection(index, checked)
                     }
-                    disabled={!!result.error || batchProcessing || isSearchingById || isAddingById}
+                    disabled={
+                      !!result.error ||
+                      batchProcessing ||
+                      isSearchingById ||
+                      isAddingById
+                    }
                   />
 
                   <div className="space-y-1">
