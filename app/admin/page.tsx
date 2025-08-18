@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { GameService } from '@/lib/supabase/client';
 
 import { Loader2, CheckCircle, XCircle, Upload, Search } from 'lucide-react';
+import { checkGameExistsInSteam } from '@/utils/steam-integration';
 
 // TODO: Only allow admin users to access this page
 
@@ -19,6 +20,7 @@ interface GameResult {
   name: string;
   igdbId: number;
   existsInDb: boolean;
+  isInSteam?: boolean;
   igdbData?: any;
   error?: string;
   selected?: boolean;
@@ -47,6 +49,7 @@ export default function AddGamePage() {
 
   // Loading states
   const [isSearching, setIsSearching] = useState(false);
+  const [isCheckingSteam, setIsCheckingSteam] = useState(false);
   const [batchProcessing, setBatchProcessing] = useState(false);
   const [batchStopped, setBatchStopped] = useState(false);
   const [isSearchingById, setIsSearchingById] = useState(false);
@@ -104,12 +107,29 @@ export default function AddGamePage() {
 
       const data = await response.json();
 
-      // Add selection state to results
-      const resultsWithSelection = data.results.map((result: GameResult) => ({
-        ...result,
-        selected: !result.existsInDb && !result.error,
-        status: 'pending' as const,
-      }));
+      console.log(
+        `✅ IGDB search complete, checking Steam availability for ${data.results.length} games...`,
+      );
+
+      // Set Steam checking state
+      setIsCheckingSteam(true);
+
+      // Add selection state and Steam check to results
+      const resultsWithSelection = await Promise.all(
+        data.results.map(async (result: GameResult) => {
+          // Check if this game exists on Steam
+          const isInSteam = await checkGameExistsInSteam(result.name);
+
+          return {
+            ...result,
+            isInSteam,
+            selected: !result.existsInDb && !result.error,
+            status: 'pending' as const,
+          };
+        }),
+      );
+
+      setIsCheckingSteam(false);
 
       setSearchResults(resultsWithSelection);
 
@@ -151,10 +171,16 @@ export default function AddGamePage() {
         throw new Error('Game not found in IGDB');
       }
 
+      // Check if this game exists on Steam
+      const isInSteam = await checkGameExistsInSteam(
+        igdbData?.name || `Game ID ${id}`,
+      );
+
       const result: GameResult = {
         name: igdbData?.name || `Game ID ${id}`,
         igdbId: id,
         existsInDb,
+        isInSteam,
         igdbData,
         selected: !existsInDb,
         status: 'pending',
@@ -176,6 +202,7 @@ export default function AddGamePage() {
         name: `Game ID ${igdbId}`,
         igdbId: Number(igdbId),
         existsInDb: false,
+        isInSteam: false,
         error: errorMessage,
         selected: false,
         status: 'pending',
@@ -423,7 +450,11 @@ export default function AddGamePage() {
             value={gameNames}
             onChange={(e) => setGameNames(e.target.value)}
             disabled={
-              isSearching || batchProcessing || isSearchingById || isAddingById
+              isSearching ||
+              isCheckingSteam ||
+              batchProcessing ||
+              isSearchingById ||
+              isAddingById
             }
             className="mt-1 min-h-32 w-full rounded-md border px-3 py-2 text-sm"
           />
@@ -433,6 +464,7 @@ export default function AddGamePage() {
           onClick={handleBatchSearch}
           disabled={
             isSearching ||
+            isCheckingSteam ||
             batchProcessing ||
             isSearchingById ||
             isAddingById ||
@@ -443,7 +475,12 @@ export default function AddGamePage() {
           {isSearching ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Searching...
+              Searching IGDB...
+            </>
+          ) : isCheckingSteam ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Checking Steam...
             </>
           ) : (
             <>
@@ -468,6 +505,7 @@ export default function AddGamePage() {
                 isSearchingById ||
                 isAddingById ||
                 isSearching ||
+                isCheckingSteam ||
                 batchProcessing
               }
               className="flex-1 rounded-md border px-3 py-2 text-sm"
@@ -478,6 +516,7 @@ export default function AddGamePage() {
                 isSearchingById ||
                 isAddingById ||
                 isSearching ||
+                isCheckingSteam ||
                 batchProcessing ||
                 !igdbId.trim()
               }
@@ -510,6 +549,11 @@ export default function AddGamePage() {
 
                   {idSearchResult.existsInDb && (
                     <Badge variant="secondary">Already in DB</Badge>
+                  )}
+                  {idSearchResult.isInSteam && (
+                    <Badge variant="outline" className="text-blue-600">
+                      Steam
+                    </Badge>
                   )}
                   {idSearchResult.error && (
                     <Badge variant="destructive">Error</Badge>
@@ -585,10 +629,34 @@ export default function AddGamePage() {
         <div className="space-y-6">
           {/* Results Header */}
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">
-              Found {searchResults.length} games
-            </h2>
-            <Badge variant="outline">{selectedCount} selected</Badge>
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold">
+                Found {searchResults.length} games
+              </h2>
+              <div className="text-muted-foreground flex gap-2 text-sm">
+                <span>Selected: {selectedCount}</span>
+                <span>•</span>
+                <span>
+                  On Steam: {searchResults.filter((r) => r.isInSteam).length}
+                </span>
+                <span>•</span>
+                <span>
+                  New:{' '}
+                  {
+                    searchResults.filter((r) => !r.existsInDb && !r.error)
+                      .length
+                  }
+                </span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {searchResults.filter((r) => r.isInSteam).length > 0 && (
+                <Badge variant="outline" className="text-blue-600">
+                  Steam: {searchResults.filter((r) => r.isInSteam).length}
+                </Badge>
+              )}
+              <Badge variant="outline">{selectedCount} selected</Badge>
+            </div>
           </div>
 
           {/* Game List */}
@@ -621,6 +689,11 @@ export default function AddGamePage() {
                       {result.existsInDb && (
                         <Badge variant="secondary">In DB</Badge>
                       )}
+                      {result.isInSteam && (
+                        <Badge variant="outline" className="text-blue-600">
+                          Steam
+                        </Badge>
+                      )}
                       {result.error && (
                         <Badge variant="destructive">Error</Badge>
                       )}
@@ -649,6 +722,10 @@ export default function AddGamePage() {
                         ID: {result.igdbId}
                       </p>
                     )}
+
+                    <p className="text-muted-foreground text-sm">
+                      Steam: {result.isInSteam ? 'Yes' : 'No'}
+                    </p>
 
                     {(result.error || result.errorMessage) && (
                       <p className="text-sm text-red-500">
@@ -716,7 +793,7 @@ export default function AddGamePage() {
             <div className="rounded-lg border p-4">
               <h3 className="mb-4 font-medium">Upload Complete</h3>
 
-              <div className="mb-4 grid grid-cols-3 gap-4 text-center">
+              <div className="mb-4 grid grid-cols-4 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold text-green-600">
                     {batchReport.successful}
@@ -732,6 +809,18 @@ export default function AddGamePage() {
                 <div>
                   <div className="text-2xl font-bold">{batchReport.total}</div>
                   <div className="text-muted-foreground text-sm">Total</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {
+                      searchResults.filter(
+                        (r) => r.isInSteam && r.status === 'completed',
+                      ).length
+                    }
+                  </div>
+                  <div className="text-muted-foreground text-sm">
+                    Steam Games
+                  </div>
                 </div>
               </div>
 
