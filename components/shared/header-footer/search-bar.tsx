@@ -2,12 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  FilterIcon,
-  Gamepad2,
-  Search as SearchIconLucide,
-  X as XIcon,
-} from 'lucide-react';
+import { Gamepad2, Search as SearchIconLucide, X as XIcon } from 'lucide-react';
 import {
   Command,
   CommandInput,
@@ -20,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { RECENT_ITEMS, TRENDING_ITEMS } from '@/constants/mock-search-result';
 import { GameDbData } from '@/types';
+import SortingDropdown, { SortOption, SortOrder } from './sorting-dropdown';
 
 // --- TYPE DEFINITIONS ---
 type InputRef = React.RefObject<HTMLInputElement | null>;
@@ -254,6 +250,11 @@ const SearchSection = ({
   const pathname = usePathname();
   const isExplorePage = pathname === '/explore';
 
+  const handleSortChange = (option: SortOption, order: SortOrder) => {
+    console.log(`Sort changed: ${option} - ${order}`);
+    // Add your sort logic here
+  };
+
   if (!isInputActive) {
     return (
       <div className="flex items-center gap-2">
@@ -272,12 +273,16 @@ const SearchSection = ({
             isActive={false}
           />
         </Command>
-        <Link href={isExplorePage ? '' : '/explore'}>
-          <Button>
-            {isExplorePage ? <FilterIcon /> : <Gamepad2 />}
-            <p>{isExplorePage ? 'Filter' : 'Explore'}</p>
-          </Button>
-        </Link>
+        {isExplorePage ? (
+          <SortingDropdown onSortChange={handleSortChange} />
+        ) : (
+          <Link href={isExplorePage ? '' : '/explore'}>
+            <Button>
+              <Gamepad2 />
+              <p>Explore</p>
+            </Button>
+          </Link>
+        )}
       </div>
     );
   }
