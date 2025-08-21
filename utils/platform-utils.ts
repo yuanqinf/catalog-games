@@ -10,7 +10,8 @@ export type UnifiedPlatform =
   | 'NINTENDO'
   | 'SWITCH'
   | 'GAMEBOY'
-  | 'MOBILE';
+  | 'MOBILE'
+  | 'Wii';
 
 /**
  * Comprehensive platform mapping based on IGDB platform database
@@ -130,8 +131,8 @@ const PLATFORM_MAPPING: Record<string, UnifiedPlatform> = {
   'nintendo gamecube': 'NINTENDO',
   gamecube: 'NINTENDO',
   gc: 'NINTENDO',
-  wii: 'NINTENDO',
-  'wii u': 'NINTENDO',
+  wii: 'Wii',
+  'wii u': 'Wii',
 
   // Nintendo Services (ID: 47, 56)
   'virtual console': 'NINTENDO',
@@ -277,6 +278,7 @@ export function unifyPlatforms(
     'GAMEBOY',
     'MAC',
     'MOBILE',
+    'Wii',
   ];
   return order.filter((platform) => unified.has(platform));
 }

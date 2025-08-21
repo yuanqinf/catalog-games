@@ -1,6 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Gamepad2, Bookmark, Calendar, Star } from 'lucide-react';
+import {
+  Gamepad2,
+  Bookmark,
+  Calendar,
+  Star,
+  MoreHorizontal,
+} from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGamepad } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -11,16 +17,28 @@ import {
   faSteam,
   faAndroid,
 } from '@fortawesome/free-brands-svg-icons';
+import { Badge } from '@/components/ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import type { GameDbData } from '@/types';
 import { unifyPlatforms, type UnifiedPlatform } from '@/utils/platform-utils';
 import { useGameRating } from '@/hooks/useGameRating';
 
-type PlatformIconData = {
-  type: 'fontawesome';
-  icon: any;
-};
+type PlatformIconData =
+  | {
+      type: 'fontawesome';
+      icon: any;
+    }
+  | {
+      type: 'badge';
+      text: string;
+    };
 
-// Map UnifiedPlatform to FontAwesome icons
+// Map UnifiedPlatform to FontAwesome icons or badges
 const getPlatformIcon = (
   platform: UnifiedPlatform,
   game: GameDbData,
@@ -30,10 +48,11 @@ const getPlatformIcon = (
     MAC: { type: 'fontawesome', icon: faApple },
     PS: { type: 'fontawesome', icon: faPlaystation },
     XBOX: { type: 'fontawesome', icon: faXbox },
-    NINTENDO: { type: 'fontawesome', icon: faGamepad },
-    SWITCH: { type: 'fontawesome', icon: faGamepad },
-    GAMEBOY: { type: 'fontawesome', icon: faGamepad },
+    NINTENDO: { type: 'badge', text: 'Nintendo Console' },
+    SWITCH: { type: 'badge', text: 'Switch' },
+    GAMEBOY: { type: 'badge', text: 'Game Boy' },
     MOBILE: { type: 'fontawesome', icon: faAndroid },
+    Wii: { type: 'badge', text: 'Wii' },
   };
 
   return iconMap[platform] || { type: 'fontawesome', icon: faGamepad };
@@ -44,9 +63,11 @@ const MiniGameCard = ({ game }: { game: GameDbData }) => {
 
   // Get unified platforms and their icons
   const unifiedPlatforms = unifyPlatforms(game.platforms);
-  const platformIconsData = unifiedPlatforms
-    .slice(0, 4)
-    .map((platform) => getPlatformIcon(platform, game));
+  const displayedPlatforms = unifiedPlatforms.slice(0, 3); // Show only 3 platforms if more than 4
+  const hasMorePlatforms = unifiedPlatforms.length > 3;
+  const platformIconsData = displayedPlatforms.map((platform) =>
+    getPlatformIcon(platform, game),
+  );
 
   return (
     <div className="p-1">
@@ -91,19 +112,51 @@ const MiniGameCard = ({ game }: { game: GameDbData }) => {
               new Date(game.first_release_date).getTime() > Date.now() ? (
                 <span className="flex items-center">
                   <Calendar size={14} className="mr-1.5 flex-shrink-0" />
-                  {`Release: ${new Date(game.first_release_date).toLocaleDateString('en-CA')}`}
+                  {new Date(game.first_release_date).toLocaleDateString(
+                    'en-CA',
+                  )}
                 </span>
               ) : (
                 <span className="flex items-center">
-                  <div className="flex gap-1">
-                    {platformIconsData.map((iconData, index) => (
-                      <FontAwesomeIcon
-                        key={index}
-                        icon={iconData.icon}
-                        className="text-sm"
-                      />
-                    ))}
-                  </div>
+                  <TooltipProvider>
+                    <div className="flex items-center gap-1">
+                      {platformIconsData.map((iconData, index) =>
+                        iconData.type === 'fontawesome' ? (
+                          <FontAwesomeIcon
+                            key={index}
+                            icon={iconData.icon}
+                            className="text-sm"
+                          />
+                        ) : (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="h-fit px-1.5 py-0.5 text-xs"
+                          >
+                            {iconData.text}
+                          </Badge>
+                        ),
+                      )}
+                      {hasMorePlatforms && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="cursor-pointer">
+                              <MoreHorizontal
+                                size={14}
+                                className="text-zinc-400 hover:text-zinc-200"
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-xs">
+                              All platforms:{' '}
+                              {game.platforms?.join(', ') || 'Unknown'}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  </TooltipProvider>
                 </span>
               )}
             </div>
