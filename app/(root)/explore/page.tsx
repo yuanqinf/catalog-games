@@ -2,12 +2,10 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import MiniGameCard from '@/components/shared/cards/mini-game-card';
-import HighlightGameCard from '@/components/shared/cards/highlight-game-card';
 import { GameService } from '@/lib/supabase/client';
 import type { GameDbData } from '@/types';
 
 const GameExplorePage = () => {
-  const [selectedGame, setSelectedGame] = useState<GameDbData>();
   const [games, setGames] = useState<GameDbData[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -22,7 +20,6 @@ const GameExplorePage = () => {
         const dbGames = await gameService.getAllGames();
         console.log(`📊 Loaded ${dbGames.length} games from database`);
         setGames(dbGames);
-        setSelectedGame(dbGames[0]);
       } catch (error) {
         console.error('❌ Failed to fetch games:', error);
         setGames([]);
@@ -39,38 +36,23 @@ const GameExplorePage = () => {
   return (
     <div className="container-3xl container mx-auto p-4">
       {loading && (
-        <div className="mb-4 text-center">
+        <div className="mb-6 text-center">
           <p className="text-muted-foreground">Loading games...</p>
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Left side: Selectable items */}
-        <div className="lg:col-span-2">
-          <div className="mb-4">
-            <p className="text-muted-foreground text-sm">
-              {games.length > 0
-                ? `${games.length} games from database`
-                : 'No games found'}
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
-            {displayGames.map((game) => (
-              <div
-                key={game.igdb_id}
-                onClick={() => setSelectedGame(game)}
-                className="cursor-pointer"
-              >
-                <MiniGameCard game={game} />
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="mb-6">
+        <p className="text-muted-foreground text-sm">
+          {games.length > 0
+            ? `${games.length} games from database`
+            : 'No games found'}
+        </p>
+      </div>
 
-        {/* Right side: Hero view */}
-        <aside className="sticky top-4 hidden h-fit lg:col-span-1 lg:block">
-          {selectedGame && <HighlightGameCard game={selectedGame} />}
-        </aside>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        {displayGames.map((game) => (
+          <MiniGameCard key={game.igdb_id} game={game} />
+        ))}
       </div>
     </div>
   );
