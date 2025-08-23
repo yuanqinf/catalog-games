@@ -14,7 +14,10 @@ export interface SteamReviewsResult {
 }
 
 /**
- * Extract review text from Steam store page HTML
+ * Extract review text from Steam store page HTML (updated for new structure)
+ *
+ * Handles both new structure (.review_score_summaries) and legacy structure (.summary_section)
+ * New structure uses .review_summary_ctn containers with .title and .game_review_summary elements
  */
 function extractReviewText(
   $: cheerio.CheerioAPI,
@@ -22,7 +25,8 @@ function extractReviewText(
 ): string | null {
   let reviewText: string | null = null;
 
-  $('.summary_section').each((_, section) => {
+  // Try new structure first (.review_score_summaries)
+  $('.review_score_summaries .review_summary_ctn').each((_, section) => {
     const title = $(section).find('.title').text().trim();
     if (title === titleLabel) {
       const text = $(section).find('.game_review_summary').text().trim();
@@ -33,13 +37,27 @@ function extractReviewText(
     }
   });
 
+  // Fallback to old structure if not found (.summary_section)
+  if (!reviewText) {
+    $('.summary_section').each((_, section) => {
+      const title = $(section).find('.title').text().trim();
+      if (title === titleLabel) {
+        const text = $(section).find('.game_review_summary').text().trim();
+        if (text) {
+          reviewText = text;
+          return false; // Break out of the loop
+        }
+      }
+    });
+  }
+
   return reviewText;
 }
 
 /**
  * Fetch Steam reviews by Steam App ID
  */
-async function fetchSteamReviewsByAppId(steamAppId: number): Promise<{
+async function fetchSteamReviewsSummaryByAppId(steamAppId: number): Promise<{
   steam_all_review: string | null;
   steam_recent_review: string | null;
 }> {
@@ -65,8 +83,27 @@ async function fetchSteamReviewsByAppId(steamAppId: number): Promise<{
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    const steam_all_review = extractReviewText($, 'Overall Reviews:');
-    const steam_recent_review = extractReviewText($, 'Recent Reviews:');
+    // Extract reviews with priority logic:
+    // 1. Recent Reviews: Available for popular games with lots of recent activity
+    // 2. Overall/English Reviews: Fallback for games with fewer reviews
+    // 3. Use recent as overall if no overall review found
+
+    let steam_recent_review = extractReviewText($, 'Recent Reviews:');
+
+    let steam_all_review = extractReviewText($, 'Overall Reviews:');
+    if (!steam_all_review) {
+      steam_all_review = extractReviewText($, 'English Reviews:');
+    }
+
+    if (!steam_all_review && steam_recent_review) {
+      steam_all_review = steam_recent_review;
+    }
+
+    // Debug logging
+    console.log(`Steam reviews for App ID ${steamAppId}:`, {
+      all_review: steam_all_review,
+      recent_review: steam_recent_review,
+    });
 
     return {
       steam_all_review,
@@ -101,7 +138,7 @@ export async function findSteamReviewSummary(
   }
 
   // Then fetch the reviews
-  const reviewData = await fetchSteamReviewsByAppId(match.steamAppId);
+  const reviewData = await fetchSteamReviewsSummaryByAppId(match.steamAppId);
 
   return {
     steamAppId: match.steamAppId,
@@ -118,7 +155,7 @@ export async function getSteamReviewsById(
   steamAppId: number,
   steamName?: string,
 ): Promise<SteamReviewsResult> {
-  const reviewData = await fetchSteamReviewsByAppId(steamAppId);
+  const reviewData = await fetchSteamReviewsSummaryByAppId(steamAppId);
 
   return {
     steamAppId,

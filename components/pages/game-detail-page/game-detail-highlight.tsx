@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/carousel';
 
 import { useGameRating } from '@/hooks/useGameRating';
+import { useSteamReviews } from '@/hooks/useSteamReviews';
 import { GameDbData } from '@/types';
 
 interface GameDetailHighlightProps {
@@ -27,6 +28,9 @@ export default function GameDetailHighlight({
     overallAverage,
     isLoading: isLoadingRating,
   } = useGameRating(game.id);
+
+  // Fetch real-time Steam reviews (client-side only)
+  const { steamReviews } = useSteamReviews(game.name);
 
   // Build image carousel: banner first, then screenshots
   const carouselImages = [
@@ -89,9 +93,6 @@ export default function GameDetailHighlight({
       </div>
 
       <div className="highlight-card-footer">
-        {/* Steam Review */}
-        <SteamReviewBadge review={game.steam_all_review ?? undefined} />
-
         {/* Catalog User Rating */}
         <div
           title={`Catalog User Rating: ${overallAverage}`}
@@ -118,6 +119,19 @@ export default function GameDetailHighlight({
           <span className="font-semibold text-neutral-200">
             {game.igdb_user_rating ? game.igdb_user_rating : 'N/A'}
           </span>
+        </div>
+
+        {/* Steam Review - client-side real-time data only with slide-in animation */}
+        <div
+          className={`transition-all duration-500 ease-out ${
+            steamReviews?.steam_all_review
+              ? 'translate-x-0 opacity-100'
+              : 'translate-x-4 opacity-0'
+          }`}
+        >
+          <SteamReviewBadge
+            review={steamReviews?.steam_all_review ?? undefined}
+          />
         </div>
       </div>
     </div>

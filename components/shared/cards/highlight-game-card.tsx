@@ -7,6 +7,7 @@ import { getAvatarBorderColor } from '@/utils/steam-utils';
 import SteamReviewBadge from '@/components/shared/steam-review-badge';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 import { useGameRating } from '@/hooks/useGameRating';
+import { useSteamReviews } from '@/hooks/useSteamReviews';
 
 import DynamicTrendChart from './dynamic-trend-chart';
 
@@ -17,8 +18,11 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
     isLoading: isLoadingRating,
   } = useGameRating(game.id);
 
+  // Fetch real-time Steam reviews (client-side only)
+  const { steamReviews } = useSteamReviews(game.name);
+
   const avatarBorderColorClass = getAvatarBorderColor(
-    game.steam_all_review ?? undefined,
+    steamReviews?.steam_all_review ?? undefined,
   );
 
   return (
@@ -116,8 +120,18 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
 
       {/* Footer Row */}
       <div className="highlight-card-footer">
-        {/* Steam Review */}
-        <SteamReviewBadge review={game.steam_all_review ?? undefined} />
+        {/* Steam Review - client-side real-time data only with slide-in animation */}
+        <div
+          className={`transition-all duration-500 ease-out ${
+            steamReviews?.steam_all_review
+              ? 'translate-x-0 opacity-100'
+              : 'translate-x-4 opacity-0'
+          }`}
+        >
+          <SteamReviewBadge
+            review={steamReviews?.steam_all_review ?? undefined}
+          />
+        </div>
 
         {/* IGDB Score */}
         <div title={`IGDB User Rating: ${game.igdb_user_rating}`}>
