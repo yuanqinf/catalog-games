@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { MessageSquarePlus } from 'lucide-react';
+import { MessageSquarePlus, Calendar } from 'lucide-react';
 import { RATING_BLOCK_COLORS, EMPTY_BLOCK_COLOR } from '@/constants/colors';
 import { ratingCategories } from '@/constants/rating-categories';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,20 @@ const RatingBlock = styled.div<{
   border-radius: 0.125rem;
 `;
 
+const ComingSoonState: React.FC<{
+  config: (typeof sizeConfig)[keyof typeof sizeConfig];
+}> = ({ config }) => (
+  <div
+    className={`${config.container} flex flex-col items-center justify-center rounded-lg border border-neutral-800 bg-neutral-900/50 p-8`}
+  >
+    <Calendar className="mb-3 h-8 w-8 text-neutral-500" />
+    <h3 className="mb-1 text-lg font-semibold text-neutral-300">Coming Soon</h3>
+    <p className="text-center text-sm text-neutral-500">
+      Ratings will be available after the game releases
+    </p>
+  </div>
+);
+
 interface GameRating {
   story: number;
   music: number;
@@ -40,6 +54,7 @@ interface CatalogRatingProps {
   showEditButton?: boolean;
   gameId?: string;
   isLoading?: boolean;
+  isUpcoming?: boolean;
 }
 
 const defaultRating: GameRating = {
@@ -93,9 +108,9 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
   className = '',
   showLabels = true,
   size = 'md',
-  showEditButton = true,
   gameId,
   isLoading = false,
+  isUpcoming = false,
 }) => {
   const config = sizeConfig[size];
   const mergedRating = { ...defaultRating, ...rating };
@@ -122,24 +137,31 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
     );
   }
 
+  // Show coming soon state for upcoming games
+  if (isUpcoming) {
+    return (
+      <div className={className}>
+        <ComingSoonState config={config} />
+      </div>
+    );
+  }
+
   return (
     <div className={`${config.container} ${className} relative`}>
-      {showEditButton && (
-        <CatalogRatingDialog
-          maxRating={maxRating}
-          gameId={gameId}
-          trigger={
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute -top-6 -right-6 z-20 size-auto bg-neutral-800 p-1 text-neutral-400 opacity-70 transition-colors duration-200 hover:bg-neutral-700 hover:text-white hover:opacity-100"
-              title="Edit ratings"
-            >
-              <MessageSquarePlus size={16} />
-            </Button>
-          }
-        />
-      )}
+      <CatalogRatingDialog
+        maxRating={maxRating}
+        gameId={gameId}
+        trigger={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute -top-6 -right-6 z-20 size-auto bg-neutral-800 p-1 text-neutral-400 opacity-70 transition-colors duration-200 hover:bg-neutral-700 hover:text-white hover:opacity-100"
+            title="Edit ratings"
+          >
+            <MessageSquarePlus size={16} />
+          </Button>
+        }
+      />
 
       {Object.entries(mergedRating).map(([category, categoryRating]) => (
         <div key={category} className="group relative flex items-center">
