@@ -73,10 +73,14 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
+        console.log('🔍 Search Data:', searchData);
+
         // Filter for main games only (category === 0)
         const mainGames = searchData.filter(
           (game: any) =>
             game.category === 0 ||
+            game.category === 1 ||
+            game.category === 2 ||
             game.category === 8 ||
             game.category === 9 ||
             game.category === 10,
