@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import MiniGameCard from '@/components/shared/cards/mini-game-card';
 import {
   Pagination,
@@ -15,6 +16,37 @@ import { GameService } from '@/lib/supabase/client';
 import type { GameDbData } from '@/types';
 
 const GAMES_PER_PAGE = 15;
+
+// Animation variants for staggered card appearance
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08, // Stagger delay between each card
+      delayChildren: 0.1, // Initial delay before first card
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: {
+    opacity: 0,
+    y: 20,
+    scale: 0.95,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring',
+      damping: 25,
+      stiffness: 300,
+      duration: 0.5,
+    },
+  },
+};
 
 const GameExplorePage = () => {
   const [games, setGames] = useState<GameDbData[]>([]);
@@ -138,15 +170,32 @@ const GameExplorePage = () => {
   return (
     <div className="container-3xl container mx-auto p-4">
       {/* Games grid */}
-      {isLoading ? (
-        <GamesGridSpinner />
-      ) : (
-        <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-3 xl:grid-cols-5 xl:p-12">
-          {games.map((game) => (
-            <MiniGameCard key={game.igdb_id} game={game} />
-          ))}
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {isLoading ? (
+          <motion.div
+            key="loading"
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <GamesGridSpinner />
+          </motion.div>
+        ) : (
+          <motion.div
+            key={`games-page-${currentPage}`}
+            className="grid grid-cols-1 gap-4 p-6 md:grid-cols-3 xl:grid-cols-5 xl:p-12"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {games.map((game) => (
+              <motion.div key={game.igdb_id} variants={cardVariants} layout>
+                <MiniGameCard game={game} />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Pagination */}
       {totalPages > 1 && (
