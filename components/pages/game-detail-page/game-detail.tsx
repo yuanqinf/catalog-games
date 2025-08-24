@@ -188,7 +188,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
   ].filter((section) => section.items?.length);
 
   return (
-    <div className="bg-background text-foreground min-h-screen w-full">
+    <div className="bg-background text-foreground min-h-screen w-full p-4">
       <main className="container-3xl container mx-auto px-8">
         {/* Game Detail Main Section */}
         <section className="grid grid-cols-1 gap-16 lg:grid-cols-3">

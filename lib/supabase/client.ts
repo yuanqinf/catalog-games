@@ -209,19 +209,40 @@ export class GameService {
   }
 
   /**
-   * Get all games
+   * Get games for explore page with pagination
+   * TODO: Add sorting options (by release date, rating, name, etc.)
+   * @param offset - Number of games to skip
+   * @param limit - Number of games to fetch (default: 15)
    */
-  async getAllGames() {
+  async getGamesForExplorePage(offset: number = 0, limit: number = 15) {
     const { data, error } = await this.supabase
       .from('games')
       .select('*')
-      .order('updated_at', { ascending: false });
+      .order('updated_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
-      throw new Error(error.message || 'Failed to fetch games');
+      throw new Error(
+        error.message || 'Failed to fetch games for explore page',
+      );
     }
 
     return data;
+  }
+
+  /**
+   * Get total count of games for pagination calculation
+   */
+  async getTotalGamesCount(): Promise<number> {
+    const { count, error } = await this.supabase
+      .from('games')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) {
+      throw new Error(error.message || 'Failed to get total games count');
+    }
+
+    return count || 0;
   }
 
   /**
