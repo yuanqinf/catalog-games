@@ -95,7 +95,7 @@ export default function AddGamePage() {
 
       console.log(`🔍 Searching for ${names.length} games...`);
 
-      const response = await fetch('/api/igdb/search-multiple', {
+      const response = await fetch('/api/igdb/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ gameNames: names }),
