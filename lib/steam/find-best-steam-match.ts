@@ -7,6 +7,12 @@ interface SteamSearchItem {
   id: number;
   type: string;
   name: string;
+  price?: any;
+  tiny_image?: string;
+  metascore?: string;
+  platforms?: any;
+  streamingvideo?: boolean;
+  controller_support?: string;
 }
 
 export interface SteamMatchResult {
@@ -94,35 +100,61 @@ function calculateSimilarity(igdbName: string, steamName: string): number {
  * Filter out unwanted Steam items
  */
 function isValidGameCandidate(item: SteamSearchItem): boolean {
-  const name = item.name.toLowerCase();
+  try {
+    // Validate item structure
+    if (!item || typeof item !== 'object') {
+      return false;
+    }
 
-  // Must be an app
-  if (item.type !== 'app') return false;
+    if (!item.name || typeof item.name !== 'string') {
+      return false;
+    }
 
-  // Filter out common non-game items
-  const exclusions = [
-    'demo',
-    'beta',
-    'alpha',
-    'test',
-    'soundtrack',
-    'ost',
-    'music',
-    'dlc',
-    'expansion',
-    'season pass',
-    'pack',
-    'bundle',
-    'collection',
-    'trailer',
-    'video',
-    'documentary',
-    'wallpaper',
-    'artbook',
-    'comic',
-  ];
+    if (!item.type || typeof item.type !== 'string') {
+      return false;
+    }
 
-  return !exclusions.some((exclusion) => name.includes(exclusion));
+    const name = item.name.toLowerCase();
+
+    // Must be an app
+    if (item.type !== 'app') {
+      return false;
+    }
+
+    // Filter out common non-game items
+    const exclusions = [
+      'demo',
+      'beta',
+      'alpha',
+      'test',
+      'soundtrack',
+      'ost',
+      'music',
+      'dlc',
+      'expansion',
+      'season pass',
+      'pack',
+      'bundle',
+      'collection',
+      'trailer',
+      'video',
+      'documentary',
+      'wallpaper',
+      'artbook',
+      'comic',
+    ];
+
+    // Check which exclusion is matching - only match whole words, not substrings
+    const words = name.split(/\s+/);
+    const matchingExclusion = exclusions.find((exclusion) =>
+      words.some((word) => word === exclusion),
+    );
+    const isValid = !matchingExclusion;
+
+    return isValid;
+  } catch (error) {
+    return false;
+  }
 }
 
 /**

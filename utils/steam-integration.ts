@@ -104,3 +104,37 @@ export async function checkGameExistsInSteam(
     return false;
   }
 }
+
+/**
+ * Fetch Steam reviews data from our API route
+ */
+export async function fetchSteamReviewsData(
+  gameName: string,
+): Promise<SteamReviewsData> {
+  try {
+    const response = await fetch(
+      `/api/steam/reviews-detail?q=${encodeURIComponent(gameName)}`,
+    );
+
+    if (!response.ok) {
+      console.error(
+        `Steam reviews API responded with status: ${response.status}`,
+      );
+      return {
+        steamAppId: null,
+        steamName: null,
+        reviews: [],
+      };
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch Steam reviews:', error);
+    return {
+      steamAppId: null,
+      steamName: null,
+      reviews: [],
+    };
+  }
+}

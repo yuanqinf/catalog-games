@@ -3,7 +3,10 @@ import { useSession } from '@clerk/nextjs';
 import type { IgdbGameData, ExternalGameReview, GameRating } from '@/types';
 import { transformIgdbData } from '@/utils/igdb-transform';
 import { uploadBanner } from '@/utils/banner-upload';
-import { fetchSteamTags } from '@/utils/steam-integration';
+import {
+  fetchSteamTags,
+  fetchSteamReviewsData,
+} from '@/utils/steam-integration';
 
 type ClerkSession = ReturnType<typeof useSession>['session'];
 
@@ -203,7 +206,41 @@ export class GameService {
       gameId = result.data.id;
     }
 
-    // Steam reviews are now fetched client-side only
+    // Fetch and add Steam reviews if Steam data was found
+    if (dbData.steam_app_id) {
+      try {
+        console.log(`📝 Fetching Steam reviews for: ${igdbData.name}`);
+        const steamReviewsData = await fetchSteamReviewsData(igdbData.name);
+        if (steamReviewsData.reviews && steamReviewsData.reviews.length > 0) {
+          // Check for duplicates and filter out existing reviews
+          const newReviews = [];
+          for (const review of steamReviewsData.reviews) {
+            const exists = await this.checkReviewExists(review.review_id);
+            if (!exists) {
+              newReviews.push({
+                review_id: review.review_id,
+                source: review.source,
+                content: review.content,
+                original_published_at: review.original_published_at,
+              });
+            }
+          }
+
+          if (newReviews.length > 0) {
+            await this.addGameReviews(gameId, newReviews);
+            console.log(`📝 Added ${newReviews.length} new Steam reviews`);
+          } else {
+            console.log(`📝 No new reviews to add (all reviews already exist)`);
+          }
+        }
+      } catch (reviewError) {
+        console.warn(
+          'Failed to fetch/save Steam reviews, but game data was saved:',
+          reviewError,
+        );
+        // Don't throw here - we want game data to be saved even if reviews fail
+      }
+    }
 
     return result;
   }
