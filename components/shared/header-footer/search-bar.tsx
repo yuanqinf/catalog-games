@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Gamepad2, Search as SearchIconLucide, X as XIcon } from 'lucide-react';
 import {
   Command,
@@ -13,8 +13,9 @@ import {
   CommandSeparator,
 } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
-import { RECENT_ITEMS, TRENDING_ITEMS } from '@/constants/mock-search-result';
+import { TRENDING_ITEMS } from '@/constants/mock-search-result';
 import { GameDbData } from '@/types';
+import { RecentSearches, type RecentSearchItem } from '@/utils/recent-searches';
 import SortingDropdown, { SortOption, SortOrder } from './sorting-dropdown';
 
 // --- TYPE DEFINITIONS ---
@@ -33,12 +34,14 @@ interface InputProps {
 const useSearchBar = () => {
   const [inputValue, setInputValue] = useState('');
   const [searchResults, setSearchResults] = useState<GameDbData[]>([]);
+  const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isInputActive, setIsInputActive] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -59,6 +62,18 @@ const useSearchBar = () => {
       inputRef.current?.focus();
     }
   }, [isInputActive]);
+
+  // Load recent searches on mount
+  useEffect(() => {
+    setRecentSearches(RecentSearches.getRecentSearches());
+  }, []);
+
+  // Reload recent searches when suggestions are shown
+  useEffect(() => {
+    if (showSuggestions) {
+      setRecentSearches(RecentSearches.getRecentSearches());
+    }
+  }, [showSuggestions]);
 
   useEffect(() => {
     if (!inputValue.trim()) {
@@ -96,9 +111,21 @@ const useSearchBar = () => {
     setShowSuggestions(false);
   };
 
-  const handleSelectSuggestion = (value: string) => {
-    setInputValue(value);
-    handleImmediateSearch(value);
+  const handleSelectSuggestion = (game: GameDbData | RecentSearchItem) => {
+    // Clear input and hide suggestions
+    setInputValue('');
+    setShowSuggestions(false);
+    setIsInputActive(false);
+
+    // Save to recent searches
+    RecentSearches.addRecentSearch(game as RecentSearchItem);
+
+    router.push(`/detail/${game.slug}`);
+  };
+
+  const handleClearRecentSearches = () => {
+    RecentSearches.clearRecentSearches();
+    setRecentSearches([]);
   };
 
   const handleClearInput = (e: React.MouseEvent) => {
@@ -124,6 +151,7 @@ const useSearchBar = () => {
     inputValue,
     setInputValue,
     searchResults,
+    recentSearches,
     isLoading,
     showSuggestions,
     isInputActive,
@@ -134,6 +162,7 @@ const useSearchBar = () => {
     handleInputKeyDown,
     handleActivate,
     handleFocus,
+    handleClearRecentSearches,
   };
 };
 
@@ -168,32 +197,76 @@ const SearchInputField = ({
 const SuggestionItem = ({
   item,
   onSelect,
+  isGame = false,
 }: {
-  item: { text: string; tag?: string };
-  onSelect: (value: string) => void;
-}) => (
-  <CommandItem
-    className="cursor-pointer transition-colors duration-200 hover:bg-zinc-700"
-    onSelect={() => onSelect(item.text)}
-  >
-    {item.text}
-    {item.tag && (
-      <span className="ml-2 rounded-sm bg-zinc-600 px-1.5 py-0.5 text-xs text-zinc-300">
-        {item.tag}
-      </span>
-    )}
-  </CommandItem>
-);
+  item: { text: string; tag?: string } | GameDbData | RecentSearchItem;
+  onSelect: (value: any) => void;
+  isGame?: boolean;
+}) => {
+  if (isGame) {
+    const game = item as GameDbData | RecentSearchItem;
+    return (
+      <CommandItem
+        className="cursor-pointer transition-colors duration-200 hover:bg-zinc-700"
+        onSelect={() => onSelect(game)}
+      >
+        <div className="flex w-full items-center gap-3">
+          {game.cover_url && (
+            <img
+              src={game.cover_url}
+              alt={game.name}
+              className="h-10 w-8 rounded object-cover"
+            />
+          )}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="truncate font-medium">{game.name}</span>
+            {game.developers?.[0] && (
+              <span className="truncate text-xs text-zinc-400">
+                {game.developers[0]}
+              </span>
+            )}
+          </div>
+          {'first_release_date' in game && game.first_release_date && (
+            <span className="text-xs text-zinc-500">
+              {new Date(game.first_release_date).getFullYear()}
+            </span>
+          )}
+        </div>
+      </CommandItem>
+    );
+  }
+
+  const simpleItem = item as { text: string; tag?: string };
+  return (
+    <CommandItem
+      className="cursor-pointer transition-colors duration-200 hover:bg-zinc-700"
+      onSelect={() => onSelect(simpleItem.text)}
+    >
+      {simpleItem.text}
+      {simpleItem.tag && (
+        <span className="ml-2 rounded-sm bg-zinc-600 px-1.5 py-0.5 text-xs text-zinc-300">
+          {simpleItem.tag}
+        </span>
+      )}
+    </CommandItem>
+  );
+};
 
 const SearchSuggestions = ({
   inputValue,
   onSelectSuggestion,
+  onSelectGame,
   searchResults,
+  recentSearches,
+  onClearRecentSearches,
   isLoading,
 }: {
   inputValue: string;
   onSelectSuggestion: (value: string) => void;
+  onSelectGame: (game: GameDbData | RecentSearchItem) => void;
   searchResults: GameDbData[];
+  recentSearches: RecentSearchItem[];
+  onClearRecentSearches: () => void;
   isLoading: boolean;
 }) => {
   const showDefaultSuggestions = !inputValue.trim();
@@ -205,16 +278,36 @@ const SearchSuggestions = ({
         </CommandEmpty>
         {showDefaultSuggestions ? (
           <>
-            <CommandGroup heading="Recent">
-              {RECENT_ITEMS.map((item) => (
-                <SuggestionItem
-                  key={item.text}
-                  item={item}
-                  onSelect={onSelectSuggestion}
-                />
-              ))}
-            </CommandGroup>
-            <CommandSeparator />
+            {recentSearches.length > 0 && (
+              <>
+                <CommandGroup heading="Recent">
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <span className="text-xs text-zinc-500">
+                      Recent Searches
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onClearRecentSearches();
+                      }}
+                      className="text-xs text-zinc-400 transition-colors hover:text-zinc-200"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  {recentSearches.map((game) => (
+                    <SuggestionItem
+                      key={game.slug}
+                      item={game}
+                      onSelect={onSelectGame}
+                      isGame={true}
+                    />
+                  ))}
+                </CommandGroup>
+                <CommandSeparator />
+              </>
+            )}
             <CommandGroup heading="Trending">
               {TRENDING_ITEMS.map((item) => (
                 <SuggestionItem
@@ -226,13 +319,15 @@ const SearchSuggestions = ({
             </CommandGroup>
           </>
         ) : (
-          !isLoading && (
+          !isLoading &&
+          searchResults.length > 0 && (
             <CommandGroup heading="Games">
               {searchResults.map((game) => (
                 <SuggestionItem
                   key={game.id}
-                  item={{ text: game.name }}
-                  onSelect={onSelectSuggestion}
+                  item={game}
+                  onSelect={onSelectGame}
+                  isGame={true}
                 />
               ))}
             </CommandGroup>
@@ -301,8 +396,14 @@ const SearchSection = ({
       {props.showSuggestions && (
         <SearchSuggestions
           inputValue={props.inputValue}
-          onSelectSuggestion={props.handleSelectSuggestion}
+          onSelectSuggestion={(text: string) => {
+            props.setInputValue(text);
+            props.handleFocus();
+          }}
+          onSelectGame={props.handleSelectSuggestion}
           searchResults={props.searchResults}
+          recentSearches={props.recentSearches}
+          onClearRecentSearches={props.handleClearRecentSearches}
           isLoading={props.isLoading}
         />
       )}

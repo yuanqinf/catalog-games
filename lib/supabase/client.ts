@@ -381,6 +381,28 @@ export class GameService {
   }
 
   /**
+   * Search games in database by name
+   */
+  async searchGames(query: string, limit: number = 10) {
+    if (!query.trim()) {
+      return [];
+    }
+
+    const { data, error } = await this.supabase
+      .from('games')
+      .select('id, name, slug, cover_url, developers, first_release_date')
+      .ilike('name', `%${query.trim()}%`)
+      .order('name')
+      .limit(limit);
+
+    if (error) {
+      throw new Error(error.message || 'Failed to search games');
+    }
+
+    return data || [];
+  }
+
+  /**
    * Get averaged user ratings for each rating type for a specific game
    */
   async getAverageGameRatingsByGameId(gameId: number): Promise<GameRating> {
