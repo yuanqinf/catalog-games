@@ -143,7 +143,11 @@ export class GameService {
   /**
    * Add or update a game from IGDB data with optional banner, Steam data, and reviews
    */
-  async addOrUpdateGame(igdbData: IgdbGameData, bannerFile?: File) {
+  async addOrUpdateGame(
+    igdbData: IgdbGameData,
+    bannerFile?: File,
+    skipSteamFetch: boolean = false,
+  ) {
     const dbData = await transformIgdbData(igdbData);
 
     // Upload banner if provided
@@ -165,9 +169,11 @@ export class GameService {
       }
     }
 
-    // Fetch Steam tags only (reviews will be fetched client-side)
-    const steamTags = await fetchSteamTags(igdbData.name);
-    Object.assign(dbData, steamTags);
+    // Fetch Steam tags only if not skipped (reviews will be fetched client-side)
+    if (!skipSteamFetch) {
+      const steamTags = await fetchSteamTags(igdbData.name);
+      Object.assign(dbData, steamTags);
+    }
 
     // Check if the game already exists
     const existingGame = await this.checkGameExists(igdbData.id);

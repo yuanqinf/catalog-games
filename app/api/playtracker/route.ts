@@ -123,7 +123,7 @@ function extractRecommendations(
           if (index < 5 && recommendations.length < 5) {
             const gameLink = $(element);
             const href = gameLink.attr('href');
-            let rawName =
+            const rawName =
               gameLink.text().trim() ||
               gameLink.find('img').attr('alt') ||
               gameLink.attr('title');
@@ -176,7 +176,7 @@ function extractRecommendations(
 
           const gameLink = $(element);
           const href = gameLink.attr('href');
-          let rawName =
+          const rawName =
             gameLink.text().trim() ||
             gameLink.find('img').attr('alt') ||
             gameLink.attr('title');

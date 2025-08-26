@@ -25,31 +25,57 @@ export interface SteamReviewsData {
 }
 
 /**
- * Fetch Steam popular tags data using SteamIntegrationService
+ * Fetch Steam popular tags data - handles both client and server environments
  */
 export async function fetchSteamTags(gameName: string): Promise<SteamData> {
   try {
     console.log(`🏷️ Fetching Steam tags for: ${gameName}`);
 
-    const tagsData = await SteamIntegrationService.getTagsOnly(gameName);
+    // Check if we're running on the server side
+    const isServer = typeof window === 'undefined';
 
-    if (tagsData && tagsData.steam_popular_tags) {
-      // Also get app info for steam_app_id
-      const appInfo = await SteamIntegrationService.findSteamApp(gameName);
+    if (isServer) {
+      // Server-side: Use SteamIntegrationService directly
+      const tagsData = await SteamIntegrationService.getTagsOnly(gameName);
 
-      const steamData = {
-        steam_app_id: appInfo?.steamAppId,
-        steam_popular_tags: tagsData.steam_popular_tags,
-      };
+      if (tagsData && tagsData.steam_popular_tags) {
+        // Also get app info for steam_app_id
+        const appInfo = await SteamIntegrationService.findSteamApp(gameName);
 
-      console.log(
-        `🏷️ Steam tags added: ${steamData.steam_popular_tags?.length || 0} tags found`,
+        const steamData = {
+          steam_app_id: appInfo?.steamAppId,
+          steam_popular_tags: tagsData.steam_popular_tags,
+        };
+
+        console.log(
+          `🏷️ Steam tags added: ${steamData.steam_popular_tags?.length || 0} tags found`,
+        );
+
+        return steamData;
+      } else {
+        console.log(`❌ No Steam tags found for: ${gameName}`);
+        return {};
+      }
+    } else {
+      // Client-side: Use API route to avoid CORS
+      const response = await fetch(
+        `/api/steam/fetch-tags?gameName=${encodeURIComponent(gameName)}`,
       );
 
-      return steamData;
-    } else {
-      console.log(`❌ No Steam tags found for: ${gameName}`);
-      return {};
+      if (!response.ok) {
+        console.error(
+          `Steam tags API responded with status: ${response.status}`,
+        );
+        return {};
+      }
+
+      const result = await response.json();
+
+      console.log(
+        `🏷️ Steam tags added: ${result.steam_popular_tags?.length || 0} tags found`,
+      );
+
+      return result;
     }
   } catch (error) {
     console.warn(

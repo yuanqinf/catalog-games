@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 import { TRENDING_ITEMS } from '@/constants/mock-search-result';
-import { GameDbData } from '@/types';
+import { GameDbData, IgdbGame } from '@/types';
 import { RecentSearches, type RecentSearchItem } from '@/utils/recent-searches';
 import SortingDropdown, { SortOption, SortOrder } from './sorting-dropdown';
 
@@ -30,10 +30,18 @@ interface InputProps {
   onClear: (e: React.MouseEvent) => void;
 }
 
+// --- TYPES FOR HYBRID SEARCH ---
+interface HybridSearchResult {
+  supabaseGames: GameDbData[];
+  igdbGames: IgdbGame[];
+  totalResults: number;
+}
+
 // --- CUSTOM HOOK for Search Logic ---
 const useSearchBar = () => {
   const [inputValue, setInputValue] = useState('');
-  const [searchResults, setSearchResults] = useState<GameDbData[]>([]);
+  const [supabaseGames, setSupabaseGames] = useState<GameDbData[]>([]);
+  const [igdbGames, setIgdbGames] = useState<IgdbGame[]>([]);
   const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -77,7 +85,8 @@ const useSearchBar = () => {
 
   useEffect(() => {
     if (!inputValue.trim()) {
-      setSearchResults([]);
+      setSupabaseGames([]);
+      setIgdbGames([]);
       setIsLoading(false);
       return;
     }
@@ -87,16 +96,22 @@ const useSearchBar = () => {
 
     debounceTimeoutRef.current = setTimeout(async () => {
       try {
-        const response = await fetch(`/api/search?query=${inputValue.trim()}`);
+        const response = await fetch(
+          `/api/search/hybrid?q=${encodeURIComponent(inputValue.trim())}&limit=10`,
+        );
         if (response.ok) {
-          const data: GameDbData[] = await response.json();
-          setSearchResults(data);
+          const data: HybridSearchResult = await response.json();
+          setSupabaseGames(data.supabaseGames);
+          // Limit IGDB results to 3 as requested
+          setIgdbGames(data.igdbGames.slice(0, 3));
         } else {
-          setSearchResults([]);
+          setSupabaseGames([]);
+          setIgdbGames([]);
         }
       } catch (error) {
         console.error('Search failed:', error);
-        setSearchResults([]);
+        setSupabaseGames([]);
+        setIgdbGames([]);
       } finally {
         setIsLoading(false);
       }
@@ -121,6 +136,50 @@ const useSearchBar = () => {
     RecentSearches.addRecentSearch(game as RecentSearchItem);
 
     router.push(`/detail/${game.slug}`);
+  };
+
+  const handleSelectIgdbGame = async (igdbGame: IgdbGame) => {
+    // Clear input and hide suggestions
+    setInputValue('');
+    setShowSuggestions(false);
+    setIsInputActive(false);
+
+    try {
+      console.log(
+        `🎮 Adding IGDB game to database: ${igdbGame.name} (ID: ${igdbGame.id})`,
+      );
+
+      // First, fetch the complete IGDB data (like admin page does)
+      const igdbResponse = await fetch(`/api/igdb/games/${igdbGame.id}`);
+      if (!igdbResponse.ok) {
+        throw new Error('Failed to fetch complete IGDB data');
+      }
+      const fullIgdbData = await igdbResponse.json();
+
+      // Add game to database using complete IGDB data
+      const response = await fetch('/api/games/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          igdbData: fullIgdbData,
+          // No banner file for search-added games
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add game to database');
+      }
+
+      await response.json();
+      console.log(`✅ Successfully added game: ${igdbGame.name}`);
+
+      // Navigate to the new game's detail page using the original slug
+      router.push(`/detail/${igdbGame.slug}`);
+    } catch (error) {
+      console.error('Failed to add IGDB game:', error);
+      // For now, just log the error - you could add toast notifications here
+    }
   };
 
   const handleClearRecentSearches = () => {
@@ -150,7 +209,8 @@ const useSearchBar = () => {
   return {
     inputValue,
     setInputValue,
-    searchResults,
+    supabaseGames,
+    igdbGames,
     recentSearches,
     isLoading,
     showSuggestions,
@@ -158,6 +218,7 @@ const useSearchBar = () => {
     wrapperRef,
     inputRef,
     handleSelectSuggestion,
+    handleSelectIgdbGame,
     handleClearInput,
     handleInputKeyDown,
     handleActivate,
@@ -199,37 +260,75 @@ const SuggestionItem = ({
   onSelect,
   isGame = false,
 }: {
-  item: { text: string; tag?: string } | GameDbData | RecentSearchItem;
+  item:
+    | { text: string; tag?: string }
+    | GameDbData
+    | RecentSearchItem
+    | IgdbGame;
   onSelect: (value: any) => void;
   isGame?: boolean;
 }) => {
   if (isGame) {
-    const game = item as GameDbData | RecentSearchItem;
+    const game = item as GameDbData | RecentSearchItem | IgdbGame;
+
+    // Handle developers for both formats
+    let developer = '';
+    if ('developers' in game && game.developers?.[0]) {
+      // Supabase format
+      developer = game.developers[0];
+    } else if ('involved_companies' in game && game.involved_companies) {
+      // IGDB format - find the first developer company
+      const developerCompany = game.involved_companies.find(
+        (company) => company.developer || !company.publisher,
+      );
+      if (developerCompany) {
+        developer = developerCompany.company.name;
+      }
+    }
+
+    // Handle first release date
+    let releaseYear = '';
+    if ('first_release_date' in game && game.first_release_date) {
+      if (typeof game.first_release_date === 'string') {
+        releaseYear = new Date(game.first_release_date)
+          .getFullYear()
+          .toString();
+      } else {
+        // IGDB format - Unix timestamp
+        releaseYear = new Date(game.first_release_date * 1000)
+          .getFullYear()
+          .toString();
+      }
+    }
+
     return (
       <CommandItem
         className="cursor-pointer transition-colors duration-200 hover:bg-zinc-700"
         onSelect={() => onSelect(game)}
       >
         <div className="flex w-full items-center gap-3">
-          {game.cover_url && (
+          {/* Supabase games show cover, IGDB games show gamepad icon */}
+          {'cover_url' in game && game.cover_url ? (
             <img
               src={game.cover_url}
               alt={game.name}
               className="h-10 w-8 rounded object-cover"
             />
+          ) : (
+            <div className="flex h-10 w-8 items-center justify-center rounded bg-zinc-800">
+              <Gamepad2 className="h-4 w-4 text-zinc-400" />
+            </div>
           )}
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="truncate font-medium">{game.name}</span>
-            {game.developers?.[0] && (
+            {developer && (
               <span className="truncate text-xs text-zinc-400">
-                {game.developers[0]}
+                {developer}
               </span>
             )}
           </div>
-          {'first_release_date' in game && game.first_release_date && (
-            <span className="text-xs text-zinc-500">
-              {new Date(game.first_release_date).getFullYear()}
-            </span>
+          {releaseYear && (
+            <span className="text-xs text-zinc-500">{releaseYear}</span>
           )}
         </div>
       </CommandItem>
@@ -256,15 +355,19 @@ const SearchSuggestions = ({
   inputValue,
   onSelectSuggestion,
   onSelectGame,
-  searchResults,
+  onSelectIgdbGame,
+  supabaseGames,
+  igdbGames,
   recentSearches,
   onClearRecentSearches,
   isLoading,
 }: {
   inputValue: string;
-  onSelectSuggestion: (value: string) => void;
-  onSelectGame: (game: GameDbData | RecentSearchItem) => void;
-  searchResults: GameDbData[];
+  onSelectSuggestion: (value: any) => void;
+  onSelectGame: (game: any) => void;
+  onSelectIgdbGame: (game: any) => void;
+  supabaseGames: GameDbData[];
+  igdbGames: IgdbGame[];
   recentSearches: RecentSearchItem[];
   onClearRecentSearches: () => void;
   isLoading: boolean;
@@ -320,13 +423,23 @@ const SearchSuggestions = ({
           </>
         ) : (
           !isLoading &&
-          searchResults.length > 0 && (
-            <CommandGroup heading="Games">
-              {searchResults.map((game) => (
+          (supabaseGames.length > 0 || igdbGames.length > 0) && (
+            <CommandGroup heading="Search Results">
+              {/* Supabase Games first (priority) */}
+              {supabaseGames.map((game) => (
                 <SuggestionItem
-                  key={game.id}
+                  key={`supabase-${game.id}`}
                   item={game}
                   onSelect={onSelectGame}
+                  isGame={true}
+                />
+              ))}
+              {/* IGDB Games after Supabase games */}
+              {igdbGames.map((game) => (
+                <SuggestionItem
+                  key={`igdb-${game.id}`}
+                  item={game}
+                  onSelect={onSelectIgdbGame}
                   isGame={true}
                 />
               ))}
@@ -401,7 +514,9 @@ const SearchSection = ({
             props.handleFocus();
           }}
           onSelectGame={props.handleSelectSuggestion}
-          searchResults={props.searchResults}
+          onSelectIgdbGame={props.handleSelectIgdbGame}
+          supabaseGames={props.supabaseGames}
+          igdbGames={props.igdbGames}
           recentSearches={props.recentSearches}
           onClearRecentSearches={props.handleClearRecentSearches}
           isLoading={props.isLoading}

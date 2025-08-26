@@ -233,7 +233,7 @@ export class SteamIntegrationService {
     // 2. Overall/English Reviews: Fallback for games with fewer reviews
     // 3. Use recent as overall if no overall review found
 
-    let steam_recent_review = extractReviewText('Recent Reviews:');
+    const steam_recent_review = extractReviewText('Recent Reviews:');
 
     let steam_all_review = extractReviewText('Overall Reviews:');
     if (!steam_all_review) {
