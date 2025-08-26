@@ -61,7 +61,7 @@ export async function fetchSteamTags(gameName: string): Promise<SteamData> {
 }
 
 /**
- * Check if a game exists in Steam using SteamIntegrationService
+ * Check if a game exists in Steam using our API route
  * @param gameName - The name of the game to search for
  * @returns Promise<boolean> - true if game exists in Steam, false otherwise
  */
@@ -71,11 +71,22 @@ export async function checkGameExistsInSteam(
   try {
     console.log(`🔍 Checking if game exists in Steam: ${gameName}`);
 
-    const appInfo = await SteamIntegrationService.findSteamApp(gameName);
+    const response = await fetch(
+      `/api/steam/check-game-exists?q=${encodeURIComponent(gameName)}`,
+    );
 
-    if (appInfo && appInfo.steamAppId) {
+    if (!response.ok) {
+      console.error(
+        `Steam check API responded with status: ${response.status}`,
+      );
+      return false;
+    }
+
+    const data = await response.json();
+
+    if (data.exists) {
       console.log(
-        `✅ Game found in Steam: ${gameName} (ID: ${appInfo.steamAppId})`,
+        `✅ Game found in Steam: ${gameName} (ID: ${data.steamAppId})`,
       );
       return true;
     } else {

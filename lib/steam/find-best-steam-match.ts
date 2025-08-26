@@ -175,6 +175,8 @@ export async function findBestSteamMatch(
   });
 
   try {
+    console.log('query: ', query);
+
     const response = await fetch(
       `https://store.steampowered.com/api/storesearch/?${query.toString()}`,
     );
