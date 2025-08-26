@@ -75,6 +75,8 @@ export default function AddGamePage() {
 
   // Handle batch game search
   const handleBatchSearch = useCallback(async () => {
+    console.log('handleBatchSearch gameNames: ', gameNames);
+
     if (!gameNames.trim()) {
       toast.error('Please enter game names');
       return;

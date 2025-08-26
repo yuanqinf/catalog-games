@@ -71,10 +71,15 @@ class IgdbClient {
       },
       body: `
         search "${query}";
-        fields id, name, slug, category;
+        fields id, name, slug, category, total_rating_count, cover, screenshots, artworks, videos, summary, storyline, first_release_date;
         where first_release_date != null 
-        & category = (0,1,2,8,9,10);
-        limit 10;
+        & category = (0,1,2,8,9,10)
+        & total_rating_count >= 3
+        & cover != null
+        & screenshots != null
+        & (artworks != null | videos != null)
+        & summary != null;
+        limit 3;
       `,
     });
 
