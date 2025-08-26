@@ -72,7 +72,8 @@ class IgdbClient {
       body: `
         search "${query}";
         fields id, name, slug, category;
-        where first_release_date != null;
+        where first_release_date != null 
+        & category = (0,1,2,8,9,10);
         limit 10;
       `,
     });
@@ -114,7 +115,7 @@ class IgdbClient {
         'Content-Type': 'text/plain',
       },
       body: `
-        fields id, name, storyline, summary, slug, first_release_date, updated_at, total_rating, total_rating_count,
+        fields id, name, storyline, summary, slug, first_release_date, updated_at, total_rating, total_rating_count, hypes,
         
         genres.name, platforms.name, involved_companies.developer, involved_companies.publisher, involved_companies.company.name, game_engines.name, game_modes.name,
 

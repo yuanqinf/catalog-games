@@ -97,29 +97,8 @@ export async function POST(request: NextRequest) {
 
         console.log('🔍 Search Data:', searchResults);
 
-        // Filter for main games only (category === 0)
-        const mainGames = searchResults.filter(
-          (game: any) =>
-            game.category === 0 ||
-            game.category === 1 ||
-            game.category === 2 ||
-            game.category === 8 ||
-            game.category === 9 ||
-            game.category === 10,
-        );
-
-        if (mainGames.length === 0) {
-          results.push({
-            name: trimmedName,
-            igdbId: 0,
-            existsInDb: false,
-            error: 'No valid games found',
-          });
-          continue;
-        }
-
-        // Process all main games, not just the first one
-        for (const game of mainGames) {
+        // Process all search results (already filtered by IGDB client)
+        for (const game of searchResults) {
           // Check if this game already exists in our database
           const existingGame = await gameService.checkGameExists(game.id);
 
