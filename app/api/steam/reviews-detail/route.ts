@@ -1,21 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findSteamReviews } from '@/lib/steam/get-steam-reviews';
+import { SteamIntegrationService } from '@/lib/steam/steam-integration-service';
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const gameName = searchParams.get('q');
-
-  if (!gameName) {
-    return NextResponse.json(
-      { error: 'Game name parameter (q) is required' },
-      { status: 400 },
-    );
-  }
-
   try {
-    const result = await findSteamReviews(gameName);
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get('q');
 
-    if (!result.steamAppId) {
+    if (!query || !query.trim()) {
+      return NextResponse.json(
+        { error: 'Query parameter "q" is required' },
+        { status: 400 },
+      );
+    }
+
+    const result = await SteamIntegrationService.getDetailedReviews(
+      query.trim(),
+    );
+
+    if (!result || !result.steamAppId) {
       return NextResponse.json(
         {
           error: 'No Steam match found for this game',
@@ -27,11 +29,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(result, { status: 200 });
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Steam reviews API error:', error);
+
     return NextResponse.json(
-      { error: 'Failed to fetch Steam reviews' },
+      {
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 },
     );
   }

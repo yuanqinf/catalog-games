@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findSteamPopularTags } from '@/lib/steam/get-steam-popular-tags';
+import { SteamIntegrationService } from '@/lib/steam/steam-integration-service';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,9 +13,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const result = await findSteamPopularTags(query.trim());
+    const result = await SteamIntegrationService.getCompleteSteamDataByName(
+      query.trim(),
+    );
 
-    if (!result.steamAppId) {
+    if (!result.success || !result.data.steamAppId) {
       return NextResponse.json(
         {
           message: 'No Steam tags found - game not found on Steam',
@@ -33,7 +35,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       query,
-      result,
+      result: {
+        steamAppId: result.data.steamAppId,
+        steamName: result.data.steamName,
+        steam_popular_tags: result.data.steam_popular_tags,
+      },
     });
   } catch (error) {
     console.error('Steam tags API error:', error);

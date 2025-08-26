@@ -1,6 +1,8 @@
 /**
- * Steam integration utility for fetching review data
+ * Steam integration utility - Updated to use SteamIntegrationService
  */
+
+import { SteamIntegrationService } from '@/lib/steam/steam-integration-service';
 
 export interface SteamData {
   steam_app_id?: number;
@@ -23,29 +25,21 @@ export interface SteamReviewsData {
 }
 
 /**
- * Fetch Steam popular tags data via API route
+ * Fetch Steam popular tags data using SteamIntegrationService
  */
 export async function fetchSteamTags(gameName: string): Promise<SteamData> {
   try {
     console.log(`🏷️ Fetching Steam tags for: ${gameName}`);
 
-    const response = await fetch(
-      `/api/steam/tags?q=${encodeURIComponent(gameName)}`,
-    );
+    const tagsData = await SteamIntegrationService.getTagsOnly(gameName);
 
-    if (!response.ok) {
-      console.log(
-        `⚠️ Steam tags API request failed with status: ${response.status}`,
-      );
-      return {};
-    }
+    if (tagsData && tagsData.steam_popular_tags) {
+      // Also get app info for steam_app_id
+      const appInfo = await SteamIntegrationService.findSteamApp(gameName);
 
-    const result = await response.json();
-
-    if (result.success && result.result.steamAppId) {
       const steamData = {
-        steam_app_id: result.result.steamAppId,
-        steam_popular_tags: result.result.steam_popular_tags,
+        steam_app_id: appInfo?.steamAppId,
+        steam_popular_tags: tagsData.steam_popular_tags,
       };
 
       console.log(
@@ -67,7 +61,7 @@ export async function fetchSteamTags(gameName: string): Promise<SteamData> {
 }
 
 /**
- * Check if a game exists in Steam
+ * Check if a game exists in Steam using SteamIntegrationService
  * @param gameName - The name of the game to search for
  * @returns Promise<boolean> - true if game exists in Steam, false otherwise
  */
@@ -77,22 +71,11 @@ export async function checkGameExistsInSteam(
   try {
     console.log(`🔍 Checking if game exists in Steam: ${gameName}`);
 
-    const response = await fetch(
-      `/api/steam/review-summary?q=${encodeURIComponent(gameName)}`,
-    );
+    const appInfo = await SteamIntegrationService.findSteamApp(gameName);
 
-    if (!response.ok) {
+    if (appInfo && appInfo.steamAppId) {
       console.log(
-        `⚠️ Steam API request failed with status: ${response.status}`,
-      );
-      return false;
-    }
-
-    const result = await response.json();
-
-    if (result.success && result.result.steamAppId) {
-      console.log(
-        `✅ Game found in Steam: ${gameName} (ID: ${result.result.steamAppId})`,
+        `✅ Game found in Steam: ${gameName} (ID: ${appInfo.steamAppId})`,
       );
       return true;
     } else {

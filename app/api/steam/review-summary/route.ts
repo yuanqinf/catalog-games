@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findSteamReviewSummary } from '@/lib/steam/get-steam-review-summary';
+import { SteamIntegrationService } from '@/lib/steam/steam-integration-service';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,15 +13,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const result = await findSteamReviewSummary(query.trim());
+    const result = await SteamIntegrationService.getCompleteSteamDataByName(
+      query.trim(),
+    );
 
-    if (!result.steamAppId) {
+    if (!result.success || !result.data.steamAppId) {
       return NextResponse.json(
         {
           message: 'No Steam reviews found - game not found on Steam',
           query,
           result: {
             steamAppId: null,
+            steamName: null,
             steam_all_review: null,
             steam_recent_review: null,
           },
@@ -33,7 +36,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       query,
-      result,
+      result: {
+        steamAppId: result.data.steamAppId,
+        steamName: result.data.steamName,
+        steam_all_review: result.data.steam_all_review,
+        steam_recent_review: result.data.steam_recent_review,
+      },
     });
   } catch (error) {
     console.error('Steam reviews API error:', error);
