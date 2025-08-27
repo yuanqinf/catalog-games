@@ -76,12 +76,13 @@ class IgdbClient {
       body: `
         search "${query}";
         fields id, name, slug, category, total_rating_count, cover, screenshots, artworks, videos, summary, storyline, first_release_date, involved_companies.company.name;
-        & category = (0,1,2,8,9,10)
+        where category = (0,1,2,8,9,10)
         & total_rating_count >= 3
         & cover != null
         & screenshots != null
         & (artworks != null | videos != null)
         & summary != null;
+        sort first_release_date desc;
         limit 3;
       `,
     });

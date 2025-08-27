@@ -2,7 +2,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Gamepad2, Search as SearchIconLucide, X as XIcon } from 'lucide-react';
+import {
+  Gamepad2,
+  Search as SearchIconLucide,
+  X as XIcon,
+  Loader2,
+} from 'lucide-react';
 import {
   Command,
   CommandInput,
@@ -37,6 +42,35 @@ interface HybridSearchResult {
   totalResults: number;
 }
 
+// --- SORTING UTILITIES ---
+/**
+ * Sort Supabase games by release date (most recent first)
+ */
+const sortSupabaseGamesByDate = (a: GameDbData, b: GameDbData): number => {
+  // Handle null/undefined dates - put them at the end
+  if (!a.first_release_date && !b.first_release_date) return 0;
+  if (!a.first_release_date) return 1;
+  if (!b.first_release_date) return -1;
+
+  // Convert string dates to timestamps and sort descending (most recent first)
+  const timestampA = new Date(a.first_release_date).getTime();
+  const timestampB = new Date(b.first_release_date).getTime();
+  return timestampB - timestampA;
+};
+
+/**
+ * Sort IGDB games by release date (most recent first)
+ */
+const sortIgdbGamesByDate = (a: IgdbGame, b: IgdbGame): number => {
+  // Handle null/undefined dates - put them at the end
+  if (!a.first_release_date && !b.first_release_date) return 0;
+  if (!a.first_release_date) return 1;
+  if (!b.first_release_date) return -1;
+
+  // Sort by Unix timestamp descending (most recent first)
+  return b.first_release_date - a.first_release_date;
+};
+
 // --- CUSTOM HOOK for Search Logic ---
 const useSearchBar = () => {
   const [inputValue, setInputValue] = useState('');
@@ -44,6 +78,7 @@ const useSearchBar = () => {
   const [igdbGames, setIgdbGames] = useState<IgdbGame[]>([]);
   const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAddingGame, setIsAddingGame] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isInputActive, setIsInputActive] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -101,9 +136,14 @@ const useSearchBar = () => {
         );
         if (response.ok) {
           const data: HybridSearchResult = await response.json();
-          setSupabaseGames(data.supabaseGames);
-          // Limit IGDB results to 3 as requested
-          setIgdbGames(data.igdbGames.slice(0, 3));
+
+          // Sort and set results using optimized sorters
+          setSupabaseGames(
+            [...data.supabaseGames].sort(sortSupabaseGamesByDate),
+          );
+          setIgdbGames(
+            [...data.igdbGames].sort(sortIgdbGamesByDate).slice(0, 3),
+          );
         } else {
           setSupabaseGames([]);
           setIgdbGames([]);
@@ -144,6 +184,9 @@ const useSearchBar = () => {
     setShowSuggestions(false);
     setIsInputActive(false);
 
+    // Set loading state
+    setIsAddingGame(true);
+
     try {
       console.log(
         `🎮 Adding IGDB game to database: ${igdbGame.name} (ID: ${igdbGame.id})`,
@@ -179,6 +222,8 @@ const useSearchBar = () => {
     } catch (error) {
       console.error('Failed to add IGDB game:', error);
       // For now, just log the error - you could add toast notifications here
+    } finally {
+      setIsAddingGame(false);
     }
   };
 
@@ -213,6 +258,7 @@ const useSearchBar = () => {
     igdbGames,
     recentSearches,
     isLoading,
+    isAddingGame,
     showSuggestions,
     isInputActive,
     wrapperRef,
@@ -259,6 +305,7 @@ const SuggestionItem = ({
   item,
   onSelect,
   isGame = false,
+  isAddingGame = false,
 }: {
   item:
     | { text: string; tag?: string }
@@ -267,9 +314,13 @@ const SuggestionItem = ({
     | IgdbGame;
   onSelect: (value: any) => void;
   isGame?: boolean;
+  isAddingGame?: boolean;
 }) => {
   if (isGame) {
     const game = item as GameDbData | RecentSearchItem | IgdbGame;
+
+    // Check if this is an IGDB game (no cover_url property)
+    const isIgdbGame = !('cover_url' in game);
 
     // Handle developers for both formats
     let developer = '';
@@ -303,11 +354,19 @@ const SuggestionItem = ({
 
     return (
       <CommandItem
-        className="cursor-pointer transition-colors duration-200 hover:bg-zinc-700"
-        onSelect={() => onSelect(game)}
+        className={`transition-colors duration-200 ${
+          isIgdbGame && isAddingGame
+            ? 'cursor-not-allowed opacity-75'
+            : 'cursor-pointer hover:bg-zinc-700'
+        }`}
+        onSelect={() => {
+          if (!(isIgdbGame && isAddingGame)) {
+            onSelect(game);
+          }
+        }}
       >
         <div className="flex w-full items-center gap-3">
-          {/* Supabase games show cover, IGDB games show gamepad icon */}
+          {/* Supabase games show cover, IGDB games show gamepad icon or loading spinner */}
           {'cover_url' in game && game.cover_url ? (
             <img
               src={game.cover_url}
@@ -316,7 +375,11 @@ const SuggestionItem = ({
             />
           ) : (
             <div className="flex h-10 w-8 items-center justify-center rounded bg-zinc-800">
-              <Gamepad2 className="h-4 w-4 text-zinc-400" />
+              {isIgdbGame && isAddingGame ? (
+                <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
+              ) : (
+                <Gamepad2 className="h-4 w-4 text-zinc-400" />
+              )}
             </div>
           )}
           <div className="flex min-w-0 flex-1 flex-col">
@@ -361,6 +424,7 @@ const SearchSuggestions = ({
   recentSearches,
   onClearRecentSearches,
   isLoading,
+  isAddingGame,
 }: {
   inputValue: string;
   onSelectSuggestion: (value: any) => void;
@@ -371,6 +435,7 @@ const SearchSuggestions = ({
   recentSearches: RecentSearchItem[];
   onClearRecentSearches: () => void;
   isLoading: boolean;
+  isAddingGame: boolean;
 }) => {
   const showDefaultSuggestions = !inputValue.trim();
   return (
@@ -441,6 +506,7 @@ const SearchSuggestions = ({
                   item={game}
                   onSelect={onSelectIgdbGame}
                   isGame={true}
+                  isAddingGame={isAddingGame}
                 />
               ))}
             </CommandGroup>
@@ -520,6 +586,7 @@ const SearchSection = ({
           recentSearches={props.recentSearches}
           onClearRecentSearches={props.handleClearRecentSearches}
           isLoading={props.isLoading}
+          isAddingGame={props.isAddingGame}
         />
       )}
     </Command>
