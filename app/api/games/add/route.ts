@@ -78,15 +78,16 @@ export async function POST(request: NextRequest) {
     if (gameDataWithSteam.steam_app_id && result.data?.id) {
       try {
         console.log(`📝 Fetching detailed Steam reviews for: ${igdbData.name}`);
-        const steamReviewsData = await SteamIntegrationService.getDetailedReviews(
-          igdbData.name,
-        );
-        
+        const steamReviewsData =
+          await SteamIntegrationService.getDetailedReviews(igdbData.name);
+
         if (steamReviewsData && steamReviewsData.reviews.length > 0) {
           // Check for duplicates and filter out existing reviews
           const newReviews = [];
           for (const review of steamReviewsData.reviews) {
-            const exists = await gameService.checkReviewExists(review.review_id);
+            const exists = await gameService.checkReviewExists(
+              review.review_id,
+            );
             if (!exists) {
               newReviews.push({
                 review_id: review.review_id,
@@ -101,7 +102,9 @@ export async function POST(request: NextRequest) {
             await gameService.addGameReviews(result.data.id, newReviews);
             console.log(`📝 Added ${newReviews.length} detailed Steam reviews`);
           } else {
-            console.log(`📝 No new detailed reviews to add (all reviews already exist)`);
+            console.log(
+              `📝 No new detailed reviews to add (all reviews already exist)`,
+            );
           }
         }
       } catch (reviewError) {

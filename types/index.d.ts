@@ -108,3 +108,29 @@ export interface GameRating {
   gameplay: number;
   longevity: number;
 }
+
+// Search-related types
+import { RecentSearchItem } from '@/utils/recent-searches';
+
+export interface HybridSearchResult {
+  supabaseGames: GameDbData[];
+  igdbGames: IgdbGame[];
+  totalResults: number;
+}
+
+export interface SearchState {
+  inputValue: string;
+  supabaseGames: GameDbData[];
+  igdbGames: IgdbGame[];
+  recentSearches: RecentSearchItem[];
+  isLoading: boolean;
+  isAddingGame: boolean;
+  showSuggestions: boolean;
+  isInputActive: boolean;
+}
+
+export type SuggestionItem =
+  | { text: string; tag?: string }
+  | GameDbData
+  | RecentSearchItem
+  | IgdbGame;
