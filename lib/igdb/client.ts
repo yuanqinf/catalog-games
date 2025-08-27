@@ -82,7 +82,6 @@ class IgdbClient {
         & screenshots != null
         & (artworks != null | videos != null)
         & summary != null;
-        sort first_release_date desc;
         limit 3;
       `,
     });

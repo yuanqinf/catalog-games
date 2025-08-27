@@ -28,6 +28,10 @@ function normalizeText(text: string): string {
     .toLowerCase()
     .replace(/[™®©]/g, '') // Remove trademark symbols
     .replace(/[:\-–—]/g, ' ') // Replace colons and dashes with spaces
+    .replace(/δ|Δ/g, 'delta') // Convert Greek Delta to word "delta"
+    .replace(/α|Α/g, 'alpha') // Convert Greek Alpha to word "alpha"
+    .replace(/β|Β/g, 'beta') // Convert Greek Beta to word "beta"
+    .replace(/γ|Γ/g, 'gamma') // Convert Greek Gamma to word "gamma"
     .replace(/\s+/g, ' ') // Normalize whitespace
     .replace(/[^\w\s]/g, '') // Remove special characters except word chars and spaces
     .trim();
@@ -161,6 +165,36 @@ function isValidGameCandidate(item: SteamSearchItem): boolean {
  * Find the best Steam match for an IGDB game name
  * Returns Steam App ID and name if found, null otherwise
  */
+/**
+ * Perform Steam search with a query term
+ */
+async function performSteamSearch(
+  searchTerm: string,
+): Promise<SteamSearchItem[]> {
+  const query = new URLSearchParams({
+    term: searchTerm,
+    cc: 'us',
+    l: 'en',
+  });
+
+  const response = await fetch(
+    `https://store.steampowered.com/api/storesearch/?${query.toString()}`,
+  );
+
+  if (!response.ok) {
+    console.error(`Steam search API error: ${response.status}`);
+    return [];
+  }
+
+  const data = await response.json();
+
+  if (!data?.items || !Array.isArray(data.items)) {
+    return [];
+  }
+
+  return data.items.filter(isValidGameCandidate);
+}
+
 export async function findBestSteamMatch(
   igdbName: string,
 ): Promise<SteamMatchResult | null> {
@@ -168,43 +202,48 @@ export async function findBestSteamMatch(
     return null;
   }
 
-  const query = new URLSearchParams({
-    term: igdbName.trim(),
-    cc: 'us',
-    l: 'en',
-  });
-
   try {
-    console.log('query: ', query);
+    console.log(`🔍 Searching Steam for: "${igdbName}"`);
 
-    const response = await fetch(
-      `https://store.steampowered.com/api/storesearch/?${query.toString()}`,
-    );
+    // Strategy 1: Direct search with original name
+    let candidates = await performSteamSearch(igdbName.trim());
+    console.log(`📊 Direct search found ${candidates.length} candidates`);
 
-    if (!response.ok) {
-      console.error(`Steam search API error: ${response.status}`);
-      return null;
+    // Strategy 2: If no results, try broader search with main keywords
+    if (candidates.length === 0) {
+      const keywords = extractKeywords(igdbName);
+      if (keywords.length >= 2) {
+        const broadSearch = keywords.slice(0, 3).join(' '); // Take first 3 keywords
+        console.log(`🔍 Trying broader search: "${broadSearch}"`);
+        candidates = await performSteamSearch(broadSearch);
+        console.log(`📊 Broad search found ${candidates.length} candidates`);
+      }
     }
 
-    const data = await response.json();
-
-    if (!data?.items || !Array.isArray(data.items)) {
-      return null;
+    // Strategy 3: For games with "Delta", also search for games with Greek Δ
+    if (candidates.length === 0 && igdbName.toLowerCase().includes('delta')) {
+      const deltaVariant = igdbName.replace(/delta/gi, 'Δ');
+      console.log(`🔍 Trying Delta symbol variant: "${deltaVariant}"`);
+      candidates = await performSteamSearch(deltaVariant);
+      console.log(
+        `📊 Delta variant search found ${candidates.length} candidates`,
+      );
     }
-
-    // Filter valid candidates
-    const candidates = data.items.filter(isValidGameCandidate);
 
     if (candidates.length === 0) {
+      console.log(`❌ No Steam candidates found for: "${igdbName}"`);
       return null;
     }
 
-    // Find best match
+    // Find best match from all candidates
     let bestMatch: SteamSearchItem | null = null;
     let bestScore = 0;
 
     for (const candidate of candidates) {
       const score = calculateSimilarity(igdbName, candidate.name);
+      console.log(
+        `🎯 Candidate: "${candidate.name}" - Score: ${score.toFixed(3)}`,
+      );
 
       if (score > bestScore && score >= 0.6) {
         bestScore = score;
@@ -213,8 +252,15 @@ export async function findBestSteamMatch(
     }
 
     if (!bestMatch) {
+      console.log(
+        `❌ No suitable match found (best score < 0.6) for: "${igdbName}"`,
+      );
       return null;
     }
+
+    console.log(
+      `✅ Best match: "${bestMatch.name}" (ID: ${bestMatch.id}, Score: ${bestScore.toFixed(3)})`,
+    );
 
     return {
       steamAppId: bestMatch.id,
