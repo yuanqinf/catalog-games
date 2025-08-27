@@ -1,6 +1,10 @@
 // lib/igdb/client.ts
 import type { IgdbToken, IgdbGame } from '@/types';
 
+interface TwitchStream {
+  viewer_count?: number;
+}
+
 class IgdbClient {
   private clientId: string;
   private clientSecret: string;
@@ -92,7 +96,7 @@ class IgdbClient {
     const games: IgdbGame[] = await res.json();
 
     return games.map((game) => {
-      if (game.cover?.url) {
+      if (game.cover && typeof game.cover === 'object' && 'url' in game.cover) {
         return {
           ...game,
           cover: {
@@ -141,7 +145,7 @@ class IgdbClient {
     const game = data[0] ?? null;
 
     if (game) {
-      if (game.cover?.url) {
+      if (game.cover && typeof game.cover === 'object' && 'url' in game.cover) {
         game.cover.url = `https:${game.cover.url}`.replace(
           '/t_thumb/',
           '/t_1080p/',
@@ -198,7 +202,7 @@ class IgdbClient {
   ): Promise<number> {
     const token = await this.getAccessToken();
 
-    const allStreams: any[] = [];
+    const allStreams: TwitchStream[] = [];
     let cursor: string | undefined;
     const maxRequests = 5; // Get 500 streams total (100 per request)
 
@@ -251,9 +255,12 @@ class IgdbClient {
     }
 
     // Sum up all viewers from all live streams to get total live viewers
-    const totalLiveViewers = allStreams.reduce((sum: number, stream: any) => {
-      return sum + (stream.viewer_count || 0);
-    }, 0);
+    const totalLiveViewers = allStreams.reduce(
+      (sum: number, stream: TwitchStream) => {
+        return sum + (stream.viewer_count || 0);
+      },
+      0,
+    );
 
     console.log(
       `Total streams fetched: ${allStreams.length}, Total viewers: ${totalLiveViewers}`,
