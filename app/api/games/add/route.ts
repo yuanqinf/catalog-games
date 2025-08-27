@@ -19,27 +19,44 @@ export async function POST(request: NextRequest) {
 
     const gameService = new GameService();
 
-    // Fetch Steam data directly in the API route (server-side)
-    console.log(`🔍 Fetching Steam data for: ${igdbData.name}`);
+    // Fetch complete Steam data directly in the API route (server-side)
+    console.log(`🔍 Fetching complete Steam data for: ${igdbData.name}`);
     let steamData = {};
 
     try {
-      const tagsData = await SteamIntegrationService.getTagsOnly(igdbData.name);
-      if (tagsData && tagsData.steam_popular_tags) {
-        const appInfo = await SteamIntegrationService.findSteamApp(
-          igdbData.name,
-        );
-        steamData = {
-          steam_app_id: appInfo?.steamAppId || null,
-          steam_popular_tags: tagsData.steam_popular_tags,
-        };
-        console.log(
-          `🏷️ Steam data added: ${tagsData.steam_popular_tags?.length || 0} tags found`,
-        );
+      // First find the Steam app to get the app ID
+      const appInfo = await SteamIntegrationService.findSteamApp(igdbData.name);
+      if (appInfo) {
+        // Get comprehensive Steam data including reviews and tags
+        const completeResult =
+          await SteamIntegrationService.getCompleteSteamDataByAppId(
+            appInfo.steamAppId,
+          );
+        if (completeResult.success) {
+          steamData = {
+            steam_app_id: appInfo.steamAppId,
+            steam_popular_tags: completeResult.data.steam_popular_tags || null,
+            steam_all_review: completeResult.data.steam_all_review || null,
+            steam_recent_review:
+              completeResult.data.steam_recent_review || null,
+          };
+          console.log(
+            `🏷️ Complete Steam data added: ${completeResult.data.steam_popular_tags?.length || 0} tags, reviews: ${completeResult.data.steam_all_review ? 'Yes' : 'No'}`,
+          );
+        } else {
+          // Fallback: just get app ID and tags
+          const tagsData = await SteamIntegrationService.getTagsOnly(
+            igdbData.name,
+          );
+          steamData = {
+            steam_app_id: appInfo.steamAppId,
+            steam_popular_tags: tagsData?.steam_popular_tags || null,
+          };
+        }
       }
     } catch (steamError) {
       console.warn(
-        'Failed to fetch Steam data, continuing without Steam tags:',
+        'Failed to fetch Steam data, continuing without Steam integration:',
         steamError,
       );
     }
