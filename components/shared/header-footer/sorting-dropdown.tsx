@@ -23,6 +23,8 @@ export type SortOrder = 'asc' | 'desc';
 
 interface SortingDropdownProps {
   onSortChange?: (option: SortOption, order: SortOrder) => void;
+  currentOption?: SortOption;
+  currentOrder?: SortOrder;
 }
 
 interface SortOptionItemProps {
@@ -81,14 +83,28 @@ const SortOptionItem = ({
   </DropdownMenuCheckboxItem>
 );
 
-const SortingDropdown = ({ onSortChange }: SortingDropdownProps) => {
-  const [selectedOption, setSelectedOption] = useState<SortOption>('Trend');
+const SortingDropdown = ({
+  onSortChange,
+  currentOption = 'Trend',
+  currentOrder = 'desc',
+}: SortingDropdownProps) => {
+  const [selectedOption, setSelectedOption] =
+    useState<SortOption>(currentOption);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sortOrders, setSortOrders] = useState<Record<SortOption, SortOrder>>({
-    Trend: 'desc',
-    Latest: 'desc',
-    Rating: 'desc',
+    Trend: currentOrder,
+    Latest: currentOrder,
+    Rating: currentOrder,
   });
+
+  // Update state when props change (URL changes)
+  React.useEffect(() => {
+    setSelectedOption(currentOption);
+    setSortOrders((prev) => ({
+      ...prev,
+      [currentOption]: currentOrder,
+    }));
+  }, [currentOption, currentOrder]);
 
   const handleOptionSelect = (option: SortOption) => {
     setSelectedOption(option);

@@ -2,29 +2,41 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Gamepad2 } from 'lucide-react';
 import { Command } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
+import { useSearchBar } from '@/hooks/search/useSearchBar';
+import { SearchInput } from './search-input';
+import { SearchSuggestions } from './search-suggestions';
 import SortingDropdown, {
   SortOption,
   SortOrder,
 } from '../header-footer/sorting-dropdown';
-import { useSearchBar } from '@/hooks/search/useSearchBar';
-import { SearchInput } from './search-input';
-import { SearchSuggestions } from './search-suggestions';
 
 const SearchSection = ({
   isInputActive,
   ...props
 }: ReturnType<typeof useSearchBar>) => {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const isExplorePage = pathname === '/explore';
 
   const handleSortChange = (option: SortOption, order: SortOrder) => {
-    console.log(`Sort changed: ${option} - ${order}`);
-    // Add your sort logic here
+    const sortBy = option.toLowerCase();
+    router.push(`/explore?sort=${sortBy}&order=${order}`, { scroll: false });
   };
+
+  // Get current sort state from URL for SortingDropdown
+  const currentSort = searchParams.get('sort') || 'trend';
+  const currentOrder = searchParams.get('order') || 'desc';
+  const currentSortOption: SortOption =
+    currentSort === 'latest'
+      ? 'Latest'
+      : currentSort === 'rating'
+        ? 'Rating'
+        : 'Trend';
 
   if (!isInputActive) {
     return (
@@ -47,7 +59,11 @@ const SearchSection = ({
         </Command>
 
         {isExplorePage ? (
-          <SortingDropdown onSortChange={handleSortChange} />
+          <SortingDropdown
+            onSortChange={handleSortChange}
+            currentOption={currentSortOption}
+            currentOrder={currentOrder as SortOrder}
+          />
         ) : (
           <Link href="/explore">
             <Button>
