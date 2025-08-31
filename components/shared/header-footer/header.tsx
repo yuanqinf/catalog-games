@@ -36,8 +36,9 @@ const Header = () => {
 
   return (
     <nav
-      className={`header sticky top-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'
-        }`}
+      className={`header sticky top-0 z-50 transition-transform duration-300 ${
+        isVisible ? 'translate-y-0' : '-translate-y-full'
+      }`}
     >
       <Link href="/">
         <div className="header-logo">

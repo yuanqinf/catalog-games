@@ -6,8 +6,17 @@ import type { GameDbData, IgdbGame } from '@/types';
 // Initialize clients
 const gameService = new GameService();
 
+interface SearchGameResult {
+  id: number;
+  name: string;
+  slug: string;
+  cover_url: string;
+  developers: string[];
+  first_release_date: string;
+}
+
 interface HybridSearchResult {
-  supabaseGames: GameDbData[];
+  supabaseGames: SearchGameResult[];
   igdbGames: IgdbGame[];
   totalResults: number;
 }
@@ -17,11 +26,11 @@ interface HybridSearchResult {
  */
 function isDuplicateGame(
   igdbGame: IgdbGame,
-  supabaseGames: GameDbData[],
+  supabaseGames: SearchGameResult[],
 ): boolean {
   return supabaseGames.some(
     (supabaseGame) =>
-      supabaseGame.igdb_id === igdbGame.id ||
+      supabaseGame.id === igdbGame.id ||
       supabaseGame.name.toLowerCase() === igdbGame.name.toLowerCase(),
   );
 }

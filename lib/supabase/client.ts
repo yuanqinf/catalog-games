@@ -420,25 +420,65 @@ export class GameService {
   }
 
   /**
-   * Search games in database by name
+   * Search games in database using PostgreSQL full-text search
    */
   async searchGames(query: string, limit: number = 10) {
     if (!query.trim()) {
       return [];
     }
 
-    const { data, error } = await this.supabase
-      .from('games')
-      .select('id, name, slug, cover_url, developers, first_release_date')
-      .ilike('name', `%${query.trim()}%`)
-      .order('name')
-      .limit(limit);
+    const searchQuery = query.trim().replace(/'/g, "''");
 
-    if (error) {
-      throw new Error(error.message || 'Failed to search games');
+    try {
+      // First try: FTS on name field with ranking
+      const { data: nameResults, error: nameError } = await this.supabase
+        .from('games')
+        .select('id, name, slug, cover_url, developers, first_release_date')
+        .textSearch('name', `'${searchQuery}'`, {
+          type: 'websearch',
+          config: 'english',
+        })
+        .limit(limit);
+
+      if (!nameError && nameResults && nameResults.length > 0) {
+        return nameResults;
+      }
+
+      // Second try: FTS on multiple fields (if available)
+      const { data: multiFieldResults, error: multiFieldError } =
+        await this.supabase.rpc('search_games_fts', {
+          search_query: searchQuery,
+          result_limit: limit,
+        });
+
+      if (
+        !multiFieldError &&
+        multiFieldResults &&
+        multiFieldResults.length > 0
+      ) {
+        return multiFieldResults;
+      }
+
+      // Fallback: ILIKE search on name and developers
+      console.warn('FTS search failed, falling back to ILIKE search');
+
+      const { data: fallbackResults, error: fallbackError } =
+        await this.supabase
+          .from('games')
+          .select('id, name, slug, cover_url, developers, first_release_date')
+          .or(`name.ilike.%${searchQuery}%,developers.cs.{${searchQuery}}`)
+          .order('name')
+          .limit(limit);
+
+      if (fallbackError) {
+        throw new Error(fallbackError.message || 'Failed to search games');
+      }
+
+      return fallbackResults || [];
+    } catch (error) {
+      console.error('Search failed:', error);
+      throw new Error('Failed to search games');
     }
-
-    return data || [];
   }
 
   /**
