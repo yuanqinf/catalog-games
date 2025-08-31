@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import SearchBar from '@/components/shared/header-footer/search-bar';
+import SearchBar from '@/components/shared/search';
 import ClerkAuth from '@/components/shared/clerk-auth';
 
 const Header = () => {
@@ -36,9 +36,8 @@ const Header = () => {
 
   return (
     <nav
-      className={`header sticky top-0 z-50 transition-transform duration-300 ${
-        isVisible ? 'translate-y-0' : '-translate-y-full'
-      }`}
+      className={`header sticky top-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'
+        }`}
     >
       <Link href="/">
         <div className="header-logo">
