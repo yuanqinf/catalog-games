@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import useSWR from 'swr';
 import { ExternalLink, Clock, Calendar, Newspaper } from 'lucide-react';
@@ -8,8 +8,10 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  type CarouselApi,
 } from '@/components/ui/carousel';
 import { Skeleton } from '@/components/ui/skeleton';
+import PaginationDots from '@/components/shared/pagination-dots';
 import { NewsArticle, NewsResponse } from '@/types';
 
 const NewsCardSkeleton = () => (
@@ -104,6 +106,9 @@ const NewsCard: React.FC<{ article: NewsArticle }> = ({ article }) => {
 };
 
 const GameNews: React.FC = () => {
+  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
   const { data, error, isLoading } = useSWR<NewsResponse>(
     '/api/gaming-news',
     (url) =>
@@ -141,6 +146,18 @@ const GameNews: React.FC = () => {
 
       <div className="relative">
         <Carousel
+          setApi={(apiInstance) => {
+            setCarouselApi(apiInstance);
+            if (apiInstance) {
+              apiInstance.on('select', () => {
+                if (apiInstance) {
+                  setActiveIndex(apiInstance.selectedScrollSnap());
+                }
+              });
+              // Set initial activeIndex
+              setActiveIndex(apiInstance.selectedScrollSnap());
+            }
+          }}
           opts={{
             align: 'start',
             slidesToScroll: 1,
@@ -172,6 +189,19 @@ const GameNews: React.FC = () => {
                   ))}
           </CarouselContent>
         </Carousel>
+
+        {/* Pagination Dots */}
+        <div className="mt-6 flex items-center justify-center sm:hidden">
+          <PaginationDots
+            totalItems={
+              data?.data
+                ?.filter((article) => article.publisher?.name)
+                .slice(0, 5).length || 5
+            }
+            activeIndex={activeIndex}
+            carouselApi={carouselApi}
+          />
+        </div>
       </div>
     </section>
   );

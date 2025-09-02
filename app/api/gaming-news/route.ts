@@ -28,6 +28,12 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
+    
+    // Sort articles by date, latest first
+    data.data?.sort((a: any, b: any) => 
+      new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
+    );
+    
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching gaming news:', error);

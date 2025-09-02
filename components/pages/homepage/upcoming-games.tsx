@@ -75,17 +75,13 @@ const UpcomingGames = () => {
               return (
                 <CarouselItem
                   key={`upcoming-${i}`}
-                  className="basis-[280px] pt-4 pb-6 pl-2 md:basis-1/2 md:pl-4 lg:basis-1/3 xl:basis-1/4"
+                  className="basis-[280px] pt-4 pb-6 pl-2 sm:basis-1/2 md:basis-1/3 md:pl-4 lg:basis-1/5 xl:basis-1/6"
                 >
                   <MiniGameCard game={transformedGame} />
                 </CarouselItem>
               );
             })}
           </CarouselContent>
-
-          {/* Enhanced Navigation Buttons */}
-          <CarouselPrevious className="left-[-48px] hidden h-12 w-12 border-zinc-700 bg-zinc-800/90 text-zinc-300 backdrop-blur-sm transition-all duration-200 hover:border-zinc-600 hover:bg-zinc-700 hover:text-white sm:flex" />
-          <CarouselNext className="right-[-48px] hidden h-12 w-12 border-zinc-700 bg-zinc-800/90 text-zinc-300 backdrop-blur-sm transition-all duration-200 hover:border-zinc-600 hover:bg-zinc-700 hover:text-white sm:flex" />
         </Carousel>
 
         {/* Mobile Pagination Dots */}
