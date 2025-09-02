@@ -29,6 +29,19 @@ interface GameResult {
   errorMessage?: string;
 }
 
+interface HeroGameResult {
+  name: string;
+  igdbId: number;
+  existsInDb: boolean;
+  existsInHeroGames: boolean;
+  isInSteam?: boolean;
+  igdbData?: any;
+  error?: string;
+  bannerFile?: File | null;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
+  errorMessage?: string;
+}
+
 interface BatchReport {
   total: number;
   successful: number;
@@ -47,6 +60,11 @@ export default function AddGamePage() {
   const [igdbId, setIgdbId] = useState('');
   const [idSearchResult, setIdSearchResult] = useState<GameResult | null>(null);
 
+  // Hero games states
+  const [heroIgdbId, setHeroIgdbId] = useState('');
+  const [heroSearchResult, setHeroSearchResult] =
+    useState<HeroGameResult | null>(null);
+
   // Loading states
   const [isSearching, setIsSearching] = useState(false);
   const [isCheckingSteam, setIsCheckingSteam] = useState(false);
@@ -54,6 +72,10 @@ export default function AddGamePage() {
   const [batchStopped, setBatchStopped] = useState(false);
   const [isSearchingById, setIsSearchingById] = useState(false);
   const [isAddingById, setIsAddingById] = useState(false);
+
+  // Hero games loading states
+  const [isSearchingHeroById, setIsSearchingHeroById] = useState(false);
+  const [isAddingHeroById, setIsAddingHeroById] = useState(false);
 
   // Progress tracking
   const [progress, setProgress] = useState(0);
@@ -267,6 +289,169 @@ export default function AddGamePage() {
     setIdSearchResult((prev) => (prev ? { ...prev, bannerFile: file } : null));
   }, []);
 
+  // Handle search by IGDB ID for hero games
+  const handleSearchHeroById = useCallback(async () => {
+    if (!heroIgdbId.trim() || isNaN(Number(heroIgdbId))) {
+      toast.error('Please enter a valid IGDB ID');
+      return;
+    }
+
+    setIsSearchingHeroById(true);
+    setHeroSearchResult(null);
+
+    try {
+      const id = Number(heroIgdbId);
+      console.log(`🔍 Searching for hero game with ID: ${id}`);
+
+      // Check if game already exists in database
+      const existsResponse = await fetch(`/api/igdb/games/${id}`);
+      let existsInDb = false;
+      let existsInHeroGames = false;
+      let igdbData = null;
+
+      if (existsResponse.ok) {
+        igdbData = await existsResponse.json();
+
+        // Check if game exists in our games table
+        const existingGame = await gameService.checkGameExists(id);
+        existsInDb = !!existingGame;
+
+        // If it exists in games table, check if it's already in hero_games
+        if (existingGame) {
+          const existingHeroGame = await gameService.checkHeroGameExists(
+            existingGame.id,
+          );
+          existsInHeroGames = !!existingHeroGame;
+        }
+      } else {
+        throw new Error('Game not found in IGDB');
+      }
+
+      // Check if this game exists on Steam
+      const isInSteam = await checkGameExistsInSteam(
+        igdbData?.name || `Game ID ${id}`,
+      );
+
+      const result: HeroGameResult = {
+        name: igdbData?.name || `Game ID ${id}`,
+        igdbId: id,
+        existsInDb,
+        existsInHeroGames,
+        isInSteam,
+        igdbData,
+        status: 'pending',
+      };
+
+      setHeroSearchResult(result);
+
+      if (existsInHeroGames) {
+        toast.info(`Game "${result.name}" is already a hero game`);
+      } else if (existsInDb) {
+        toast.success(
+          `Found game: "${result.name}" (ready to add to hero games)`,
+        );
+      } else {
+        toast.success(
+          `Found game: "${result.name}" (will be added to database first)`,
+        );
+      }
+    } catch (error) {
+      console.error('Hero game ID search failed:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      setHeroSearchResult({
+        name: `Game ID ${heroIgdbId}`,
+        igdbId: Number(heroIgdbId),
+        existsInDb: false,
+        existsInHeroGames: false,
+        isInSteam: false,
+        error: errorMessage,
+        status: 'pending',
+      });
+
+      toast.error(`Failed to find game: ${errorMessage}`);
+    } finally {
+      setIsSearchingHeroById(false);
+    }
+  }, [heroIgdbId, gameService]);
+
+  // Handle add single game to hero games by ID
+  const handleAddHeroById = useCallback(async () => {
+    if (
+      !heroSearchResult ||
+      heroSearchResult.error ||
+      heroSearchResult.existsInHeroGames
+    ) {
+      return;
+    }
+
+    setIsAddingHeroById(true);
+
+    try {
+      console.log(
+        `🚀 Adding hero game: ${heroSearchResult.name} (ID: ${heroSearchResult.igdbId})`,
+      );
+
+      if (heroSearchResult.existsInDb) {
+        // Game already exists in database, just add to hero_games
+        const existingGame = await gameService.checkGameExists(
+          heroSearchResult.igdbId,
+        );
+        if (existingGame) {
+          await gameService.addHeroGame(existingGame.id);
+        }
+      } else {
+        // Add to database first, then add to hero_games
+        await gameService.addHeroGameByIgdbId(
+          heroSearchResult.igdbData,
+          heroSearchResult.bannerFile || undefined,
+        );
+      }
+
+      // Update the result to show it's completed
+      setHeroSearchResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'completed',
+              existsInHeroGames: true,
+              existsInDb: true,
+            }
+          : null,
+      );
+
+      toast.success(
+        `Successfully added "${heroSearchResult.name}" as a hero game`,
+      );
+    } catch (error) {
+      console.error('Failed to add hero game:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      setHeroSearchResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'failed',
+              errorMessage,
+            }
+          : null,
+      );
+
+      toast.error(`Failed to add hero game: ${errorMessage}`);
+    } finally {
+      setIsAddingHeroById(false);
+    }
+  }, [heroSearchResult, gameService]);
+
+  // Handle banner upload for hero game
+  const handleHeroBannerUpload = useCallback((file: File | null) => {
+    setHeroSearchResult((prev) =>
+      prev ? { ...prev, bannerFile: file } : null,
+    );
+  }, []);
+
   // Handle individual game selection
   const handleGameSelection = useCallback(
     (index: number, selected: boolean) => {
@@ -456,7 +641,9 @@ export default function AddGamePage() {
               isCheckingSteam ||
               batchProcessing ||
               isSearchingById ||
-              isAddingById
+              isAddingById ||
+              isSearchingHeroById ||
+              isAddingHeroById
             }
             className="mt-1 min-h-32 w-full rounded-md border px-3 py-2 text-sm"
           />
@@ -470,6 +657,8 @@ export default function AddGamePage() {
             batchProcessing ||
             isSearchingById ||
             isAddingById ||
+            isSearchingHeroById ||
+            isAddingHeroById ||
             !gameNames.trim()
           }
           className="w-full"
@@ -508,7 +697,9 @@ export default function AddGamePage() {
                 isAddingById ||
                 isSearching ||
                 isCheckingSteam ||
-                batchProcessing
+                batchProcessing ||
+                isSearchingHeroById ||
+                isAddingHeroById
               }
               className="flex-1 rounded-md border px-3 py-2 text-sm"
             />
@@ -520,6 +711,8 @@ export default function AddGamePage() {
                 isSearching ||
                 isCheckingSteam ||
                 batchProcessing ||
+                isSearchingHeroById ||
+                isAddingHeroById ||
                 !igdbId.trim()
               }
               variant="outline"
@@ -626,6 +819,163 @@ export default function AddGamePage() {
         )}
       </div>
 
+      {/* Add Hero Game by IGDB ID */}
+      <div className="mb-6 space-y-4 rounded-lg border p-6">
+        <div>
+          <label className="text-sm font-medium">
+            Add Hero Game by IGDB ID
+          </label>
+          <p className="mt-1 text-xs text-zinc-500">
+            Hero games are featured prominently on the homepage. If the game
+            exists in database, it will be added to hero games directly.
+            Otherwise, it will be added to database first.
+          </p>
+          <div className="mt-2 flex gap-2">
+            <input
+              type="number"
+              placeholder="Enter IGDB ID (e.g. 1234)"
+              value={heroIgdbId}
+              onChange={(e) => setHeroIgdbId(e.target.value)}
+              disabled={
+                isSearchingHeroById ||
+                isAddingHeroById ||
+                isSearching ||
+                isCheckingSteam ||
+                batchProcessing ||
+                isSearchingById ||
+                isAddingById
+              }
+              className="flex-1 rounded-md border px-3 py-2 text-sm"
+            />
+            <Button
+              onClick={handleSearchHeroById}
+              disabled={
+                isSearchingHeroById ||
+                isAddingHeroById ||
+                isSearching ||
+                isCheckingSteam ||
+                batchProcessing ||
+                isSearchingById ||
+                isAddingById ||
+                !heroIgdbId.trim()
+              }
+              variant="outline"
+            >
+              {isSearchingHeroById ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-2 h-4 w-4" />
+                  Search
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Hero Game Search Result */}
+        {heroSearchResult && (
+          <div className="rounded-lg border p-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">
+                    {heroSearchResult.igdbData?.name || heroSearchResult.name}
+                  </span>
+
+                  {heroSearchResult.existsInHeroGames && (
+                    <Badge variant="secondary">Already Hero Game</Badge>
+                  )}
+                  {heroSearchResult.existsInDb &&
+                    !heroSearchResult.existsInHeroGames && (
+                      <Badge variant="outline" className="text-green-600">
+                        In DB
+                      </Badge>
+                    )}
+                  {!heroSearchResult.existsInDb && (
+                    <Badge variant="outline" className="text-yellow-600">
+                      Will Add to DB
+                    </Badge>
+                  )}
+                  {heroSearchResult.isInSteam && (
+                    <Badge variant="outline" className="text-blue-600">
+                      Steam
+                    </Badge>
+                  )}
+                  {heroSearchResult.error && (
+                    <Badge variant="destructive">Error</Badge>
+                  )}
+                  {heroSearchResult.status === 'completed' && (
+                    <Badge variant="outline" className="text-green-600">
+                      <CheckCircle className="mr-1 h-3 w-3" />
+                      Added to Hero Games
+                    </Badge>
+                  )}
+                  {heroSearchResult.status === 'failed' && (
+                    <Badge variant="destructive">
+                      <XCircle className="mr-1 h-3 w-3" />
+                      Failed
+                    </Badge>
+                  )}
+                </div>
+
+                <p className="text-muted-foreground text-sm">
+                  IGDB ID: {heroSearchResult.igdbId}
+                </p>
+
+                {(heroSearchResult.error || heroSearchResult.errorMessage) && (
+                  <p className="text-sm text-red-500">
+                    {heroSearchResult.error || heroSearchResult.errorMessage}
+                  </p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2">
+                {!heroSearchResult.error &&
+                  !heroSearchResult.existsInHeroGames && (
+                    <>
+                      <FileUpload
+                        label=""
+                        onFileSelect={handleHeroBannerUpload}
+                        accept="image/jpeg,image/png,image/webp"
+                        maxSize={5 * 1024 * 1024}
+                        className="w-32"
+                      />
+                      {heroSearchResult.bannerFile && (
+                        <span className="text-xs text-green-600">✓ Banner</span>
+                      )}
+                      <Button
+                        onClick={handleAddHeroById}
+                        disabled={
+                          isAddingHeroById ||
+                          heroSearchResult.status === 'completed'
+                        }
+                        size="sm"
+                      >
+                        {isAddingHeroById ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Adding...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="mr-2 h-4 w-4" />
+                            Add to Hero Games
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Results */}
       {searchResults.length > 0 && (
         <div className="space-y-6">
@@ -678,7 +1028,9 @@ export default function AddGamePage() {
                       !!result.error ||
                       batchProcessing ||
                       isSearchingById ||
-                      isAddingById
+                      isAddingById ||
+                      isSearchingHeroById ||
+                      isAddingHeroById
                     }
                   />
 

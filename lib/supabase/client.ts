@@ -532,4 +532,107 @@ export class GameService {
 
     return averages;
   }
+
+  /**
+   * Check if a game is already in hero_games
+   */
+  async checkHeroGameExists(gameId: number) {
+    const { data, error } = await this.supabase
+      .from('hero_games')
+      .select('id')
+      .eq('game_id', gameId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message || 'Failed to check if hero game exists');
+    }
+
+    return data;
+  }
+
+  /**
+   * Add a game to hero_games
+   */
+  async addHeroGame(gameId: number) {
+    // Check if already exists
+    const existingHeroGame = await this.checkHeroGameExists(gameId);
+    if (existingHeroGame) {
+      throw new Error('Game is already in hero games');
+    }
+
+    const { data, error } = await this.supabase
+      .from('hero_games')
+      .insert({ game_id: gameId })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message || 'Failed to add hero game');
+    }
+
+    return data;
+  }
+
+  /**
+   * Remove a game from hero_games
+   */
+  async removeHeroGame(gameId: number) {
+    const { data, error } = await this.supabase
+      .from('hero_games')
+      .delete()
+      .eq('game_id', gameId)
+      .select();
+
+    if (error) {
+      throw new Error(error.message || 'Failed to remove hero game');
+    }
+
+    return data;
+  }
+
+  /**
+   * Get all hero games
+   */
+  async getHeroGames() {
+    const { data, error } = await this.supabase
+      .from('hero_games')
+      .select(
+        `
+        id,
+        game_id,
+        added_at,
+        games:game_id (
+          id,
+          name,
+          slug,
+          cover_url,
+          banner_url,
+          developers,
+          igdb_id
+        )
+      `,
+      )
+      .order('added_at', { ascending: false })
+      .limit(5);
+
+    if (error) {
+      throw new Error(error.message || 'Failed to fetch hero games');
+    }
+
+    return data;
+  }
+
+  /**
+   * Add game to hero_games by IGDB ID (will add to games table first if doesn't exist)
+   */
+  async addHeroGameByIgdbId(igdbData: IgdbGameData, bannerFile?: File) {
+    // First, add or update the game in the games table
+    const gameResult = await this.addOrUpdateGame(igdbData, bannerFile);
+    const gameId = gameResult.data.id;
+
+    // Then add it to hero_games
+    await this.addHeroGame(gameId);
+
+    return { gameId, heroGame: await this.checkHeroGameExists(gameId) };
+  }
 }
