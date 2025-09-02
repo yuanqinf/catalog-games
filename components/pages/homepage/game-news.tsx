@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import useSWR from 'swr';
-import { ExternalLink, Clock, Calendar } from 'lucide-react';
+import { ExternalLink, Clock, Calendar, Newspaper } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -131,7 +131,12 @@ const GameNews: React.FC = () => {
   return (
     <section className="mb-12">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Gaming News</h2>
+        <div className="flex items-center gap-3">
+          <Newspaper size={20} className="text-white" />
+          <div>
+            <h2 className="text-2xl font-bold text-white">Gaming News</h2>
+          </div>
+        </div>
       </div>
 
       <div className="relative">

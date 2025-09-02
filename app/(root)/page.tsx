@@ -1,6 +1,5 @@
 'use client';
 import HeroGames from '@/components/pages/homepage/hero-games';
-import MonthlyWorstGames from '@/components/pages/homepage/monthly-worst-games';
 import UpcomingGames from '@/components/pages/homepage/upcoming-games';
 import GameRanks from '@/components/pages/homepage/game-ranks';
 import GameNews from '@/components/pages/homepage/game-news';
