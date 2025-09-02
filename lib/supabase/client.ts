@@ -635,4 +635,72 @@ export class GameService {
 
     return { gameId, heroGame: await this.checkHeroGameExists(gameId) };
   }
+
+  /**
+   * Check if a game exists in upcoming_games table
+   */
+  async checkUpcomingGameExists(gameId: number) {
+    const { data, error } = await this.supabase
+      .from('upcoming_games')
+      .select('id')
+      .eq('game_id', gameId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(
+        error.message || 'Failed to check if upcoming game exists',
+      );
+    }
+
+    return data;
+  }
+
+  /**
+   * Add a game to upcoming_games table
+   */
+  async addUpcomingGame(gameId: number, highlight: boolean = false) {
+    const { data: game, error: gameError } = await this.supabase
+      .from('games')
+      .select('first_release_date')
+      .eq('id', gameId)
+      .single();
+
+    if (gameError) {
+      throw new Error(gameError.message || 'Failed to fetch game release date');
+    }
+
+    const { data, error } = await this.supabase
+      .from('upcoming_games')
+      .insert({
+        game_id: gameId,
+        highlight,
+        first_release_date: game.first_release_date,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message || 'Failed to add upcoming game');
+    }
+
+    return data;
+  }
+
+  /**
+   * Add game to database first, then to upcoming_games table
+   */
+  async addUpcomingGameByIgdbId(
+    igdbData: IgdbGameData,
+    bannerFile?: File,
+    highlight: boolean = false,
+  ) {
+    // First add the game to the main games table
+    const gameResult = await this.addOrUpdateGame(igdbData, bannerFile);
+    const gameId = gameResult.data.id;
+
+    // Then add it to upcoming_games
+    await this.addUpcomingGame(gameId, highlight);
+
+    return { gameId, upcomingGame: await this.checkUpcomingGameExists(gameId) };
+  }
 }

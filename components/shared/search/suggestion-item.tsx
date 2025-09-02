@@ -9,6 +9,7 @@ import {
   SuggestionItem as SuggestionItemType,
 } from '@/types';
 import { RecentSearchItem } from '@/utils/recent-searches';
+import Image from 'next/image';
 
 interface SuggestionItemProps {
   item: SuggestionItemType;
@@ -78,10 +79,12 @@ export const SuggestionItem = ({
         <div className="flex w-full items-center gap-3">
           {/* Supabase games show cover, IGDB games show gamepad icon or loading spinner */}
           {'cover_url' in game && game.cover_url ? (
-            <img
+            <Image
               src={game.cover_url}
               alt={game.name}
               className="h-10 w-8 rounded object-cover"
+              width={32}
+              height={32}
             />
           ) : (
             <div className="flex h-10 w-8 items-center justify-center rounded bg-zinc-800">

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import useSWR from 'swr';
-import { Bookmark, Gamepad2, Star, Loader2 } from 'lucide-react';
+import { Bookmark, Gamepad2, Star } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GameService } from '@/lib/supabase/client';
 import { igdbClient } from '@/lib/igdb/client';
-import type { GameDbData, IgdbGame } from '@/types';
+import type { IgdbGame } from '@/types';
 
 // Initialize clients
 const gameService = new GameService();
