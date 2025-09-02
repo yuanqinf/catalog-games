@@ -76,13 +76,8 @@ class IgdbClient {
       body: `
         search "${query}";
         fields id, name, slug, category, total_rating_count, cover, screenshots, artworks, videos, summary, storyline, first_release_date, involved_companies.company.name;
-        where category = (0,1,2,8,9,10)
-        & total_rating_count >= 3
-        & cover != null
-        & screenshots != null
-        & (artworks != null | videos != null)
-        & summary != null;
-        limit 3;
+        where category = (0,1,2,8,9,10);
+        limit 10;
       `,
     });
 
@@ -95,7 +90,35 @@ class IgdbClient {
 
     const games: IgdbGame[] = await res.json();
 
-    return games.map((game) => {
+    // Filter out special editions, deluxe editions, GOTY, etc.
+    const filteredGames = games.filter((game) => {
+      const name = game.name.toLowerCase();
+      const excludePatterns = [
+        'deluxe edition',
+        'deluxe',
+        'goty',
+        'game of the year',
+        "collector's edition",
+        'collector edition',
+        'premium edition',
+        'ultimate edition',
+        'enhanced edition',
+        'definitive edition',
+        'complete edition',
+        'gold edition',
+        'legendary edition',
+        'special edition',
+        'limited edition',
+        "director's cut",
+        'remastered',
+        'hd edition',
+        'anniversary edition',
+      ];
+
+      return !excludePatterns.some((pattern) => name.includes(pattern));
+    });
+
+    return filteredGames.map((game) => {
       if (game.cover && typeof game.cover === 'object' && 'url' in game.cover) {
         return {
           ...game,
