@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const rapidApiNewsKey = process.env.RAPIDAPI_NEWS_KEY;
+    const rapidApiNewsKey = process.env.RAPIDAPI_KEY;
 
     if (!rapidApiNewsKey) {
       return NextResponse.json(

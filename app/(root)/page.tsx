@@ -12,7 +12,7 @@ const HomePage = () => {
 
       <GameNews />
 
-      <MonthlyWorstGames />
+      {/* <MonthlyWorstGames /> */}
 
       <UpcomingGames />
 
