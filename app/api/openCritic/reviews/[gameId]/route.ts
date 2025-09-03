@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { gameId: string } }
+  { params }: { params: { gameId: string } },
 ) {
   try {
     const rapidApiKey = process.env.RAPIDAPI_KEY;
@@ -16,17 +16,14 @@ export async function GET(
 
     const { gameId } = params;
     const { searchParams } = new URL(request.url);
-    
+
     // Extract query parameters with defaults
     const skip = parseInt(searchParams.get('skip') || '0');
     const sort = searchParams.get('sort') || 'popularity';
-    
+
     // Validate gameId
     if (!gameId || isNaN(parseInt(gameId))) {
-      return NextResponse.json(
-        { error: 'Invalid game ID' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: 'Invalid game ID' }, { status: 400 });
     }
 
     const url = `https://opencritic-api.p.rapidapi.com/reviews/game/${gameId}?skip=${skip}&sort=${sort}`;
@@ -60,9 +57,9 @@ export async function GET(
   } catch (error) {
     console.error('Error fetching OpenCritic reviews:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch reviews',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 },
     );

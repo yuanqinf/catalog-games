@@ -34,10 +34,10 @@ const NewsCardSkeleton = () => (
 const NewsCard: React.FC<{ article: NewsArticle }> = ({ article }) => {
   const formattedDate = article.date
     ? new Date(article.date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
     : null;
 
   return (
@@ -109,7 +109,11 @@ const GameNews: React.FC = () => {
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const { data: rawData, error, isLoading } = useSWR<{
+  const {
+    data: rawData,
+    error,
+    isLoading,
+  } = useSWR<{
     success: boolean;
     data: Array<{
       id: number;
@@ -144,22 +148,22 @@ const GameNews: React.FC = () => {
   // Transform Supabase data to match NewsResponse format
   const data: NewsResponse | undefined = rawData
     ? {
-      success: rawData.success,
-      data: rawData.data.map((article) => ({
-        title: article.title,
-        url: article.url,
-        excerpt: article.excerpt,
-        thumbnail: article.thumbnail,
-        date: article.published_at,
-        authors: article.authors,
-        publisher: article.publisher
-          ? {
-            name: article.publisher,
-          }
-          : undefined,
-      })),
-      totalHits: rawData.total,
-    }
+        success: rawData.success,
+        data: rawData.data.map((article) => ({
+          title: article.title,
+          url: article.url,
+          excerpt: article.excerpt,
+          thumbnail: article.thumbnail,
+          date: article.published_at,
+          authors: article.authors,
+          publisher: article.publisher
+            ? {
+                name: article.publisher,
+              }
+            : undefined,
+        })),
+        totalHits: rawData.total,
+      }
     : undefined;
 
   if (error) {
@@ -174,7 +178,8 @@ const GameNews: React.FC = () => {
   }
 
   // Filter articles with publishers
-  const articlesWithPublisher = data?.data?.filter((article) => article.publisher?.name) || [];
+  const articlesWithPublisher =
+    data?.data?.filter((article) => article.publisher?.name) || [];
 
   // Show empty state if no articles with publishers are found
   if (!isLoading && articlesWithPublisher.length === 0) {
@@ -233,23 +238,23 @@ const GameNews: React.FC = () => {
           <CarouselContent className="-ml-2 md:-ml-4">
             {isLoading
               ? // Loading skeletons
-              Array.from({ length: 5 }).map((_, index) => (
-                <CarouselItem
-                  key={index}
-                  className="pl-2 md:basis-1/2 md:pl-4 lg:basis-1/3 xl:basis-1/4"
-                >
-                  <NewsCardSkeleton />
-                </CarouselItem>
-              ))
+                Array.from({ length: 5 }).map((_, index) => (
+                  <CarouselItem
+                    key={index}
+                    className="pl-2 md:basis-1/2 md:pl-4 lg:basis-1/3 xl:basis-1/4"
+                  >
+                    <NewsCardSkeleton />
+                  </CarouselItem>
+                ))
               : // Actual news cards - show up to 5 articles with publishers
-              articlesWithPublisher.slice(0, 5).map((article, index) => (
-                <CarouselItem
-                  key={index}
-                  className="pl-2 md:basis-1/2 md:pl-4 lg:basis-1/3 xl:basis-1/4"
-                >
-                  <NewsCard article={article} />
-                </CarouselItem>
-              ))}
+                articlesWithPublisher.slice(0, 5).map((article, index) => (
+                  <CarouselItem
+                    key={index}
+                    className="pl-2 md:basis-1/2 md:pl-4 lg:basis-1/3 xl:basis-1/4"
+                  >
+                    <NewsCard article={article} />
+                  </CarouselItem>
+                ))}
           </CarouselContent>
         </Carousel>
 

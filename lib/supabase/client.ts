@@ -1,11 +1,9 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { useSession } from '@clerk/nextjs';
-import type { IgdbGameData, ExternalGameReview, GameRating } from '@/types';
+import type { IgdbGameData, GameRating } from '@/types';
 import { transformIgdbData } from '@/utils/igdb-transform';
 import { uploadBanner } from '@/utils/banner-upload';
-import {
-  fetchSteamTags,
-} from '@/utils/steam-integration';
+import { fetchSteamTags } from '@/utils/steam-integration';
 
 type ClerkSession = ReturnType<typeof useSession>['session'];
 
@@ -82,30 +80,6 @@ export class GameService {
   }
 
   /**
-   * Add external reviews for a game
-   */
-  async addGameReviews(
-    gameId: number,
-    reviews: Omit<ExternalGameReview, 'game_id'>[],
-  ) {
-    // Set the game_id for each review
-    const reviewsWithGameId = reviews.map((review) => ({
-      ...review,
-      game_id: gameId,
-    }));
-
-    const { data, error } = await this.supabase
-      .from('external_game_reviews')
-      .insert(reviewsWithGameId);
-
-    if (error) {
-      throw new Error(error.message || 'Failed to insert game reviews');
-    }
-
-    return data;
-  }
-
-  /**
    * Get reviews for a specific game from third party sources (OpenCritic)
    */
   async getGameReviews(gameId: number) {
@@ -117,23 +91,6 @@ export class GameService {
 
     if (error) {
       throw new Error(error.message || 'Failed to fetch game reviews');
-    }
-
-    return data;
-  }
-
-  /**
-   * Check if a review already exists (to avoid duplicates)
-   */
-  async checkReviewExists(reviewId: string) {
-    const { data, error } = await this.supabase
-      .from('external_game_reviews')
-      .select('id')
-      .eq('review_id', reviewId)
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(error.message || 'Failed to check if review exists');
     }
 
     return data;
@@ -700,19 +657,21 @@ export class GameService {
    * Add multiple game news articles to the database
    * Returns success/failure results for each article
    */
-  async addGameNewsBatch(articles: Array<{
-    title: string;
-    url: string;
-    excerpt?: string;
-    thumbnail?: string;
-    language?: string;
-    paywall?: boolean;
-    contentLength?: number;
-    date?: string;
-    authors?: string[];
-    keywords?: string[];
-    publisher?: { name?: string };
-  }>) {
+  async addGameNewsBatch(
+    articles: Array<{
+      title: string;
+      url: string;
+      excerpt?: string;
+      thumbnail?: string;
+      language?: string;
+      paywall?: boolean;
+      contentLength?: number;
+      date?: string;
+      authors?: string[];
+      keywords?: string[];
+      publisher?: { name?: string };
+    }>,
+  ) {
     const results = {
       successful: [] as any[],
       failed: [] as { article: any; error: string }[],
@@ -740,7 +699,9 @@ export class GameService {
           language: article.language || null,
           paywall: article.paywall || false,
           content_length: article.contentLength || null,
-          published_at: article.date ? new Date(article.date).toISOString() : null,
+          published_at: article.date
+            ? new Date(article.date).toISOString()
+            : null,
           authors: article.authors || [],
           keywords: article.keywords || [],
           publisher: article.publisher?.name || null,
@@ -780,13 +741,14 @@ export class GameService {
     limit: number = 20,
     sortBy: 'latest' | 'title' = 'latest',
   ) {
-    let query = this.supabase
-      .from('game_news')
-      .select('*');
+    let query = this.supabase.from('game_news').select('*');
 
     // Apply sorting
     if (sortBy === 'latest') {
-      query = query.order('published_at', { ascending: false, nullsFirst: false });
+      query = query.order('published_at', {
+        ascending: false,
+        nullsFirst: false,
+      });
     } else {
       query = query.order('title', { ascending: true });
     }
@@ -821,31 +783,39 @@ export class GameService {
   /**
    * Search for a game on OpenCritic by exact name match
    */
-  async searchOpenCriticGame(gameName: string): Promise<{ id: number; name: string } | null> {
+  async searchOpenCriticGame(
+    gameName: string,
+  ): Promise<{ id: number; name: string } | null> {
     try {
       const encodedName = encodeURIComponent(gameName);
       const response = await fetch(
         `/api/openCritic/search?criteria=${encodedName}`,
         {
           method: 'GET',
-        }
+        },
       );
 
       if (!response.ok) {
-        console.warn(`OpenCritic search API failed with status: ${response.status}`);
+        console.warn(
+          `OpenCritic search API failed with status: ${response.status}`,
+        );
         return null;
       }
 
       const apiResponse = await response.json();
-      
-      if (!apiResponse.success || !Array.isArray(apiResponse.data) || apiResponse.data.length === 0) {
+
+      if (
+        !apiResponse.success ||
+        !Array.isArray(apiResponse.data) ||
+        apiResponse.data.length === 0
+      ) {
         console.warn(`No OpenCritic results found for: ${gameName}`);
         return null;
       }
 
       // Look for exact name match first
       const exactMatch = apiResponse.data.find(
-        (game: any) => game.name?.toLowerCase() === gameName.toLowerCase()
+        (game: any) => game.name?.toLowerCase() === gameName.toLowerCase(),
       );
 
       if (exactMatch) {
@@ -884,23 +854,25 @@ export class GameService {
     gameId: number,
     openCriticGameId: number,
     skip: number = 0,
-    limit: number = 20
+    limit: number = 20,
   ): Promise<any[]> {
     try {
       const response = await fetch(
         `/api/openCritic/reviews/${openCriticGameId}?skip=${skip}&sort=popularity`,
         {
           method: 'GET',
-        }
+        },
       );
 
       if (!response.ok) {
-        console.warn(`OpenCritic reviews API failed with status: ${response.status}`);
+        console.warn(
+          `OpenCritic reviews API failed with status: ${response.status}`,
+        );
         return [];
       }
 
       const apiResponse = await response.json();
-      
+
       if (!apiResponse.success || !Array.isArray(apiResponse.data)) {
         console.warn('Invalid OpenCritic reviews API response format');
         return [];
@@ -915,7 +887,9 @@ export class GameService {
 
         try {
           // Check if review already exists
-          const existingReview = await this.checkThirdPartyReviewExists(review.externalUrl);
+          const existingReview = await this.checkThirdPartyReviewExists(
+            review.externalUrl,
+          );
           if (existingReview) {
             console.log(`Review already exists, skipping: ${review.title}`);
             continue;
@@ -924,7 +898,9 @@ export class GameService {
           // Transform review data to match database schema
           const reviewData = {
             game_id: gameId,
-            published_date: review.publishedDate ? new Date(review.publishedDate).toISOString() : null,
+            published_date: review.publishedDate
+              ? new Date(review.publishedDate).toISOString()
+              : null,
             external_url: review.externalUrl,
             snippet_content: review.snippet || null,
             score: review.score || null,
@@ -941,13 +917,18 @@ export class GameService {
             .single();
 
           if (error) {
-            console.warn(`Failed to insert review: ${review.title}`, error.message);
+            console.warn(
+              `Failed to insert review: ${review.title}`,
+              error.message,
+            );
             continue;
           }
 
           processedReviews.push(data);
           addedCount++;
-          console.log(`✅ Added review: ${review.title} from ${review.Outlet?.name}`);
+          console.log(
+            `✅ Added review: ${review.title} from ${review.Outlet?.name}`,
+          );
         } catch (reviewError) {
           console.warn(`Error processing review: ${review.title}`, reviewError);
           continue;
@@ -967,22 +948,29 @@ export class GameService {
   async addOpenCriticReviews(gameId: number, gameName: string): Promise<void> {
     try {
       console.log(`🔍 Searching OpenCritic for: ${gameName}`);
-      
+
       // Search for the game on OpenCritic
       const openCriticGame = await this.searchOpenCriticGame(gameName);
-      
+
       if (!openCriticGame) {
         console.warn(`No OpenCritic game found for: ${gameName}`);
         return;
       }
 
-      console.log(`📝 Found OpenCritic game: ${openCriticGame.name} (ID: ${openCriticGame.id})`);
-      
+      console.log(
+        `📝 Found OpenCritic game: ${openCriticGame.name} (ID: ${openCriticGame.id})`,
+      );
+
       // Fetch reviews for the game
-      const reviews = await this.fetchOpenCriticReviews(gameId, openCriticGame.id);
-      
+      const reviews = await this.fetchOpenCriticReviews(
+        gameId,
+        openCriticGame.id,
+      );
+
       if (reviews.length > 0) {
-        console.log(`✅ Added ${reviews.length} OpenCritic reviews for: ${gameName}`);
+        console.log(
+          `✅ Added ${reviews.length} OpenCritic reviews for: ${gameName}`,
+        );
       } else {
         console.warn(`No new OpenCritic reviews added for: ${gameName}`);
       }

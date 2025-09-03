@@ -30,18 +30,6 @@ export interface GameDbData {
   steam_popular_tags?: string[] | null;
 }
 
-// External Game Reviews Interface
-export interface ExternalGameReview {
-  id?: number;
-  review_id: string;
-  game_id: number;
-  source: string; // 'steam', 'metacritic', etc.
-  content: string;
-  original_published_at: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
 // Type for IGDB game data from API
 export interface IgdbGameData {
   id: number; // IGDB id

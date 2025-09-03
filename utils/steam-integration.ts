@@ -11,19 +11,6 @@ export interface SteamData {
   steam_popular_tags?: string[];
 }
 
-// Steam Reviews Interface (importing from the reviews utility)
-export interface SteamReviewsData {
-  steamAppId: number | null;
-  steamName: string | null;
-  reviews: Array<{
-    review_id: string;
-    game_id: number | null;
-    source: string;
-    content: string;
-    original_published_at: string;
-  }>;
-}
-
 /**
  * Fetch Steam popular tags data - handles both client and server environments
  */
@@ -122,39 +109,5 @@ export async function checkGameExistsInSteam(
   } catch (error) {
     console.warn('Steam existence check failed:', error);
     return false;
-  }
-}
-
-/**
- * Fetch Steam reviews data from our API route
- */
-export async function fetchSteamReviewsData(
-  gameName: string,
-): Promise<SteamReviewsData> {
-  try {
-    const response = await fetch(
-      `/api/steam/reviews-detail?q=${encodeURIComponent(gameName)}`,
-    );
-
-    if (!response.ok) {
-      console.error(
-        `Steam reviews API responded with status: ${response.status}`,
-      );
-      return {
-        steamAppId: null,
-        steamName: null,
-        reviews: [],
-      };
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch Steam reviews:', error);
-    return {
-      steamAppId: null,
-      steamName: null,
-      reviews: [],
-    };
   }
 }

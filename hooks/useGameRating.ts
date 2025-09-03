@@ -163,7 +163,8 @@ export function useGameReviews(gameId: number | string | undefined) {
       errorRetryInterval: 1000,
       onSuccess: () =>
         console.log(`💾 Cached third party reviews for game ${numericGameId}`),
-      onError: (err) => console.error('Failed to fetch third party reviews:', err),
+      onError: (err) =>
+        console.error('Failed to fetch third party reviews:', err),
     },
   );
 

@@ -35,7 +35,9 @@ const FeaturedCriticReviews = ({ gameId }: FeaturedCriticReviewsProps) => {
           <h3 className="mb-6 text-2xl font-bold">Professional Reviews</h3>
           <div className="flex h-32 w-full items-center justify-center">
             <div className="text-muted-foreground">
-              {error ? 'Failed to load reviews' : 'No professional reviews available yet'}
+              {error
+                ? 'Failed to load reviews'
+                : 'No professional reviews available yet'}
             </div>
           </div>
         </CardContent>
@@ -48,7 +50,10 @@ const FeaturedCriticReviews = ({ gameId }: FeaturedCriticReviewsProps) => {
     if (!a.published_date && !b.published_date) return 0;
     if (!a.published_date) return 1;
     if (!b.published_date) return -1;
-    return new Date(b.published_date).getTime() - new Date(a.published_date).getTime();
+    return (
+      new Date(b.published_date).getTime() -
+      new Date(a.published_date).getTime()
+    );
   });
 
   // Show first 3 by default, or all if showAll is true
@@ -71,7 +76,7 @@ const FeaturedCriticReviews = ({ gameId }: FeaturedCriticReviewsProps) => {
           {displayedReviews.map((review) => (
             <div
               key={review.id}
-              className="group rounded-lg border border-border/50 p-4 transition-all hover:border-border hover:shadow-sm"
+              className="group border-border/50 hover:border-border rounded-lg border p-4 transition-all hover:shadow-sm"
             >
               {/* Header with outlet, score, and date */}
               <div className="mb-3 flex items-start justify-between">
@@ -79,7 +84,7 @@ const FeaturedCriticReviews = ({ gameId }: FeaturedCriticReviewsProps) => {
                   {review.outlet_name && (
                     <div className="flex items-center gap-1">
                       <Building2 size={16} className="text-muted-foreground" />
-                      <span className="font-semibold text-foreground">
+                      <span className="text-foreground font-semibold">
                         {review.outlet_name}
                       </span>
                     </div>
@@ -90,16 +95,19 @@ const FeaturedCriticReviews = ({ gameId }: FeaturedCriticReviewsProps) => {
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-2 text-sm">
                   {review.published_date && (
                     <div className="flex items-center gap-1">
                       <Calendar size={14} />
                       <span>
-                        {new Date(review.published_date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
+                        {new Date(review.published_date).toLocaleDateString(
+                          'en-US',
+                          {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          },
+                        )}
                       </span>
                     </div>
                   )}
@@ -108,7 +116,7 @@ const FeaturedCriticReviews = ({ gameId }: FeaturedCriticReviewsProps) => {
 
               {/* Author */}
               {review.author_name && (
-                <div className="mb-3 flex items-center gap-1 text-sm text-muted-foreground">
+                <div className="text-muted-foreground mb-3 flex items-center gap-1 text-sm">
                   <User size={14} />
                   <span>by {review.author_name}</span>
                 </div>
@@ -116,7 +124,7 @@ const FeaturedCriticReviews = ({ gameId }: FeaturedCriticReviewsProps) => {
 
               {/* Review content */}
               {review.snippet_content && (
-                <p className="mb-3 text-foreground leading-relaxed line-clamp-4">
+                <p className="text-foreground mb-3 line-clamp-4 leading-relaxed">
                   {review.snippet_content}
                 </p>
               )}
@@ -126,8 +134,14 @@ const FeaturedCriticReviews = ({ gameId }: FeaturedCriticReviewsProps) => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 gap-1 text-muted-foreground hover:text-foreground"
-                  onClick={() => window.open(review.external_url, '_blank', 'noopener,noreferrer')}
+                  className="text-muted-foreground hover:text-foreground h-8 gap-1"
+                  onClick={() =>
+                    window.open(
+                      review.external_url,
+                      '_blank',
+                      'noopener,noreferrer',
+                    )
+                  }
                 >
                   <span className="text-xs">Read Full Review</span>
                   <ExternalLink size={12} />
@@ -146,8 +160,7 @@ const FeaturedCriticReviews = ({ gameId }: FeaturedCriticReviewsProps) => {
             >
               {showAll
                 ? `Show Less`
-                : `Show All ${sortedReviews.length} Reviews`
-              }
+                : `Show All ${sortedReviews.length} Reviews`}
             </Button>
           </div>
         )}

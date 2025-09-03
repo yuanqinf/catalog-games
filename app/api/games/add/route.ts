@@ -74,47 +74,8 @@ export async function POST(request: NextRequest) {
       true,
     );
 
-    // If we have Steam app ID, fetch and add detailed Steam reviews
-    if (gameDataWithSteam.steam_app_id && result.data?.id) {
-      try {
-        console.log(`📝 Fetching detailed Steam reviews for: ${igdbData.name}`);
-        const steamReviewsData =
-          await SteamIntegrationService.getDetailedReviews(igdbData.name);
-
-        if (steamReviewsData && steamReviewsData.reviews.length > 0) {
-          // Check for duplicates and filter out existing reviews
-          const newReviews = [];
-          for (const review of steamReviewsData.reviews) {
-            const exists = await gameService.checkReviewExists(
-              review.review_id,
-            );
-            if (!exists) {
-              newReviews.push({
-                review_id: review.review_id,
-                source: review.source,
-                content: review.content,
-                original_published_at: review.original_published_at,
-              });
-            }
-          }
-
-          if (newReviews.length > 0) {
-            await gameService.addGameReviews(result.data.id, newReviews);
-            console.log(`📝 Added ${newReviews.length} detailed Steam reviews`);
-          } else {
-            console.log(
-              `📝 No new detailed reviews to add (all reviews already exist)`,
-            );
-          }
-        }
-      } catch (reviewError) {
-        console.warn(
-          'Failed to fetch/save detailed Steam reviews, but game data was saved:',
-          reviewError,
-        );
-        // Don't throw here - we want game data to be saved even if reviews fail
-      }
-    }
+    // Note: We no longer fetch detailed Steam reviews since we've pivoted to using OpenCritic
+    // Steam review summary (overall rating like "Very Positive") is still preserved in the game data
 
     console.log(`✅ Successfully added game: ${igdbData.name}`);
 

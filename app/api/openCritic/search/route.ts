@@ -49,9 +49,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error searching OpenCritic games:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to search games',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 },
     );
