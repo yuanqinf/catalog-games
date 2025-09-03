@@ -34,10 +34,10 @@ const NewsCardSkeleton = () => (
 const NewsCard: React.FC<{ article: NewsArticle }> = ({ article }) => {
   const formattedDate = article.date
     ? new Date(article.date).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
     : null;
 
   return (
@@ -109,8 +109,27 @@ const GameNews: React.FC = () => {
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const { data, error, isLoading } = useSWR<NewsResponse>(
-    '/api/gaming-news',
+  const { data: rawData, error, isLoading } = useSWR<{
+    success: boolean;
+    data: Array<{
+      id: number;
+      title: string;
+      url: string;
+      excerpt?: string;
+      thumbnail?: string;
+      language?: string;
+      paywall?: boolean;
+      content_length?: number;
+      published_at?: string;
+      authors?: string[];
+      keywords?: string[];
+      publisher?: string;
+      created_at: string;
+      updated_at: string;
+    }>;
+    total: number;
+  }>(
+    '/api/game-news?limit=10',
     (url) =>
       fetch(url).then((res) => {
         if (!res.ok) throw new Error('Failed to fetch news');
@@ -122,12 +141,59 @@ const GameNews: React.FC = () => {
     },
   );
 
+  // Transform Supabase data to match NewsResponse format
+  const data: NewsResponse | undefined = rawData
+    ? {
+      success: rawData.success,
+      data: rawData.data.map((article) => ({
+        title: article.title,
+        url: article.url,
+        excerpt: article.excerpt,
+        thumbnail: article.thumbnail,
+        date: article.published_at,
+        authors: article.authors,
+        publisher: article.publisher
+          ? {
+            name: article.publisher,
+          }
+          : undefined,
+      })),
+      totalHits: rawData.total,
+    }
+    : undefined;
+
   if (error) {
     return (
       <section className="mb-12">
         <h2 className="mb-6 text-2xl font-bold">Gaming News</h2>
         <div className="rounded-lg border border-red-800 bg-red-900/20 p-4 text-red-400">
           Failed to load gaming news. Please try again later.
+        </div>
+      </section>
+    );
+  }
+
+  // Filter articles with publishers
+  const articlesWithPublisher = data?.data?.filter((article) => article.publisher?.name) || [];
+
+  // Show empty state if no articles with publishers are found
+  if (!isLoading && articlesWithPublisher.length === 0) {
+    return (
+      <section className="mb-12">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Newspaper size={20} className="text-white" />
+            <div>
+              <h2 className="text-2xl font-bold text-white">Gaming News</h2>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg border border-zinc-700 bg-zinc-800/50 p-6 text-center text-zinc-400">
+          <Newspaper size={40} className="mx-auto mb-3 text-zinc-500" />
+          <p>No gaming news articles with publishers found.</p>
+          <p className="mt-1 text-sm">
+            Use the admin panel to load news articles from the API.
+          </p>
         </div>
       </section>
     );
@@ -167,37 +233,30 @@ const GameNews: React.FC = () => {
           <CarouselContent className="-ml-2 md:-ml-4">
             {isLoading
               ? // Loading skeletons
-                Array.from({ length: 5 }).map((_, index) => (
-                  <CarouselItem
-                    key={index}
-                    className="pl-2 md:basis-1/2 md:pl-4 lg:basis-1/3 xl:basis-1/4"
-                  >
-                    <NewsCardSkeleton />
-                  </CarouselItem>
-                ))
-              : // Actual news cards - show only 5 articles with publishers
-                data?.data
-                  ?.filter((article) => article.publisher?.name)
-                  .slice(0, 5)
-                  .map((article, index) => (
-                    <CarouselItem
-                      key={index}
-                      className="pl-2 md:basis-1/2 md:pl-4 lg:basis-1/3 xl:basis-1/4"
-                    >
-                      <NewsCard article={article} />
-                    </CarouselItem>
-                  ))}
+              Array.from({ length: 5 }).map((_, index) => (
+                <CarouselItem
+                  key={index}
+                  className="pl-2 md:basis-1/2 md:pl-4 lg:basis-1/3 xl:basis-1/4"
+                >
+                  <NewsCardSkeleton />
+                </CarouselItem>
+              ))
+              : // Actual news cards - show up to 5 articles with publishers
+              articlesWithPublisher.slice(0, 5).map((article, index) => (
+                <CarouselItem
+                  key={index}
+                  className="pl-2 md:basis-1/2 md:pl-4 lg:basis-1/3 xl:basis-1/4"
+                >
+                  <NewsCard article={article} />
+                </CarouselItem>
+              ))}
           </CarouselContent>
         </Carousel>
 
         {/* Pagination Dots */}
         <div className="mt-6 flex items-center justify-center sm:hidden">
           <PaginationDots
-            totalItems={
-              data?.data
-                ?.filter((article) => article.publisher?.name)
-                .slice(0, 5).length || 5
-            }
+            totalItems={Math.min(articlesWithPublisher.length, 5)}
             activeIndex={activeIndex}
             carouselApi={carouselApi}
           />

@@ -703,4 +703,143 @@ export class GameService {
 
     return { gameId, upcomingGame: await this.checkUpcomingGameExists(gameId) };
   }
+
+  /**
+   * Check if a news article already exists by URL
+   */
+  async checkGameNewsExists(url: string) {
+    const { data, error } = await this.supabase
+      .from('game_news')
+      .select('id')
+      .eq('url', url)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message || 'Failed to check if news exists');
+    }
+
+    return data;
+  }
+
+  /**
+   * Add multiple game news articles to the database
+   * Returns success/failure results for each article
+   */
+  async addGameNewsBatch(articles: Array<{
+    title: string;
+    url: string;
+    excerpt?: string;
+    thumbnail?: string;
+    language?: string;
+    paywall?: boolean;
+    contentLength?: number;
+    date?: string;
+    authors?: string[];
+    keywords?: string[];
+    publisher?: { name?: string };
+  }>) {
+    const results = {
+      successful: [] as any[],
+      failed: [] as { article: any; error: string }[],
+      skipped: [] as { article: any; reason: string }[],
+    };
+
+    for (const article of articles) {
+      try {
+        // Check if article already exists
+        const existing = await this.checkGameNewsExists(article.url);
+        if (existing) {
+          results.skipped.push({
+            article,
+            reason: 'Article already exists in database',
+          });
+          continue;
+        }
+
+        // Transform API data to match database schema
+        const newsData = {
+          title: article.title,
+          url: article.url,
+          excerpt: article.excerpt || null,
+          thumbnail: article.thumbnail || null,
+          language: article.language || null,
+          paywall: article.paywall || false,
+          content_length: article.contentLength || null,
+          published_at: article.date ? new Date(article.date).toISOString() : null,
+          authors: article.authors || [],
+          keywords: article.keywords || [],
+          publisher: article.publisher?.name || null,
+        };
+
+        // Insert the news article
+        const { data, error } = await this.supabase
+          .from('game_news')
+          .insert(newsData)
+          .select()
+          .single();
+
+        if (error) {
+          results.failed.push({
+            article,
+            error: error.message || 'Failed to insert news article',
+          });
+        } else {
+          results.successful.push(data);
+        }
+      } catch (error) {
+        results.failed.push({
+          article,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Get game news with pagination and sorting
+   */
+  async getGameNews(
+    offset: number = 0,
+    limit: number = 20,
+    sortBy: 'latest' | 'title' = 'latest',
+  ) {
+    let query = this.supabase
+      .from('game_news')
+      .select('*');
+
+    // Apply sorting
+    if (sortBy === 'latest') {
+      query = query.order('published_at', { ascending: false, nullsFirst: false });
+    } else {
+      query = query.order('title', { ascending: true });
+    }
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw new Error(error.message || 'Failed to fetch game news');
+    }
+
+    return data;
+  }
+
+  /**
+   * Get total count of game news for pagination
+   */
+  async getTotalGameNewsCount(): Promise<number> {
+    const { count, error } = await this.supabase
+      .from('game_news')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) {
+      throw new Error(error.message || 'Failed to get total news count');
+    }
+
+    return count || 0;
+  }
 }

@@ -93,6 +93,14 @@ export default function AddGamePage() {
   const [isLoadingUpcoming, setIsLoadingUpcoming] = useState(false);
   const [upcomingBatchProcessing, setUpcomingBatchProcessing] = useState(false);
 
+  // Game news states
+  const [isLoadingNews, setIsLoadingNews] = useState(false);
+  const [newsResults, setNewsResults] = useState<{
+    successful: any[];
+    failed: Array<{ article: any; error: string }>;
+    skipped: Array<{ article: any; reason: string }>;
+  } | null>(null);
+
   // Loading states
   const [isSearching, setIsSearching] = useState(false);
   const [isCheckingSteam, setIsCheckingSteam] = useState(false);
@@ -388,10 +396,10 @@ export default function AddGamePage() {
       setIdSearchResult((prev) =>
         prev
           ? {
-              ...prev,
-              status: 'failed',
-              errorMessage,
-            }
+            ...prev,
+            status: 'failed',
+            errorMessage,
+          }
           : null,
       );
 
@@ -503,11 +511,11 @@ export default function AddGamePage() {
       setHeroSearchResult((prev) =>
         prev
           ? {
-              ...prev,
-              status: 'completed',
-              existsInHeroGames: true,
-              existsInDb: true,
-            }
+            ...prev,
+            status: 'completed',
+            existsInHeroGames: true,
+            existsInDb: true,
+          }
           : null,
       );
 
@@ -522,10 +530,10 @@ export default function AddGamePage() {
       setHeroSearchResult((prev) =>
         prev
           ? {
-              ...prev,
-              status: 'failed',
-              errorMessage,
-            }
+            ...prev,
+            status: 'failed',
+            errorMessage,
+          }
           : null,
       );
 
@@ -884,11 +892,11 @@ export default function AddGamePage() {
           prev.map((g, i) =>
             i === index
               ? {
-                  ...g,
-                  status: 'completed',
-                  existsInUpcomingGames: true,
-                  errorMessage: undefined,
-                }
+                ...g,
+                status: 'completed',
+                existsInUpcomingGames: true,
+                errorMessage: undefined,
+              }
               : g,
           ),
         );
@@ -954,11 +962,11 @@ export default function AddGamePage() {
           prev.map((g, i) =>
             i === index
               ? {
-                  ...g,
-                  status: 'completed',
-                  existsInDb: true,
-                  errorMessage: undefined,
-                }
+                ...g,
+                status: 'completed',
+                existsInDb: true,
+                errorMessage: undefined,
+              }
               : g,
           ),
         );
@@ -1013,6 +1021,42 @@ export default function AddGamePage() {
       setUpcomingBatchProcessing(false);
     }
   }, [upcomingGames, handleRetryUpcomingGame]);
+
+  // Game news functions
+  const handleLoadGameNews = useCallback(async () => {
+    setIsLoadingNews(true);
+    setNewsResults(null);
+
+    try {
+      // Fetch news from the gaming news API
+      const response = await fetch('/api/gaming-news');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch news: ${response.status}`);
+      }
+
+      const newsData = await response.json();
+
+      if (!newsData.success || !newsData.data) {
+        throw new Error('Invalid news data received');
+      }
+
+      // Process the news articles using GameService
+      const results = await gameService.addGameNewsBatch(newsData.data);
+      setNewsResults(results);
+
+      // Show summary toast
+      const { successful, failed, skipped } = results;
+      toast.success(
+        `News processed: ${successful.length} added, ${skipped.length} skipped, ${failed.length} failed`
+      );
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to load game news: ${errorMessage}`);
+      console.error('Error loading game news:', error);
+    } finally {
+      setIsLoadingNews(false);
+    }
+  }, [gameService]);
 
   // Handle banner upload for hero game
   const handleHeroBannerUpload = useCallback((file: File | null) => {
@@ -1139,10 +1183,10 @@ export default function AddGamePage() {
             prev.map((r) =>
               r.igdbId === game.igdbId
                 ? {
-                    ...r,
-                    status: 'failed',
-                    errorMessage,
-                  }
+                  ...r,
+                  status: 'failed',
+                  errorMessage,
+                }
                 : r,
             ),
           );
@@ -1618,25 +1662,25 @@ export default function AddGamePage() {
                 {upcomingGames.filter(
                   (g) => g.status === 'failed' && g.isMatched,
                 ).length > 0 && (
-                  <Button
-                    onClick={handleRetryAllFailedUpcoming}
-                    disabled={upcomingBatchProcessing}
-                    size="sm"
-                    variant="outline"
-                  >
-                    {upcomingBatchProcessing ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Retrying...
-                      </>
-                    ) : (
-                      <>
-                        <RotateCcw className="mr-2 h-4 w-4" />
-                        Retry All Failed
-                      </>
-                    )}
-                  </Button>
-                )}
+                    <Button
+                      onClick={handleRetryAllFailedUpcoming}
+                      disabled={upcomingBatchProcessing}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {upcomingBatchProcessing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Retrying...
+                        </>
+                      ) : (
+                        <>
+                          <RotateCcw className="mr-2 h-4 w-4" />
+                          Retry All Failed
+                        </>
+                      )}
+                    </Button>
+                  )}
                 {upcomingGames.filter((g) => g.selected).length > 0 && (
                   <Button
                     onClick={handleUpcomingBatchProcess}
@@ -1665,11 +1709,10 @@ export default function AddGamePage() {
               {upcomingGames.map((game, index) => (
                 <div
                   key={index}
-                  className={`flex items-center justify-between rounded-lg border p-3 ${
-                    game.isMatched
-                      ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20'
-                      : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
-                  }`}
+                  className={`flex items-center justify-between rounded-lg border p-3 ${game.isMatched
+                    ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20'
+                    : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
+                    }`}
                 >
                   <div className="flex items-center space-x-3">
                     {game.isMatched && (
@@ -1812,6 +1855,114 @@ export default function AddGamePage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Game News Management */}
+      <div className="mb-6 space-y-4 rounded-lg border p-6">
+        <div>
+          <label className="text-sm font-medium">Game News Management</label>
+          <p className="mt-1 text-xs text-zinc-500">
+            Fetch and store the latest gaming news articles from the news API into the database.
+            Duplicate articles will be automatically skipped based on URL.
+          </p>
+        </div>
+
+        <div className="flex gap-4">
+          <Button
+            onClick={handleLoadGameNews}
+            disabled={isLoadingNews}
+            className="w-full"
+          >
+            {isLoadingNews ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading News...
+              </>
+            ) : (
+              <>
+                <Search className="mr-2 h-4 w-4" />
+                Load Game News
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* News Results */}
+        {newsResults && (
+          <div className="mt-4 space-y-4 rounded-lg border p-4">
+            <h3 className="font-medium">News Processing Results</h3>
+
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-green-600">
+                  {newsResults.successful.length}
+                </div>
+                <div className="text-sm text-muted-foreground">Added</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {newsResults.skipped.length}
+                </div>
+                <div className="text-sm text-muted-foreground">Skipped</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-red-600">
+                  {newsResults.failed.length}
+                </div>
+                <div className="text-sm text-muted-foreground">Failed</div>
+              </div>
+            </div>
+
+            {/* Show details if there are failures or skipped items */}
+            {(newsResults.failed.length > 0 || newsResults.skipped.length > 0) && (
+              <div className="space-y-2">
+                {newsResults.skipped.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-yellow-600">Skipped Articles:</h4>
+                    <div className="max-h-32 overflow-y-auto space-y-1">
+                      {newsResults.skipped.map((item, index) => (
+                        <div key={index} className="text-xs text-muted-foreground">
+                          • {item.article.title} - {item.reason}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {newsResults.failed.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-red-600">Failed Articles:</h4>
+                    <div className="max-h-32 overflow-y-auto space-y-1">
+                      {newsResults.failed.map((item, index) => (
+                        <div key={index} className="text-xs text-red-500">
+                          • {item.article.title} - {item.error}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {newsResults.successful.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-green-600">Successfully Added:</h4>
+                <div className="max-h-32 overflow-y-auto space-y-1">
+                  {newsResults.successful.slice(0, 5).map((article, index) => (
+                    <div key={index} className="text-xs text-muted-foreground">
+                      • {article.title} ({article.publisher || 'Unknown Publisher'})
+                    </div>
+                  ))}
+                  {newsResults.successful.length > 5 && (
+                    <div className="text-xs text-muted-foreground">
+                      ... and {newsResults.successful.length - 5} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
