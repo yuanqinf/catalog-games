@@ -48,6 +48,7 @@ import {
   getPlaytrackerData,
   PlaytimeData,
 } from '@/lib/playernet/get-playernet-data';
+import { useSteamReviews } from '@/hooks/useSteamReviews';
 import FeaturedUserReviews from './game-detail-featured-review';
 
 const GameDetail = ({ game }: { game: GameDbData }) => {
@@ -143,8 +144,10 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     loadPlaytrackerData();
   }, [game.slug, game.name]);
 
+  const { steamReviews } = useSteamReviews(game.name);
+
   const avatarBorderColorClass = getAvatarBorderColor(
-    game.steam_all_review ?? undefined,
+    steamReviews?.steam_all_review ?? undefined,
   );
 
   const getYouTubeEmbedUrl = (id: string) => {
@@ -261,15 +264,22 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                 <div
                   className={`flex-shrink-0 rounded-full border-2 p-1 ${avatarBorderColorClass}`}
                 >
-                  <div className="relative h-16 w-16 overflow-hidden rounded-full">
-                    <Image
-                      src={game.cover_url ?? ''}
-                      alt={`${game.name} avatar`}
-                      fill
-                      sizes="64px"
-                      className="rounded-full object-cover"
-                    />
-                  </div>
+                  {game.cover_url ? (
+                    <div className="relative h-16 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+                      <Image
+                        src={game.cover_url}
+                        alt={`${game.name} avatar`}
+                        fill
+                        sizes="64px"
+                        className="rounded-full object-cover"
+                        priority
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800">
+                      <Gamepad2 className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+                    </div>
+                  )}
                 </div>
 
                 {/* Title and Date */}

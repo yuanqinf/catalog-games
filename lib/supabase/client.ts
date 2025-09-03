@@ -783,26 +783,33 @@ export class GameService {
   /**
    * Search for a game on OpenCritic with smart matching
    */
-  async searchOpenCriticGame(gameName: string): Promise<{ id: number; name: string } | null> {
+  async searchOpenCriticGame(
+    gameName: string,
+  ): Promise<{ id: number; name: string } | null> {
     try {
-      const response = await fetch(`/api/openCritic/search?criteria=${encodeURIComponent(gameName)}`);
-      
+      const response = await fetch(
+        `/api/openCritic/search?criteria=${encodeURIComponent(gameName)}`,
+      );
+
       if (!response.ok) return null;
-      
+
       const { success, data } = await response.json();
       if (!success || !Array.isArray(data) || data.length === 0) return null;
 
       // Try exact match first
-      const exactMatch = data.find(game => 
-        game.name?.toLowerCase() === gameName.toLowerCase()
+      const exactMatch = data.find(
+        (game) => game.name?.toLowerCase() === gameName.toLowerCase(),
       );
       if (exactMatch) return { id: exactMatch.id, name: exactMatch.name };
 
       // Try Roman numeral conversion for common cases
-      const normalizedSearch = gameName.replace(/ III$/i, ' 3').replace(/ II$/i, ' 2').replace(/ IV$/i, ' 4');
+      const normalizedSearch = gameName
+        .replace(/ III$/i, ' 3')
+        .replace(/ II$/i, ' 2')
+        .replace(/ IV$/i, ' 4');
       if (normalizedSearch !== gameName) {
-        const romanMatch = data.find(game => 
-          game.name?.toLowerCase() === normalizedSearch.toLowerCase()
+        const romanMatch = data.find(
+          (game) => game.name?.toLowerCase() === normalizedSearch.toLowerCase(),
         );
         if (romanMatch) return { id: romanMatch.id, name: romanMatch.name };
       }
