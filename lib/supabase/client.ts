@@ -5,7 +5,6 @@ import { transformIgdbData } from '@/utils/igdb-transform';
 import { uploadBanner } from '@/utils/banner-upload';
 import {
   fetchSteamTags,
-  fetchSteamReviewsData,
 } from '@/utils/steam-integration';
 
 type ClerkSession = ReturnType<typeof useSession>['session'];
@@ -107,14 +106,14 @@ export class GameService {
   }
 
   /**
-   * Get reviews for a specific game
+   * Get reviews for a specific game from third party sources (OpenCritic)
    */
   async getGameReviews(gameId: number) {
     const { data, error } = await this.supabase
-      .from('external_game_reviews')
+      .from('third_party_game_reviews')
       .select('*')
       .eq('game_id', gameId)
-      .order('original_published_at', { ascending: false });
+      .order('published_date', { ascending: false, nullsFirst: false });
 
     if (error) {
       throw new Error(error.message || 'Failed to fetch game reviews');
@@ -141,7 +140,7 @@ export class GameService {
   }
 
   /**
-   * Add or update a game from IGDB data with optional banner, Steam data, and reviews
+   * Add or update a game from IGDB data with optional banner, Steam data, and OpenCritic reviews
    */
   async addOrUpdateGame(
     igdbData: IgdbGameData,
@@ -212,40 +211,16 @@ export class GameService {
       gameId = result.data.id;
     }
 
-    // Fetch and add Steam reviews if Steam data was found
-    if (dbData.steam_app_id) {
-      try {
-        console.log(`📝 Fetching Steam reviews for: ${igdbData.name}`);
-        const steamReviewsData = await fetchSteamReviewsData(igdbData.name);
-        if (steamReviewsData.reviews && steamReviewsData.reviews.length > 0) {
-          // Check for duplicates and filter out existing reviews
-          const newReviews = [];
-          for (const review of steamReviewsData.reviews) {
-            const exists = await this.checkReviewExists(review.review_id);
-            if (!exists) {
-              newReviews.push({
-                review_id: review.review_id,
-                source: review.source,
-                content: review.content,
-                original_published_at: review.original_published_at,
-              });
-            }
-          }
-
-          if (newReviews.length > 0) {
-            await this.addGameReviews(gameId, newReviews);
-            console.log(`📝 Added ${newReviews.length} new Steam reviews`);
-          } else {
-            console.log(`📝 No new reviews to add (all reviews already exist)`);
-          }
-        }
-      } catch (reviewError) {
-        console.warn(
-          'Failed to fetch/save Steam reviews, but game data was saved:',
-          reviewError,
-        );
-        // Don't throw here - we want game data to be saved even if reviews fail
-      }
+    // Fetch and add OpenCritic reviews
+    try {
+      console.log(`📝 Fetching OpenCritic reviews for: ${igdbData.name}`);
+      await this.addOpenCriticReviews(gameId, igdbData.name);
+    } catch (reviewError) {
+      console.warn(
+        'Failed to fetch/save OpenCritic reviews, but game data was saved:',
+        reviewError,
+      );
+      // Don't throw here - we want game data to be saved even if reviews fail
     }
 
     return result;
@@ -841,5 +816,179 @@ export class GameService {
     }
 
     return count || 0;
+  }
+
+  /**
+   * Search for a game on OpenCritic by exact name match
+   */
+  async searchOpenCriticGame(gameName: string): Promise<{ id: number; name: string } | null> {
+    try {
+      const encodedName = encodeURIComponent(gameName);
+      const response = await fetch(
+        `/api/openCritic/search?criteria=${encodedName}`,
+        {
+          method: 'GET',
+        }
+      );
+
+      if (!response.ok) {
+        console.warn(`OpenCritic search API failed with status: ${response.status}`);
+        return null;
+      }
+
+      const apiResponse = await response.json();
+      
+      if (!apiResponse.success || !Array.isArray(apiResponse.data) || apiResponse.data.length === 0) {
+        console.warn(`No OpenCritic results found for: ${gameName}`);
+        return null;
+      }
+
+      // Look for exact name match first
+      const exactMatch = apiResponse.data.find(
+        (game: any) => game.name?.toLowerCase() === gameName.toLowerCase()
+      );
+
+      if (exactMatch) {
+        return { id: exactMatch.id, name: exactMatch.name };
+      }
+
+      console.warn(`No exact OpenCritic match found for: ${gameName}`);
+      return null;
+    } catch (error) {
+      console.warn(`OpenCritic search error for ${gameName}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Check if a review already exists by external URL
+   */
+  async checkThirdPartyReviewExists(externalUrl: string) {
+    const { data, error } = await this.supabase
+      .from('third_party_game_reviews')
+      .select('id')
+      .eq('external_url', externalUrl)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message || 'Failed to check if review exists');
+    }
+
+    return data;
+  }
+
+  /**
+   * Fetch reviews for a game from OpenCritic
+   */
+  async fetchOpenCriticReviews(
+    gameId: number,
+    openCriticGameId: number,
+    skip: number = 0,
+    limit: number = 20
+  ): Promise<any[]> {
+    try {
+      const response = await fetch(
+        `/api/openCritic/reviews/${openCriticGameId}?skip=${skip}&sort=popularity`,
+        {
+          method: 'GET',
+        }
+      );
+
+      if (!response.ok) {
+        console.warn(`OpenCritic reviews API failed with status: ${response.status}`);
+        return [];
+      }
+
+      const apiResponse = await response.json();
+      
+      if (!apiResponse.success || !Array.isArray(apiResponse.data)) {
+        console.warn('Invalid OpenCritic reviews API response format');
+        return [];
+      }
+
+      const reviews = apiResponse.data;
+      const processedReviews = [];
+      let addedCount = 0;
+
+      for (const review of reviews) {
+        if (addedCount >= limit) break;
+
+        try {
+          // Check if review already exists
+          const existingReview = await this.checkThirdPartyReviewExists(review.externalUrl);
+          if (existingReview) {
+            console.log(`Review already exists, skipping: ${review.title}`);
+            continue;
+          }
+
+          // Transform review data to match database schema
+          const reviewData = {
+            game_id: gameId,
+            published_date: review.publishedDate ? new Date(review.publishedDate).toISOString() : null,
+            external_url: review.externalUrl,
+            snippet_content: review.snippet || null,
+            score: review.score || null,
+            np_score: review.npScore || null,
+            outlet_name: review.Outlet?.name || null,
+            author_name: review.Authors?.[0]?.name || null, // First author only
+          };
+
+          // Insert the review
+          const { data, error } = await this.supabase
+            .from('third_party_game_reviews')
+            .insert(reviewData)
+            .select()
+            .single();
+
+          if (error) {
+            console.warn(`Failed to insert review: ${review.title}`, error.message);
+            continue;
+          }
+
+          processedReviews.push(data);
+          addedCount++;
+          console.log(`✅ Added review: ${review.title} from ${review.Outlet?.name}`);
+        } catch (reviewError) {
+          console.warn(`Error processing review: ${review.title}`, reviewError);
+          continue;
+        }
+      }
+
+      return processedReviews;
+    } catch (error) {
+      console.warn(`OpenCritic reviews fetch error:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Add OpenCritic reviews for a game
+   */
+  async addOpenCriticReviews(gameId: number, gameName: string): Promise<void> {
+    try {
+      console.log(`🔍 Searching OpenCritic for: ${gameName}`);
+      
+      // Search for the game on OpenCritic
+      const openCriticGame = await this.searchOpenCriticGame(gameName);
+      
+      if (!openCriticGame) {
+        console.warn(`No OpenCritic game found for: ${gameName}`);
+        return;
+      }
+
+      console.log(`📝 Found OpenCritic game: ${openCriticGame.name} (ID: ${openCriticGame.id})`);
+      
+      // Fetch reviews for the game
+      const reviews = await this.fetchOpenCriticReviews(gameId, openCriticGame.id);
+      
+      if (reviews.length > 0) {
+        console.log(`✅ Added ${reviews.length} OpenCritic reviews for: ${gameName}`);
+      } else {
+        console.warn(`No new OpenCritic reviews added for: ${gameName}`);
+      }
+    } catch (error) {
+      console.warn(`Failed to add OpenCritic reviews for ${gameName}:`, error);
+      // Don't throw - this is non-critical and shouldn't fail the entire game addition
+    }
   }
 }
