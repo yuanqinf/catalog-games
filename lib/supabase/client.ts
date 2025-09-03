@@ -781,51 +781,36 @@ export class GameService {
   }
 
   /**
-   * Search for a game on OpenCritic by exact name match
+   * Search for a game on OpenCritic with smart matching
    */
-  async searchOpenCriticGame(
-    gameName: string,
-  ): Promise<{ id: number; name: string } | null> {
+  async searchOpenCriticGame(gameName: string): Promise<{ id: number; name: string } | null> {
     try {
-      const encodedName = encodeURIComponent(gameName);
-      const response = await fetch(
-        `/api/openCritic/search?criteria=${encodedName}`,
-        {
-          method: 'GET',
-        },
-      );
+      const response = await fetch(`/api/openCritic/search?criteria=${encodeURIComponent(gameName)}`);
+      
+      if (!response.ok) return null;
+      
+      const { success, data } = await response.json();
+      if (!success || !Array.isArray(data) || data.length === 0) return null;
 
-      if (!response.ok) {
-        console.warn(
-          `OpenCritic search API failed with status: ${response.status}`,
+      // Try exact match first
+      const exactMatch = data.find(game => 
+        game.name?.toLowerCase() === gameName.toLowerCase()
+      );
+      if (exactMatch) return { id: exactMatch.id, name: exactMatch.name };
+
+      // Try Roman numeral conversion for common cases
+      const normalizedSearch = gameName.replace(/ III$/i, ' 3').replace(/ II$/i, ' 2').replace(/ IV$/i, ' 4');
+      if (normalizedSearch !== gameName) {
+        const romanMatch = data.find(game => 
+          game.name?.toLowerCase() === normalizedSearch.toLowerCase()
         );
-        return null;
+        if (romanMatch) return { id: romanMatch.id, name: romanMatch.name };
       }
 
-      const apiResponse = await response.json();
-
-      if (
-        !apiResponse.success ||
-        !Array.isArray(apiResponse.data) ||
-        apiResponse.data.length === 0
-      ) {
-        console.warn(`No OpenCritic results found for: ${gameName}`);
-        return null;
-      }
-
-      // Look for exact name match first
-      const exactMatch = apiResponse.data.find(
-        (game: any) => game.name?.toLowerCase() === gameName.toLowerCase(),
-      );
-
-      if (exactMatch) {
-        return { id: exactMatch.id, name: exactMatch.name };
-      }
-
-      console.warn(`No exact OpenCritic match found for: ${gameName}`);
+      console.warn(`No OpenCritic match found for: ${gameName}`);
       return null;
     } catch (error) {
-      console.warn(`OpenCritic search error for ${gameName}:`, error);
+      console.warn(`OpenCritic search error:`, error);
       return null;
     }
   }
