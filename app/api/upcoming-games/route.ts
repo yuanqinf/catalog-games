@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
         highlight,
         added_at,
         first_release_date,
+        status,
         games:game_id (
           id,
           igdb_id,
@@ -31,7 +32,8 @@ export async function GET(request: NextRequest) {
         )
       `,
       )
-      .order('added_at', { ascending: false }); // Default fallback ordering
+      .eq('status', 'upcoming')
+      .order('added_at', { ascending: false });
 
     if (error) {
       throw new Error(error.message || 'Failed to fetch upcoming games');
@@ -55,6 +57,7 @@ export async function GET(request: NextRequest) {
         platforms: upcomingGame.games.platforms,
         highlight: upcomingGame.highlight,
         added_at: upcomingGame.added_at,
+        status: upcomingGame.status,
       })) || [];
 
     // Optimized sorting: highlighted → upcoming releases → recently added
