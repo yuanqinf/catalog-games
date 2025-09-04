@@ -1,6 +1,7 @@
 import { GameDbData, IgdbGame } from '@/types';
 import { RecentSearches, RecentSearchItem } from '@/utils/recent-searches';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { GameService } from '@/lib/supabase/client';
 
 export const createGameHandlers = (
   router: AppRouterInstance,
@@ -55,8 +56,30 @@ export const createGameHandlers = (
         throw new Error(errorData.message || 'Failed to add game to database');
       }
 
-      await response.json();
+      const addResult = await response.json();
       console.log(`✅ Successfully added game: ${igdbGame.name}`);
+
+      // Attempt to fetch OpenCritic reviews for the newly added game
+      try {
+        const gameService = new GameService();
+        const gameId = addResult.data?.id;
+
+        if (gameId) {
+          console.log(
+            `📝 Attempting to fetch OpenCritic reviews for: ${igdbGame.name}`,
+          );
+          await gameService.addOpenCriticReviews(gameId, igdbGame.name);
+          console.log(
+            `✅ OpenCritic review fetch completed for: ${igdbGame.name}`,
+          );
+        }
+      } catch (reviewError) {
+        // Fail silently as requested
+        console.warn(
+          `Failed to fetch OpenCritic reviews for ${igdbGame.name}:`,
+          reviewError,
+        );
+      }
 
       // Navigate to the new game's detail page
       router.push(`/detail/${igdbGame.slug}`);

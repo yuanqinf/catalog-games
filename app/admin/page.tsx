@@ -101,6 +101,17 @@ export default function AddGamePage() {
     skipped: Array<{ article: any; reason: string }>;
   } | null>(null);
 
+  // OpenCritic review states
+  const [openCriticGameId, setOpenCriticGameId] = useState('');
+  const [supabaseGameId, setSupabaseGameId] = useState('');
+  const [isAddingReviews, setIsAddingReviews] = useState(false);
+  const [reviewResults, setReviewResults] = useState<{
+    success: boolean;
+    reviewsAdded: number;
+    message: string;
+    error?: string;
+  } | null>(null);
+
   // Loading states
   const [isSearching, setIsSearching] = useState(false);
   const [isCheckingSteam, setIsCheckingSteam] = useState(false);
@@ -1066,6 +1077,66 @@ export default function AddGamePage() {
     );
   }, []);
 
+  // Handle adding OpenCritic reviews
+  const handleAddOpenCriticReviews = useCallback(async () => {
+    if (!openCriticGameId.trim() || !supabaseGameId.trim()) {
+      toast.error('Please enter both OpenCritic Game ID and Supabase Game ID');
+      return;
+    }
+
+    if (isNaN(Number(openCriticGameId)) || isNaN(Number(supabaseGameId))) {
+      toast.error('Both IDs must be valid numbers');
+      return;
+    }
+
+    setIsAddingReviews(true);
+    setReviewResults(null);
+
+    try {
+      console.log(
+        `🔍 Adding OpenCritic reviews for game ${supabaseGameId} from OpenCritic ID ${openCriticGameId}`,
+      );
+
+      const reviews = await gameService.fetchOpenCriticReviews(
+        Number(supabaseGameId),
+        Number(openCriticGameId),
+      );
+
+      if (reviews.length > 0) {
+        setReviewResults({
+          success: true,
+          reviewsAdded: reviews.length,
+          message: `Successfully added ${reviews.length} reviews`,
+        });
+        toast.success(`Added ${reviews.length} OpenCritic reviews`);
+      } else {
+        setReviewResults({
+          success: false,
+          reviewsAdded: 0,
+          message: 'No new reviews were added (may already exist)',
+        });
+        toast.info(
+          'No new reviews added - they may already exist in the database',
+        );
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to add OpenCritic reviews:', error);
+
+      setReviewResults({
+        success: false,
+        reviewsAdded: 0,
+        message: `Failed to add reviews: ${errorMessage}`,
+        error: errorMessage,
+      });
+
+      toast.error(`Failed to add reviews: ${errorMessage}`);
+    } finally {
+      setIsAddingReviews(false);
+    }
+  }, [openCriticGameId, supabaseGameId, gameService]);
+
   // Handle individual game selection
   const handleGameSelection = useCallback(
     (index: number, selected: boolean) => {
@@ -1977,6 +2048,107 @@ export default function AddGamePage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* Add OpenCritic Reviews */}
+      <div className="mb-6 space-y-4 rounded-lg border p-6">
+        <div>
+          <label className="text-sm font-medium">
+            Add OpenCritic Reviews to Game
+          </label>
+          <p className="mt-1 text-xs text-zinc-500">
+            Add OpenCritic reviews to a specific game in your database by
+            providing both the OpenCritic game ID and the Supabase game ID.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <label className="text-sm font-medium">OpenCritic Game ID</label>
+            <input
+              type="number"
+              placeholder="e.g., 12345"
+              value={openCriticGameId}
+              onChange={(e) => setOpenCriticGameId(e.target.value)}
+              disabled={isAddingReviews}
+              className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Supabase Game ID</label>
+            <input
+              type="number"
+              placeholder="e.g., 67890"
+              value={supabaseGameId}
+              onChange={(e) => setSupabaseGameId(e.target.value)}
+              disabled={isAddingReviews}
+              className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+
+        <Button
+          onClick={handleAddOpenCriticReviews}
+          disabled={
+            isAddingReviews ||
+            !openCriticGameId.trim() ||
+            !supabaseGameId.trim()
+          }
+          className="w-full"
+        >
+          {isAddingReviews ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Adding Reviews...
+            </>
+          ) : (
+            <>
+              <Upload className="mr-2 h-4 w-4" />
+              Add OpenCritic Reviews
+            </>
+          )}
+        </Button>
+
+        {/* Review Results */}
+        {reviewResults && (
+          <div
+            className={`mt-4 rounded-lg border p-4 ${
+              reviewResults.success
+                ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20'
+                : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
+            }`}
+          >
+            <h3 className="font-medium">
+              {reviewResults.success ? 'Success' : 'Failed'}
+            </h3>
+            <div className="mt-2 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Reviews Added:</span>
+                <span
+                  className={`text-sm font-medium ${
+                    reviewResults.success ? 'text-green-600' : 'text-red-600'
+                  }`}
+                >
+                  {reviewResults.reviewsAdded}
+                </span>
+              </div>
+              <p
+                className={`text-sm ${
+                  reviewResults.success
+                    ? 'text-green-700 dark:text-green-400'
+                    : 'text-red-700 dark:text-red-400'
+                }`}
+              >
+                {reviewResults.message}
+              </p>
+              {reviewResults.error && (
+                <p className="text-sm text-red-600">
+                  Error: {reviewResults.error}
+                </p>
+              )}
+            </div>
           </div>
         )}
       </div>

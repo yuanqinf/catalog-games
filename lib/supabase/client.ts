@@ -878,6 +878,14 @@ export class GameService {
         if (addedCount >= limit) break;
 
         try {
+          // Skip reviews without snippet content
+          if (!review.snippet || !review.snippet.trim()) {
+            console.log(
+              `Skipping review without snippet content: ${review.externalUrl}`,
+            );
+            continue;
+          }
+
           // Check if review already exists
           const existingReview = await this.checkThirdPartyReviewExists(
             review.externalUrl,
@@ -894,7 +902,7 @@ export class GameService {
               ? new Date(review.publishedDate).toISOString()
               : null,
             external_url: review.externalUrl,
-            snippet_content: review.snippet || null,
+            snippet_content: review.snippet,
             score: review.score || null,
             np_score: review.npScore || null,
             outlet_name: review.Outlet?.name || null,
