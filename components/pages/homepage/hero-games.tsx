@@ -226,7 +226,8 @@ const HeroGames = () => {
                   carouselApi?.scrollTo(index);
                 }}
               >
-                <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md">
+                <div className={`h-12 w-12 flex-shrink-0 overflow-hidden rounded-md transition-all duration-200 ${activeIndex === index ? 'scale-110' : ''
+                  }`}>
                   {game.images.thumbnail ? (
                     <Image
                       src={game.images.thumbnail}
