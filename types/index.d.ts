@@ -75,6 +75,7 @@ export interface IgdbGame {
     | {
         url: string;
       };
+  cover_url?: string; // Processed cover URL for easy access
   screenshots?: { url: string }[];
   artworks?: { url: string }[];
   rating?: number;

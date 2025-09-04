@@ -75,7 +75,7 @@ class IgdbClient {
       },
       body: `
         search "${query}";
-        fields id, name, slug, category, total_rating_count, cover, screenshots, artworks, videos, summary, storyline, first_release_date, involved_companies.company.name;
+        fields id, name, slug, category, total_rating_count, cover.url, screenshots.url, artworks.url, videos, summary, storyline, first_release_date, involved_companies.company.name;
         where category = (0,1,2,8,9,10);
         limit 10;
       `,
@@ -120,17 +120,25 @@ class IgdbClient {
 
     return filteredGames.map((game) => {
       if (game.cover && typeof game.cover === 'object' && 'url' in game.cover) {
-        return {
-          ...game,
-          cover: {
-            ...game.cover,
-            url: `https:${game.cover.url}`.replace(
-              '/t_thumb/',
-              '/t_cover_big/',
-            ),
-          },
-        };
+        game.cover.url = `https:${game.cover.url}`.replace(
+          '/t_thumb/',
+          '/t_1080p/',
+        );
+        (game as any).cover_url = game.cover.url;
       }
+      if (game.screenshots) {
+        game.screenshots = game.screenshots.map((screenshot) => ({
+          ...screenshot,
+          url: `https:${screenshot.url}`.replace('/t_thumb/', '/t_1080p/'),
+        }));
+      }
+      if (game.artworks) {
+        game.artworks = game.artworks.map((artwork) => ({
+          ...artwork,
+          url: `https:${artwork.url}`.replace('/t_thumb/', '/t_1080p/'),
+        }));
+      }
+
       return game;
     });
   }

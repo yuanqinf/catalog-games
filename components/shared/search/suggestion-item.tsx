@@ -63,6 +63,7 @@ export const SuggestionItem = ({
     const game = item as GameDbData | RecentSearchItem | IgdbGame;
     const { isIgdbGame, developer, releaseYear } = getGameDetails(game);
 
+    console.log(game);
     return (
       <CommandItem
         className={`transition-colors duration-200 ${
