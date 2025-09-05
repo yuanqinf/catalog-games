@@ -3,15 +3,13 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@clerk/nextjs';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  AdminProvider,
-  GameBatchSearch,
-  SingleGameAdd,
-  HeroGameManager,
-  UpcomingGamesManager,
-  GameNewsManager,
-  OpenCriticReviewsManager,
-} from '@/components/admin';
+import { AdminProvider } from '@/components/admin/AdminContext';
+import { GameBatchSearch } from '@/components/admin/GameBatchSearch';
+import { SingleGameAdd } from '@/components/admin/SingleGameAdd';
+import { HeroGameManager } from '@/components/admin/HeroGameManager';
+import { UpcomingGamesManager } from '@/components/admin/UpcomingGamesManager';
+import { GameNewsManager } from '@/components/admin/GameNewsManager';
+import { OpenCriticReviewsManager } from '@/components/admin/OpenCriticReviewsManager';
 
 // TODO: Only allow admin users to access this page
 

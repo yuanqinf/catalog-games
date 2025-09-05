@@ -1,0 +1,2378 @@
+'use client';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from '@clerk/nextjs';
+
+import { Button } from '@/components/ui/button';
+import { FileUpload } from '@/components/ui/file-upload';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { toast } from 'sonner';
+import { GameService } from '@/lib/supabase/client';
+
+import {
+  Loader2,
+  CheckCircle,
+  XCircle,
+  Upload,
+  Search,
+  RotateCcw,
+} from 'lucide-react';
+import { checkGameExistsInSteam } from '@/utils/steam-integration';
+
+// TODO: Only allow admin users to access this page
+
+interface GameResult {
+  name: string;
+  igdbId: number;
+  existsInDb: boolean;
+  isInSteam?: boolean;
+  igdbData?: any;
+  error?: string;
+  selected?: boolean;
+  bannerFile?: File | null;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
+  errorMessage?: string;
+}
+
+interface HeroGameResult {
+  name: string;
+  igdbId: number;
+  existsInDb: boolean;
+  existsInHeroGames: boolean;
+  isInSteam?: boolean;
+  igdbData?: any;
+  error?: string;
+  bannerFile?: File | null;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
+  errorMessage?: string;
+}
+
+interface UpcomingGameResult {
+  name: string;
+  igdbId?: number;
+  existsInDb: boolean;
+  existsInUpcomingGames: boolean;
+  isMatched: boolean;
+  isInSteam?: boolean;
+  igdbData?: any;
+  error?: string;
+  selected?: boolean;
+  highlight?: boolean;
+  bannerFile?: File | null;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
+  errorMessage?: string;
+}
+
+interface BatchReport {
+  total: number;
+  successful: number;
+  failed: number;
+  details: Array<{
+    name: string;
+    status: 'success' | 'failed';
+    message: string;
+  }>;
+}
+
+export default function AddGamePage() {
+  // Form states
+  const [gameNames, setGameNames] = useState('');
+  const [searchResults, setSearchResults] = useState<GameResult[]>([]);
+  const [igdbId, setIgdbId] = useState('');
+  const [idSearchResult, setIdSearchResult] = useState<GameResult | null>(null);
+
+  // Hero games states
+  const [heroIgdbId, setHeroIgdbId] = useState('');
+  const [heroSearchResult, setHeroSearchResult] =
+    useState<HeroGameResult | null>(null);
+
+  // Upcoming games states
+  const [upcomingGames, setUpcomingGames] = useState<UpcomingGameResult[]>([]);
+  const [isLoadingUpcoming, setIsLoadingUpcoming] = useState(false);
+  const [upcomingBatchProcessing, setUpcomingBatchProcessing] = useState(false);
+
+  // Game news states
+  const [isLoadingNews, setIsLoadingNews] = useState(false);
+  const [newsResults, setNewsResults] = useState<{
+    successful: any[];
+    failed: Array<{ article: any; error: string }>;
+    skipped: Array<{ article: any; reason: string }>;
+  } | null>(null);
+
+  // OpenCritic review states
+  const [openCriticGameId, setOpenCriticGameId] = useState('');
+  const [supabaseGameId, setSupabaseGameId] = useState('');
+  const [isAddingReviews, setIsAddingReviews] = useState(false);
+  const [reviewResults, setReviewResults] = useState<{
+    success: boolean;
+    reviewsAdded: number;
+    message: string;
+    error?: string;
+  } | null>(null);
+
+  // Loading states
+  const [isSearching, setIsSearching] = useState(false);
+  const [isCheckingSteam, setIsCheckingSteam] = useState(false);
+  const [batchProcessing, setBatchProcessing] = useState(false);
+  const [batchStopped, setBatchStopped] = useState(false);
+  const [isSearchingById, setIsSearchingById] = useState(false);
+  const [isAddingById, setIsAddingById] = useState(false);
+
+  // Hero games loading states
+  const [isSearchingHeroById, setIsSearchingHeroById] = useState(false);
+  const [isAddingHeroById, setIsAddingHeroById] = useState(false);
+
+  // Progress tracking
+  const [progress, setProgress] = useState(0);
+  const [currentBatch, setCurrentBatch] = useState(0);
+  const [totalBatches, setTotalBatches] = useState(0);
+  const [batchReport, setBatchReport] = useState<BatchReport | null>(null);
+
+  const router = useRouter();
+  const { isLoaded, isSignedIn, session } = useSession();
+
+  // Redirect if not signed in (side effect)
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.replace('/');
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  const gameService = useMemo(() => new GameService(session), [session]);
+
+  // Generic function to search and process a game by IGDB ID
+  const searchAndProcessGameById = useCallback(
+    async (
+      igdbId: number,
+      options: {
+        checkHeroGames?: boolean;
+        checkUpcomingGames?: boolean;
+        skipSteamCheck?: boolean;
+      } = {},
+    ) => {
+      console.log(`🔍 Searching for game with ID: ${igdbId}`);
+
+      // Fetch IGDB data
+      const existsResponse = await fetch(`/api/igdb/games/${igdbId}`);
+      if (!existsResponse.ok) {
+        throw new Error('Game not found in IGDB');
+      }
+
+      const igdbData = await existsResponse.json();
+
+      // Check if game exists in our games table
+      const existingGame = await gameService.checkGameExists(igdbId);
+      const existsInDb = !!existingGame;
+
+      // Check hero games if requested
+      let existsInHeroGames = false;
+      if (options.checkHeroGames && existingGame) {
+        const existingHeroGame = await gameService.checkHeroGameExists(
+          existingGame.id,
+        );
+        existsInHeroGames = !!existingHeroGame;
+      }
+
+      // Check upcoming games if requested
+      let existsInUpcomingGames = false;
+      if (options.checkUpcomingGames && existingGame) {
+        const existingUpcomingGame = await gameService.checkUpcomingGameExists(
+          existingGame.id,
+        );
+        existsInUpcomingGames = !!existingUpcomingGame;
+      }
+
+      // Check Steam availability
+      let isInSteam = false;
+      if (!options.skipSteamCheck) {
+        isInSteam = await checkGameExistsInSteam(
+          igdbData?.name || `Game ID ${igdbId}`,
+        );
+      }
+
+      return {
+        igdbId,
+        name: igdbData?.name || `Game ID ${igdbId}`,
+        existsInDb,
+        existsInHeroGames,
+        existsInUpcomingGames,
+        isInSteam,
+        igdbData,
+      };
+    },
+    [gameService],
+  );
+
+  // Generic function to search and process a game by name
+  const searchAndProcessGameByName = useCallback(
+    async (
+      gameName: string,
+      options: {
+        checkHeroGames?: boolean;
+        checkUpcomingGames?: boolean;
+        skipSteamCheck?: boolean;
+      } = {},
+    ) => {
+      console.log(`🔍 Searching for game: ${gameName}`);
+
+      // Search for this game in IGDB
+      const igdbResponse = await fetch('/api/igdb/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: gameName }),
+      });
+
+      if (!igdbResponse.ok) {
+        throw new Error('IGDB search failed');
+      }
+
+      const igdbData = await igdbResponse.json();
+
+      // Look for exact case-insensitive match
+      let igdbMatch = null;
+      if (igdbData.results && igdbData.results.length > 0) {
+        igdbMatch = igdbData.results.find(
+          (result: any) =>
+            result.igdbData?.name?.toLowerCase() === gameName.toLowerCase(),
+        );
+      }
+
+      if (!igdbMatch) {
+        throw new Error('No matching game found in IGDB');
+      }
+
+      // Use the existing function to get detailed game info
+      return await searchAndProcessGameById(igdbMatch.igdbId, options);
+    },
+    [searchAndProcessGameById],
+  );
+
+  // Handle batch game search
+  const handleBatchSearch = useCallback(async () => {
+    console.log('handleBatchSearch gameNames: ', gameNames);
+
+    if (!gameNames.trim()) {
+      toast.error('Please enter game names');
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      // Parse game names (split by new lines and filter empty)
+      const names = gameNames
+        .split('\n')
+        .map((name) => name.trim())
+        .filter((name) => name.length > 0);
+
+      if (names.length === 0) {
+        toast.error('No valid game names found');
+        return;
+      }
+
+      console.log(`🔍 Searching for ${names.length} games...`);
+
+      const response = await fetch('/api/igdb/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameNames: names }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
+
+      const data = await response.json();
+
+      console.log(
+        `✅ IGDB search complete, checking Steam availability for ${data.results.length} games...`,
+      );
+
+      // Set Steam checking state
+      setIsCheckingSteam(true);
+
+      // Add selection state and Steam check to results
+      const resultsWithSelection = await Promise.all(
+        data.results.map(async (result: GameResult) => {
+          // Check if this game exists on Steam
+          const isInSteam = await checkGameExistsInSteam(result.name);
+
+          return {
+            ...result,
+            isInSteam,
+            selected: !result.existsInDb && !result.error,
+            status: 'pending' as const,
+          };
+        }),
+      );
+
+      setIsCheckingSteam(false);
+
+      setSearchResults(resultsWithSelection);
+
+      toast.success(
+        `Found ${data.summary.found}/${data.summary.total} games. ${data.summary.new} new games available to add.`,
+      );
+    } catch (error) {
+      console.error('Batch search failed:', error);
+      toast.error('Failed to search games');
+    } finally {
+      setIsSearching(false);
+    }
+  }, [gameNames]);
+
+  // Handle search by IGDB ID
+  const handleSearchById = useCallback(async () => {
+    if (!igdbId.trim() || isNaN(Number(igdbId))) {
+      toast.error('Please enter a valid IGDB ID');
+      return;
+    }
+
+    setIsSearchingById(true);
+    setIdSearchResult(null);
+
+    try {
+      const id = Number(igdbId);
+      const gameInfo = await searchAndProcessGameById(id);
+
+      const result: GameResult = {
+        name: gameInfo.name,
+        igdbId: gameInfo.igdbId,
+        existsInDb: gameInfo.existsInDb,
+        isInSteam: gameInfo.isInSteam,
+        igdbData: gameInfo.igdbData,
+        selected: !gameInfo.existsInDb,
+        status: 'pending',
+      };
+
+      setIdSearchResult(result);
+
+      if (gameInfo.existsInDb) {
+        toast.info(`Game "${result.name}" already exists in database`);
+      } else {
+        toast.success(`Found game: "${result.name}"`);
+      }
+    } catch (error) {
+      console.error('ID search failed:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      setIdSearchResult({
+        name: `Game ID ${igdbId}`,
+        igdbId: Number(igdbId),
+        existsInDb: false,
+        isInSteam: false,
+        error: errorMessage,
+        selected: false,
+        status: 'pending',
+      });
+
+      toast.error(`Failed to find game: ${errorMessage}`);
+    } finally {
+      setIsSearchingById(false);
+    }
+  }, [igdbId, searchAndProcessGameById]);
+
+  // Handle add single game by ID
+  const handleAddById = useCallback(async () => {
+    if (!idSearchResult || idSearchResult.error || idSearchResult.existsInDb) {
+      return;
+    }
+
+    setIsAddingById(true);
+
+    try {
+      console.log(
+        `🚀 Adding game: ${idSearchResult.name} (ID: ${idSearchResult.igdbId})`,
+      );
+
+      // Add the game to database
+      await gameService.addOrUpdateGame(
+        idSearchResult.igdbData,
+        idSearchResult.bannerFile || undefined,
+      );
+
+      // Update the result to show it's completed
+      setIdSearchResult((prev) =>
+        prev ? { ...prev, status: 'completed', existsInDb: true } : null,
+      );
+
+      toast.success(`Successfully added "${idSearchResult.name}" to database`);
+    } catch (error) {
+      console.error('Failed to add game:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      setIdSearchResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'failed',
+              errorMessage,
+            }
+          : null,
+      );
+
+      toast.error(`Failed to add game: ${errorMessage}`);
+    } finally {
+      setIsAddingById(false);
+    }
+  }, [idSearchResult, gameService]);
+
+  // Handle banner upload for ID search result
+  const handleIdBannerUpload = useCallback((file: File | null) => {
+    setIdSearchResult((prev) => (prev ? { ...prev, bannerFile: file } : null));
+  }, []);
+
+  // Handle search by IGDB ID for hero games
+  const handleSearchHeroById = useCallback(async () => {
+    if (!heroIgdbId.trim() || isNaN(Number(heroIgdbId))) {
+      toast.error('Please enter a valid IGDB ID');
+      return;
+    }
+
+    setIsSearchingHeroById(true);
+    setHeroSearchResult(null);
+
+    try {
+      const id = Number(heroIgdbId);
+      const gameInfo = await searchAndProcessGameById(id, {
+        checkHeroGames: true,
+      });
+
+      const result: HeroGameResult = {
+        name: gameInfo.name,
+        igdbId: gameInfo.igdbId,
+        existsInDb: gameInfo.existsInDb,
+        existsInHeroGames: gameInfo.existsInHeroGames,
+        isInSteam: gameInfo.isInSteam,
+        igdbData: gameInfo.igdbData,
+        status: 'pending',
+      };
+
+      setHeroSearchResult(result);
+
+      if (gameInfo.existsInHeroGames) {
+        toast.info(`Game "${result.name}" is already a hero game`);
+      } else if (gameInfo.existsInDb) {
+        toast.success(
+          `Found game: "${result.name}" (ready to add to hero games)`,
+        );
+      } else {
+        toast.success(
+          `Found game: "${result.name}" (will be added to database first)`,
+        );
+      }
+    } catch (error) {
+      console.error('Hero game ID search failed:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      setHeroSearchResult({
+        name: `Game ID ${heroIgdbId}`,
+        igdbId: Number(heroIgdbId),
+        existsInDb: false,
+        existsInHeroGames: false,
+        isInSteam: false,
+        error: errorMessage,
+        status: 'pending',
+      });
+
+      toast.error(`Failed to find game: ${errorMessage}`);
+    } finally {
+      setIsSearchingHeroById(false);
+    }
+  }, [heroIgdbId, searchAndProcessGameById]);
+
+  // Handle add single game to hero games by ID
+  const handleAddHeroById = useCallback(async () => {
+    if (
+      !heroSearchResult ||
+      heroSearchResult.error ||
+      heroSearchResult.existsInHeroGames
+    ) {
+      return;
+    }
+
+    setIsAddingHeroById(true);
+
+    try {
+      console.log(
+        `🚀 Adding hero game: ${heroSearchResult.name} (ID: ${heroSearchResult.igdbId})`,
+      );
+
+      if (heroSearchResult.existsInDb) {
+        // Game already exists in database, just add to hero_games
+        const existingGame = await gameService.checkGameExists(
+          heroSearchResult.igdbId,
+        );
+        if (existingGame) {
+          await gameService.addHeroGame(existingGame.id);
+        }
+      } else {
+        // Add to database first, then add to hero_games
+        await gameService.addHeroGameByIgdbId(
+          heroSearchResult.igdbData,
+          heroSearchResult.bannerFile || undefined,
+        );
+      }
+
+      // Update the result to show it's completed
+      setHeroSearchResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'completed',
+              existsInHeroGames: true,
+              existsInDb: true,
+            }
+          : null,
+      );
+
+      toast.success(
+        `Successfully added "${heroSearchResult.name}" as a hero game`,
+      );
+    } catch (error) {
+      console.error('Failed to add hero game:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      setHeroSearchResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'failed',
+              errorMessage,
+            }
+          : null,
+      );
+
+      toast.error(`Failed to add hero game: ${errorMessage}`);
+    } finally {
+      setIsAddingHeroById(false);
+    }
+  }, [heroSearchResult, gameService]);
+
+  // Handle loading upcoming games
+  const handleLoadUpcomingGames = useCallback(async () => {
+    setIsLoadingUpcoming(true);
+    setUpcomingGames([]);
+
+    try {
+      console.log('🔍 Loading upcoming games from OpenCritic...');
+
+      // Fetch upcoming games from OpenCritic API
+      const upcomingResponse = await fetch('/api/openCritic/upcoming');
+      if (!upcomingResponse.ok) {
+        throw new Error('Failed to fetch upcoming games');
+      }
+      const upcomingData = await upcomingResponse.json();
+
+      if (!upcomingData.success || !Array.isArray(upcomingData.data)) {
+        throw new Error('Invalid response from OpenCritic API');
+      }
+
+      console.log(
+        `📦 Found ${upcomingData.data.length} upcoming games from OpenCritic`,
+      );
+
+      // Process each upcoming game
+      const results: UpcomingGameResult[] = [];
+
+      for (const upcomingGame of upcomingData.data) {
+        try {
+          const gameName = upcomingGame.name;
+          console.log(`🎮 Processing: ${gameName}`);
+
+          // Search for this game in IGDB
+          const igdbResponse = await fetch('/api/igdb/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: gameName }),
+          });
+
+          let igdbMatch = null;
+          let existsInDb = false;
+          let existsInUpcomingGames = false;
+
+          if (igdbResponse.ok) {
+            const igdbData = await igdbResponse.json();
+
+            // Look for exact case-insensitive match
+            if (igdbData.results && igdbData.results.length > 0) {
+              igdbMatch = igdbData.results.find(
+                (result: any) =>
+                  result.igdbData?.name?.toLowerCase() ===
+                  gameName.toLowerCase(),
+              );
+
+              if (igdbMatch) {
+                // Fetch full IGDB data for the matched game
+                console.log(
+                  `🔍 Fetching full IGDB data for: ${gameName} (ID: ${igdbMatch.igdbId})`,
+                );
+                const igdbFullDataResponse = await fetch(
+                  `/api/igdb/games/${igdbMatch.igdbId}`,
+                );
+                if (igdbFullDataResponse.ok) {
+                  const fullIgdbData = await igdbFullDataResponse.json();
+                  igdbMatch.igdbData = fullIgdbData; // Replace with full data
+                  console.log(`✅ Got full IGDB data for: ${gameName}`, {
+                    has_cover: !!fullIgdbData.cover,
+                    has_screenshots: !!fullIgdbData.screenshots,
+                    has_summary: !!fullIgdbData.summary,
+                    has_updated_at: !!fullIgdbData.updated_at,
+                  });
+                } else {
+                  console.warn(
+                    `⚠️ Failed to fetch full IGDB data for: ${gameName}`,
+                  );
+                }
+
+                // Check if game exists in our database
+                const existingGame = await gameService.checkGameExists(
+                  igdbMatch.igdbId,
+                );
+                existsInDb = !!existingGame;
+
+                // If it exists in games table, check if it's already in upcoming_games
+                if (existingGame) {
+                  const existingUpcomingGame =
+                    await gameService.checkUpcomingGameExists(existingGame.id);
+                  existsInUpcomingGames = !!existingUpcomingGame;
+                }
+              }
+            }
+          }
+
+          // Create result object
+          const result: UpcomingGameResult = {
+            name: gameName,
+            igdbId: igdbMatch?.igdbId,
+            existsInDb,
+            existsInUpcomingGames,
+            isMatched: !!igdbMatch,
+            igdbData: igdbMatch?.igdbData,
+            selected: !!igdbMatch,
+            highlight: false,
+            status: 'pending',
+          };
+
+          results.push(result);
+
+          console.log(
+            `${igdbMatch ? '✅' : '❌'} ${gameName}: ${igdbMatch ? 'Matched' : 'No match'} ${existsInDb ? '(In DB)' : ''} ${existsInUpcomingGames ? '(In Upcoming)' : ''}`,
+          );
+        } catch (error) {
+          console.error(`❌ Error processing ${upcomingGame.name}:`, error);
+          results.push({
+            name: upcomingGame.name,
+            existsInDb: false,
+            existsInUpcomingGames: false,
+            isMatched: false,
+            selected: false,
+            highlight: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            status: 'pending',
+          });
+        }
+      }
+
+      setUpcomingGames(results);
+
+      const matchedCount = results.filter((r) => r.isMatched).length;
+      const newCount = results.filter(
+        (r) => r.isMatched && !r.existsInUpcomingGames,
+      ).length;
+
+      toast.success(
+        `Loaded ${results.length} upcoming games. ${matchedCount} matched, ${newCount} new games available.`,
+      );
+    } catch (error) {
+      console.error('Failed to load upcoming games:', error);
+      toast.error('Failed to load upcoming games');
+    } finally {
+      setIsLoadingUpcoming(false);
+    }
+  }, [gameService]);
+
+  // Handle upcoming game selection
+  const handleUpcomingGameSelection = useCallback(
+    (index: number, selected: boolean) => {
+      setUpcomingGames((prev) =>
+        prev.map((game, i) => (i === index ? { ...game, selected } : game)),
+      );
+    },
+    [],
+  );
+
+  // Handle upcoming game highlight toggle
+  const handleUpcomingGameHighlight = useCallback(
+    (index: number, highlight: boolean) => {
+      setUpcomingGames((prev) =>
+        prev.map((game, i) => (i === index ? { ...game, highlight } : game)),
+      );
+    },
+    [],
+  );
+
+  // Handle banner upload for upcoming games
+  const handleUpcomingBannerUpload = useCallback(
+    (index: number, file: File | null) => {
+      setUpcomingGames((prev) =>
+        prev.map((game, i) =>
+          i === index ? { ...game, bannerFile: file } : game,
+        ),
+      );
+    },
+    [],
+  );
+
+  // Handle upcoming games batch processing
+  const handleUpcomingBatchProcess = useCallback(async () => {
+    const selectedGames = upcomingGames.filter(
+      (game) => game.selected && game.isMatched,
+    );
+
+    if (selectedGames.length === 0) {
+      toast.error('No games selected for processing');
+      return;
+    }
+
+    setUpcomingBatchProcessing(true);
+
+    try {
+      console.log(`🚀 Adding ${selectedGames.length} upcoming games...`);
+
+      for (const game of selectedGames) {
+        // Update status to processing
+        setUpcomingGames((prev) =>
+          prev.map((g) =>
+            g.name === game.name ? { ...g, status: 'processing' } : g,
+          ),
+        );
+
+        try {
+          if (game.existsInDb && game.igdbId) {
+            // Game already exists in database, just add to upcoming_games
+            const existingGame = await gameService.checkGameExists(game.igdbId);
+            if (existingGame) {
+              await gameService.addUpcomingGame(
+                existingGame.id,
+                game.highlight,
+              );
+            }
+          } else if (game.igdbData && game.igdbId) {
+            // Ensure we have full IGDB data before adding
+            let fullIgdbData = game.igdbData;
+
+            console.log(`🔍 Verifying IGDB data for: ${game.name}`, {
+              has_cover: !!fullIgdbData.cover,
+              has_screenshots: !!fullIgdbData.screenshots,
+              has_summary: !!fullIgdbData.summary,
+              has_updated_at: !!fullIgdbData.updated_at,
+            });
+
+            // If the IGDB data looks incomplete, fetch it again
+            if (
+              !fullIgdbData.cover ||
+              !fullIgdbData.screenshots ||
+              !fullIgdbData.summary ||
+              !fullIgdbData.updated_at
+            ) {
+              console.log(`🔄 Fetching complete IGDB data for: ${game.name}`);
+              const igdbFullDataResponse = await fetch(
+                `/api/igdb/games/${game.igdbId}`,
+              );
+              if (igdbFullDataResponse.ok) {
+                fullIgdbData = await igdbFullDataResponse.json();
+                console.log(`✅ Updated IGDB data for: ${game.name}`, {
+                  has_cover: !!fullIgdbData.cover,
+                  has_screenshots: !!fullIgdbData.screenshots,
+                  has_summary: !!fullIgdbData.summary,
+                  has_updated_at: !!fullIgdbData.updated_at,
+                });
+              }
+            }
+
+            // Add to database first, then to upcoming_games
+            console.log(`🚀 Adding ${game.name} to database with full data`);
+            await gameService.addUpcomingGameByIgdbId(
+              fullIgdbData,
+              game.bannerFile || undefined,
+              game.highlight,
+            );
+          }
+
+          // Update status to completed
+          setUpcomingGames((prev) =>
+            prev.map((g) =>
+              g.name === game.name
+                ? { ...g, status: 'completed', existsInUpcomingGames: true }
+                : g,
+            ),
+          );
+
+          console.log(`✅ Successfully added: ${game.name}`);
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
+
+          // Update status to failed
+          setUpcomingGames((prev) =>
+            prev.map((g) =>
+              g.name === game.name
+                ? { ...g, status: 'failed', errorMessage }
+                : g,
+            ),
+          );
+
+          console.error(`❌ Failed to add ${game.name}:`, error);
+        }
+      }
+
+      const successCount = upcomingGames.filter(
+        (g) => g.status === 'completed',
+      ).length;
+      toast.success(
+        `Successfully added ${successCount}/${selectedGames.length} upcoming games`,
+      );
+    } catch (error) {
+      console.error('Upcoming games batch processing failed:', error);
+      toast.error('Failed to process upcoming games');
+    } finally {
+      setUpcomingBatchProcessing(false);
+    }
+  }, [upcomingGames, gameService]);
+
+  // Handle retry individual upcoming game
+  const handleRetryUpcomingGame = useCallback(
+    async (index: number) => {
+      const game = upcomingGames[index];
+      if (!game.isMatched || !game.igdbId) return;
+
+      // Update status to processing
+      setUpcomingGames((prev) =>
+        prev.map((g, i) =>
+          i === index
+            ? { ...g, status: 'processing', errorMessage: undefined }
+            : g,
+        ),
+      );
+
+      try {
+        console.log(`🔄 Retrying: ${game.name}`);
+
+        if (game.existsInDb && game.igdbId) {
+          // Game already exists in database, just add to upcoming_games
+          const existingGame = await gameService.checkGameExists(game.igdbId);
+          if (existingGame) {
+            // Check if already in upcoming_games
+            const existingUpcomingGame =
+              await gameService.checkUpcomingGameExists(existingGame.id);
+            if (!existingUpcomingGame) {
+              await gameService.addUpcomingGame(
+                existingGame.id,
+                game.highlight,
+              );
+            }
+          }
+        } else if (game.igdbData && game.igdbId) {
+          // Fetch fresh IGDB data
+          console.log(`🔍 Fetching fresh IGDB data for retry: ${game.name}`);
+          const igdbFullDataResponse = await fetch(
+            `/api/igdb/games/${game.igdbId}`,
+          );
+          let fullIgdbData = game.igdbData;
+
+          if (igdbFullDataResponse.ok) {
+            fullIgdbData = await igdbFullDataResponse.json();
+          }
+
+          // Add to database first, then to upcoming_games
+          await gameService.addUpcomingGameByIgdbId(
+            fullIgdbData,
+            game.bannerFile || undefined,
+            game.highlight,
+          );
+        }
+
+        // Update status to completed
+        setUpcomingGames((prev) =>
+          prev.map((g, i) =>
+            i === index
+              ? {
+                  ...g,
+                  status: 'completed',
+                  existsInUpcomingGames: true,
+                  errorMessage: undefined,
+                }
+              : g,
+          ),
+        );
+
+        toast.success(`Successfully added "${game.name}"`);
+        console.log(`✅ Retry successful: ${game.name}`);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+
+        // Update status to failed
+        setUpcomingGames((prev) =>
+          prev.map((g, i) =>
+            i === index ? { ...g, status: 'failed', errorMessage } : g,
+          ),
+        );
+
+        toast.error(`Failed to retry "${game.name}": ${errorMessage}`);
+        console.error(`❌ Retry failed for ${game.name}:`, error);
+      }
+    },
+    [upcomingGames, gameService],
+  );
+
+  // Handle reupload game to games table for games already in upcoming_games
+  const handleReuploadToGamesTable = useCallback(
+    async (index: number) => {
+      const game = upcomingGames[index];
+      if (!game.isMatched || !game.igdbId || !game.existsInUpcomingGames)
+        return;
+
+      // Update status to processing
+      setUpcomingGames((prev) =>
+        prev.map((g, i) =>
+          i === index
+            ? { ...g, status: 'processing', errorMessage: undefined }
+            : g,
+        ),
+      );
+
+      try {
+        console.log(`🔄 Reuploading to games table: ${game.name}`);
+
+        // Fetch fresh IGDB data
+        const igdbFullDataResponse = await fetch(
+          `/api/igdb/games/${game.igdbId}`,
+        );
+        let fullIgdbData = game.igdbData;
+
+        if (igdbFullDataResponse.ok) {
+          fullIgdbData = await igdbFullDataResponse.json();
+        }
+
+        // Force update the game in the games table (even if it exists)
+        await gameService.addOrUpdateGame(
+          fullIgdbData,
+          game.bannerFile || undefined,
+          false, // skipSteamFetch
+        );
+
+        // Update status to completed
+        setUpcomingGames((prev) =>
+          prev.map((g, i) =>
+            i === index
+              ? {
+                  ...g,
+                  status: 'completed',
+                  existsInDb: true,
+                  errorMessage: undefined,
+                }
+              : g,
+          ),
+        );
+
+        toast.success(`Successfully reuploaded "${game.name}" to games table`);
+        console.log(`✅ Reupload successful: ${game.name}`);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+
+        // Update status to failed
+        setUpcomingGames((prev) =>
+          prev.map((g, i) =>
+            i === index ? { ...g, status: 'failed', errorMessage } : g,
+          ),
+        );
+
+        toast.error(`Failed to reupload "${game.name}": ${errorMessage}`);
+        console.error(`❌ Reupload failed for ${game.name}:`, error);
+      }
+    },
+    [upcomingGames, gameService],
+  );
+
+  // Handle retry all failed upcoming games
+  const handleRetryAllFailedUpcoming = useCallback(async () => {
+    const failedGames = upcomingGames
+      .map((game, index) => ({ game, index }))
+      .filter(({ game }) => game.status === 'failed' && game.isMatched);
+
+    if (failedGames.length === 0) {
+      toast.info('No failed games to retry');
+      return;
+    }
+
+    setUpcomingBatchProcessing(true);
+
+    try {
+      console.log(`🔄 Retrying ${failedGames.length} failed games...`);
+
+      for (const { game, index } of failedGames) {
+        await handleRetryUpcomingGame(index);
+        // Small delay between retries
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
+      toast.success(`Retry completed for ${failedGames.length} games`);
+    } catch (error) {
+      console.error('Batch retry failed:', error);
+      toast.error('Failed to retry games');
+    } finally {
+      setUpcomingBatchProcessing(false);
+    }
+  }, [upcomingGames, handleRetryUpcomingGame]);
+
+  // Game news functions
+  const handleLoadGameNews = useCallback(async () => {
+    setIsLoadingNews(true);
+    setNewsResults(null);
+
+    try {
+      // Fetch news from the gaming news API
+      const response = await fetch('/api/gaming-news');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch news: ${response.status}`);
+      }
+
+      const newsData = await response.json();
+
+      if (!newsData.success || !newsData.data) {
+        throw new Error('Invalid news data received');
+      }
+
+      // Process the news articles using GameService
+      const results = await gameService.addGameNewsBatch(newsData.data);
+      setNewsResults(results);
+
+      // Show summary toast
+      const { successful, failed, skipped } = results;
+      toast.success(
+        `News processed: ${successful.length} added, ${skipped.length} skipped, ${failed.length} failed`,
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to load game news: ${errorMessage}`);
+      console.error('Error loading game news:', error);
+    } finally {
+      setIsLoadingNews(false);
+    }
+  }, [gameService]);
+
+  // Handle banner upload for hero game
+  const handleHeroBannerUpload = useCallback((file: File | null) => {
+    setHeroSearchResult((prev) =>
+      prev ? { ...prev, bannerFile: file } : null,
+    );
+  }, []);
+
+  // Handle adding OpenCritic reviews
+  const handleAddOpenCriticReviews = useCallback(async () => {
+    if (!openCriticGameId.trim() || !supabaseGameId.trim()) {
+      toast.error('Please enter both OpenCritic Game ID and Supabase Game ID');
+      return;
+    }
+
+    if (isNaN(Number(openCriticGameId)) || isNaN(Number(supabaseGameId))) {
+      toast.error('Both IDs must be valid numbers');
+      return;
+    }
+
+    setIsAddingReviews(true);
+    setReviewResults(null);
+
+    try {
+      console.log(
+        `🔍 Adding OpenCritic reviews for game ${supabaseGameId} from OpenCritic ID ${openCriticGameId}`,
+      );
+
+      const reviews = await gameService.fetchOpenCriticReviews(
+        Number(supabaseGameId),
+        Number(openCriticGameId),
+      );
+
+      if (reviews.length > 0) {
+        setReviewResults({
+          success: true,
+          reviewsAdded: reviews.length,
+          message: `Successfully added ${reviews.length} reviews`,
+        });
+        toast.success(`Added ${reviews.length} OpenCritic reviews`);
+      } else {
+        setReviewResults({
+          success: false,
+          reviewsAdded: 0,
+          message: 'No new reviews were added (may already exist)',
+        });
+        toast.info(
+          'No new reviews added - they may already exist in the database',
+        );
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to add OpenCritic reviews:', error);
+
+      setReviewResults({
+        success: false,
+        reviewsAdded: 0,
+        message: `Failed to add reviews: ${errorMessage}`,
+        error: errorMessage,
+      });
+
+      toast.error(`Failed to add reviews: ${errorMessage}`);
+    } finally {
+      setIsAddingReviews(false);
+    }
+  }, [openCriticGameId, supabaseGameId, gameService]);
+
+  // Handle individual game selection
+  const handleGameSelection = useCallback(
+    (index: number, selected: boolean) => {
+      setSearchResults((prev) =>
+        prev.map((result, i) =>
+          i === index ? { ...result, selected } : result,
+        ),
+      );
+    },
+    [],
+  );
+
+  // Handle banner upload for individual game
+  const handleBannerUpload = useCallback((index: number, file: File | null) => {
+    setSearchResults((prev) =>
+      prev.map((result, i) =>
+        i === index ? { ...result, bannerFile: file } : result,
+      ),
+    );
+  }, []);
+
+  // Handle batch processing
+  const handleBatchProcess = useCallback(async () => {
+    const selectedGames = searchResults.filter(
+      (game) => game.selected && !game.error,
+    );
+
+    if (selectedGames.length === 0) {
+      toast.error('No games selected for processing');
+      return;
+    }
+
+    setBatchProcessing(true);
+    setBatchStopped(false);
+    setProgress(0);
+
+    const batchSize = 5;
+    const batches = [];
+    for (let i = 0; i < selectedGames.length; i += batchSize) {
+      batches.push(selectedGames.slice(i, i + batchSize));
+    }
+
+    setTotalBatches(batches.length);
+    setCurrentBatch(0);
+
+    const report: BatchReport = {
+      total: selectedGames.length,
+      successful: 0,
+      failed: 0,
+      details: [],
+    };
+
+    console.log(
+      `🚀 Starting batch processing: ${selectedGames.length} games in ${batches.length} batches`,
+    );
+
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      if (batchStopped) {
+        console.log('🛑 Batch processing stopped by user');
+        break;
+      }
+
+      setCurrentBatch(batchIndex + 1);
+      const batch = batches[batchIndex];
+
+      console.log(
+        `📦 Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} games)`,
+      );
+
+      // Process games in current batch
+      for (const game of batch) {
+        if (batchStopped) break;
+
+        // Update game status to processing
+        setSearchResults((prev) =>
+          prev.map((r) =>
+            r.igdbId === game.igdbId ? { ...r, status: 'processing' } : r,
+          ),
+        );
+
+        try {
+          // Fetch full IGDB data
+          const igdbResponse = await fetch(`/api/igdb/games/${game.igdbId}`);
+          if (!igdbResponse.ok) {
+            throw new Error('Failed to fetch IGDB data');
+          }
+          const igdbData = await igdbResponse.json();
+
+          // Add/update game
+          await gameService.addOrUpdateGame(
+            igdbData,
+            game.bannerFile || undefined,
+          );
+
+          // Update status to completed
+          setSearchResults((prev) =>
+            prev.map((r) =>
+              r.igdbId === game.igdbId ? { ...r, status: 'completed' } : r,
+            ),
+          );
+
+          report.successful++;
+          report.details.push({
+            name: game.name,
+            status: 'success',
+            message: 'Successfully added to database',
+          });
+
+          console.log(`✅ Successfully processed: ${game.name}`);
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
+
+          // Update status to failed
+          setSearchResults((prev) =>
+            prev.map((r) =>
+              r.igdbId === game.igdbId
+                ? {
+                    ...r,
+                    status: 'failed',
+                    errorMessage,
+                  }
+                : r,
+            ),
+          );
+
+          report.failed++;
+          report.details.push({
+            name: game.name,
+            status: 'failed',
+            message: errorMessage,
+          });
+
+          console.error(`❌ Failed to process ${game.name}:`, error);
+        }
+
+        // Update progress
+        const processed = report.successful + report.failed;
+        setProgress((processed / selectedGames.length) * 100);
+      }
+
+      // Small delay between batches to avoid overwhelming the system
+      if (batchIndex < batches.length - 1 && !batchStopped) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
+
+    setBatchProcessing(false);
+    setBatchReport(report);
+
+    const successMessage = batchStopped
+      ? `Batch processing stopped. Processed ${report.successful + report.failed}/${report.total} games.`
+      : `Batch processing complete! Successfully added ${report.successful}/${report.total} games.`;
+
+    toast.success(successMessage);
+    console.log('📊 Final Report:', report);
+  }, [searchResults, gameService, batchStopped]);
+
+  // Stop batch processing
+  const handleStopBatch = useCallback(() => {
+    setBatchStopped(true);
+    toast.info('Stopping batch processing...');
+  }, []);
+
+  if (isLoaded && !isSignedIn) {
+    return null;
+  }
+
+  const selectedCount = searchResults.filter((game) => game.selected).length;
+
+  return (
+    <div className="mx-auto max-w-4xl p-6">
+      <h1 className="mb-8 text-3xl font-bold">Game Batch Upload</h1>
+
+      {/* Search Form */}
+      <div className="mb-6 space-y-4 rounded-lg border p-6">
+        <div>
+          <label className="text-sm font-medium">
+            Game Names (one per line)
+          </label>
+          <textarea
+            placeholder="Zelda&#10;Mario&#10;Final Fantasy"
+            value={gameNames}
+            onChange={(e) => setGameNames(e.target.value)}
+            disabled={
+              isSearching ||
+              isCheckingSteam ||
+              batchProcessing ||
+              isSearchingById ||
+              isAddingById ||
+              isSearchingHeroById ||
+              isAddingHeroById
+            }
+            className="mt-1 min-h-32 w-full rounded-md border px-3 py-2 text-sm"
+          />
+        </div>
+
+        <Button
+          onClick={handleBatchSearch}
+          disabled={
+            isSearching ||
+            isCheckingSteam ||
+            batchProcessing ||
+            isSearchingById ||
+            isAddingById ||
+            isSearchingHeroById ||
+            isAddingHeroById ||
+            !gameNames.trim()
+          }
+          className="w-full"
+        >
+          {isSearching ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Searching IGDB...
+            </>
+          ) : isCheckingSteam ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Checking Steam...
+            </>
+          ) : (
+            <>
+              <Search className="mr-2 h-4 w-4" />
+              Search Games
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Search by IGDB ID */}
+      <div className="mb-6 space-y-4 rounded-lg border p-6">
+        <div>
+          <label className="text-sm font-medium">Add Game by IGDB ID</label>
+          <div className="mt-1 flex gap-2">
+            <input
+              type="number"
+              placeholder="Enter IGDB ID (e.g. 1234)"
+              value={igdbId}
+              onChange={(e) => setIgdbId(e.target.value)}
+              disabled={
+                isSearchingById ||
+                isAddingById ||
+                isSearching ||
+                isCheckingSteam ||
+                batchProcessing ||
+                isSearchingHeroById ||
+                isAddingHeroById
+              }
+              className="flex-1 rounded-md border px-3 py-2 text-sm"
+            />
+            <Button
+              onClick={handleSearchById}
+              disabled={
+                isSearchingById ||
+                isAddingById ||
+                isSearching ||
+                isCheckingSteam ||
+                batchProcessing ||
+                isSearchingHeroById ||
+                isAddingHeroById ||
+                !igdbId.trim()
+              }
+              variant="outline"
+            >
+              {isSearchingById ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-2 h-4 w-4" />
+                  Search
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* ID Search Result */}
+        {idSearchResult && (
+          <div className="rounded-lg border p-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">
+                    {idSearchResult.igdbData?.name || idSearchResult.name}
+                  </span>
+
+                  {idSearchResult.existsInDb && (
+                    <Badge variant="secondary">Already in DB</Badge>
+                  )}
+                  {idSearchResult.isInSteam && (
+                    <Badge variant="outline" className="text-blue-600">
+                      Steam
+                    </Badge>
+                  )}
+                  {idSearchResult.error && (
+                    <Badge variant="destructive">Error</Badge>
+                  )}
+                  {idSearchResult.status === 'completed' && (
+                    <Badge variant="outline" className="text-green-600">
+                      <CheckCircle className="mr-1 h-3 w-3" />
+                      Added
+                    </Badge>
+                  )}
+                  {idSearchResult.status === 'failed' && (
+                    <Badge variant="destructive">
+                      <XCircle className="mr-1 h-3 w-3" />
+                      Failed
+                    </Badge>
+                  )}
+                </div>
+
+                <p className="text-muted-foreground text-sm">
+                  IGDB ID: {idSearchResult.igdbId}
+                </p>
+
+                {(idSearchResult.error || idSearchResult.errorMessage) && (
+                  <p className="text-sm text-red-500">
+                    {idSearchResult.error || idSearchResult.errorMessage}
+                  </p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2">
+                {!idSearchResult.error && !idSearchResult.existsInDb && (
+                  <>
+                    <FileUpload
+                      label=""
+                      onFileSelect={handleIdBannerUpload}
+                      accept="image/jpeg,image/png,image/webp"
+                      maxSize={5 * 1024 * 1024}
+                      className="w-32"
+                    />
+                    {idSearchResult.bannerFile && (
+                      <span className="text-xs text-green-600">✓ Banner</span>
+                    )}
+                    <Button
+                      onClick={handleAddById}
+                      disabled={
+                        isAddingById || idSearchResult.status === 'completed'
+                      }
+                      size="sm"
+                    >
+                      {isAddingById ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Add Game
+                        </>
+                      )}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Add Hero Game by IGDB ID */}
+      <div className="mb-6 space-y-4 rounded-lg border p-6">
+        <div>
+          <label className="text-sm font-medium">
+            Add Hero Game by IGDB ID
+          </label>
+          <p className="mt-1 text-xs text-zinc-500">
+            Hero games are featured prominently on the homepage. If the game
+            exists in database, it will be added to hero games directly.
+            Otherwise, it will be added to database first.
+          </p>
+          <div className="mt-2 flex gap-2">
+            <input
+              type="number"
+              placeholder="Enter IGDB ID (e.g. 1234)"
+              value={heroIgdbId}
+              onChange={(e) => setHeroIgdbId(e.target.value)}
+              disabled={
+                isSearchingHeroById ||
+                isAddingHeroById ||
+                isSearching ||
+                isCheckingSteam ||
+                batchProcessing ||
+                isSearchingById ||
+                isAddingById
+              }
+              className="flex-1 rounded-md border px-3 py-2 text-sm"
+            />
+            <Button
+              onClick={handleSearchHeroById}
+              disabled={
+                isSearchingHeroById ||
+                isAddingHeroById ||
+                isSearching ||
+                isCheckingSteam ||
+                batchProcessing ||
+                isSearchingById ||
+                isAddingById ||
+                !heroIgdbId.trim()
+              }
+              variant="outline"
+            >
+              {isSearchingHeroById ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-2 h-4 w-4" />
+                  Search
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Hero Game Search Result */}
+        {heroSearchResult && (
+          <div className="rounded-lg border p-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">
+                    {heroSearchResult.igdbData?.name || heroSearchResult.name}
+                  </span>
+
+                  {heroSearchResult.existsInHeroGames && (
+                    <Badge variant="secondary">Already Hero Game</Badge>
+                  )}
+                  {heroSearchResult.existsInDb &&
+                    !heroSearchResult.existsInHeroGames && (
+                      <Badge variant="outline" className="text-green-600">
+                        In DB
+                      </Badge>
+                    )}
+                  {!heroSearchResult.existsInDb && (
+                    <Badge variant="outline" className="text-yellow-600">
+                      Will Add to DB
+                    </Badge>
+                  )}
+                  {heroSearchResult.isInSteam && (
+                    <Badge variant="outline" className="text-blue-600">
+                      Steam
+                    </Badge>
+                  )}
+                  {heroSearchResult.error && (
+                    <Badge variant="destructive">Error</Badge>
+                  )}
+                  {heroSearchResult.status === 'completed' && (
+                    <Badge variant="outline" className="text-green-600">
+                      <CheckCircle className="mr-1 h-3 w-3" />
+                      Added to Hero Games
+                    </Badge>
+                  )}
+                  {heroSearchResult.status === 'failed' && (
+                    <Badge variant="destructive">
+                      <XCircle className="mr-1 h-3 w-3" />
+                      Failed
+                    </Badge>
+                  )}
+                </div>
+
+                <p className="text-muted-foreground text-sm">
+                  IGDB ID: {heroSearchResult.igdbId}
+                </p>
+
+                {(heroSearchResult.error || heroSearchResult.errorMessage) && (
+                  <p className="text-sm text-red-500">
+                    {heroSearchResult.error || heroSearchResult.errorMessage}
+                  </p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2">
+                {!heroSearchResult.error &&
+                  !heroSearchResult.existsInHeroGames && (
+                    <>
+                      <FileUpload
+                        label=""
+                        onFileSelect={handleHeroBannerUpload}
+                        accept="image/jpeg,image/png,image/webp"
+                        maxSize={5 * 1024 * 1024}
+                        className="w-32"
+                      />
+                      {heroSearchResult.bannerFile && (
+                        <span className="text-xs text-green-600">✓ Banner</span>
+                      )}
+                      <Button
+                        onClick={handleAddHeroById}
+                        disabled={
+                          isAddingHeroById ||
+                          heroSearchResult.status === 'completed'
+                        }
+                        size="sm"
+                      >
+                        {isAddingHeroById ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Adding...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="mr-2 h-4 w-4" />
+                            Add to Hero Games
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Add Upcoming Games */}
+      <div className="mb-6 space-y-4 rounded-lg border p-6">
+        <div>
+          <label className="text-sm font-medium">
+            Add Upcoming Games from OpenCritic
+          </label>
+          <p className="mt-1 text-xs text-zinc-500">
+            Load upcoming games from OpenCritic API and match them with IGDB.
+            Matched games will be added to both games and upcoming_games tables.
+          </p>
+          <div className="mt-2">
+            <Button
+              onClick={handleLoadUpcomingGames}
+              disabled={
+                isLoadingUpcoming ||
+                upcomingBatchProcessing ||
+                isSearching ||
+                isCheckingSteam ||
+                batchProcessing ||
+                isSearchingById ||
+                isAddingById ||
+                isSearchingHeroById ||
+                isAddingHeroById
+              }
+              variant="outline"
+              className="w-full"
+            >
+              {isLoadingUpcoming ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading Upcoming Games...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-2 h-4 w-4" />
+                  Load Upcoming Games
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Upcoming Games Results */}
+        {upcomingGames.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h3 className="font-medium">
+                  Found {upcomingGames.length} upcoming games
+                </h3>
+                <div className="flex gap-2 text-sm text-zinc-500">
+                  <span>
+                    Matched: {upcomingGames.filter((g) => g.isMatched).length}
+                  </span>
+                  <span>•</span>
+                  <span>
+                    Selected: {upcomingGames.filter((g) => g.selected).length}
+                  </span>
+                  <span>•</span>
+                  <span>
+                    New:{' '}
+                    {
+                      upcomingGames.filter(
+                        (g) => g.isMatched && !g.existsInUpcomingGames,
+                      ).length
+                    }
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {upcomingGames.filter(
+                  (g) => g.status === 'failed' && g.isMatched,
+                ).length > 0 && (
+                  <Button
+                    onClick={handleRetryAllFailedUpcoming}
+                    disabled={upcomingBatchProcessing}
+                    size="sm"
+                    variant="outline"
+                  >
+                    {upcomingBatchProcessing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Retrying...
+                      </>
+                    ) : (
+                      <>
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Retry All Failed
+                      </>
+                    )}
+                  </Button>
+                )}
+                {upcomingGames.filter((g) => g.selected).length > 0 && (
+                  <Button
+                    onClick={handleUpcomingBatchProcess}
+                    disabled={upcomingBatchProcessing}
+                    size="sm"
+                  >
+                    {upcomingBatchProcessing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Add Selected (
+                        {upcomingGames.filter((g) => g.selected).length})
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Games List */}
+            <div className="max-h-96 space-y-2 overflow-y-auto">
+              {upcomingGames.map((game, index) => (
+                <div
+                  key={index}
+                  className={`flex items-center justify-between rounded-lg border p-3 ${
+                    game.isMatched
+                      ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20'
+                      : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    {game.isMatched && (
+                      <Checkbox
+                        checked={game.selected}
+                        onCheckedChange={(checked: boolean) =>
+                          handleUpcomingGameSelection(index, checked)
+                        }
+                        disabled={upcomingBatchProcessing}
+                      />
+                    )}
+
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{game.name}</span>
+
+                        {!game.isMatched && (
+                          <Badge variant="destructive" className="text-xs">
+                            No Match
+                          </Badge>
+                        )}
+                        {game.existsInUpcomingGames && (
+                          <Badge variant="secondary" className="text-xs">
+                            Already in Upcoming
+                          </Badge>
+                        )}
+                        {game.existsInDb && !game.existsInUpcomingGames && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs text-green-600"
+                          >
+                            In DB
+                          </Badge>
+                        )}
+                        {game.status === 'processing' && (
+                          <Badge variant="outline" className="text-xs">
+                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                            Processing
+                          </Badge>
+                        )}
+                        {game.status === 'completed' && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs text-green-600"
+                          >
+                            <CheckCircle className="mr-1 h-3 w-3" />
+                            Added
+                          </Badge>
+                        )}
+                        {game.status === 'failed' && (
+                          <Badge variant="destructive" className="text-xs">
+                            <XCircle className="mr-1 h-3 w-3" />
+                            Failed
+                          </Badge>
+                        )}
+                      </div>
+
+                      {game.igdbId && (
+                        <p className="text-xs text-zinc-500">
+                          IGDB ID: {game.igdbId}
+                        </p>
+                      )}
+
+                      {(game.error || game.errorMessage) && (
+                        <p className="text-xs text-red-500">
+                          {game.error || game.errorMessage}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {/* Individual retry button for failed games */}
+                    {game.status === 'failed' && game.isMatched && (
+                      <Button
+                        onClick={() => handleRetryUpcomingGame(index)}
+                        disabled={upcomingBatchProcessing}
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                      </Button>
+                    )}
+
+                    {/* Reupload to games table button for games already in upcoming */}
+                    {game.existsInUpcomingGames &&
+                      game.isMatched &&
+                      game.igdbId && (
+                        <div className="flex items-center gap-2">
+                          <FileUpload
+                            label=""
+                            onFileSelect={(file) =>
+                              handleUpcomingBannerUpload(index, file)
+                            }
+                            accept="image/jpeg,image/png,image/webp"
+                            maxSize={5 * 1024 * 1024}
+                            className="w-20"
+                          />
+                          {game.bannerFile && (
+                            <span className="text-xs text-green-600">✓</span>
+                          )}
+                          <Button
+                            onClick={() => handleReuploadToGamesTable(index)}
+                            disabled={
+                              upcomingBatchProcessing ||
+                              game.status === 'processing'
+                            }
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-3 text-xs"
+                            title="Reupload to games table with latest IGDB data"
+                          >
+                            <Upload className="mr-1 h-3 w-3" />
+                            Reupload
+                          </Button>
+                        </div>
+                      )}
+
+                    {/* Highlight checkbox for matched games */}
+                    {game.isMatched && game.selected && (
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`highlight-${index}`}
+                          checked={game.highlight}
+                          onCheckedChange={(checked: boolean) =>
+                            handleUpcomingGameHighlight(index, checked)
+                          }
+                          disabled={upcomingBatchProcessing}
+                        />
+                        <label
+                          htmlFor={`highlight-${index}`}
+                          className="text-xs text-zinc-600"
+                        >
+                          Highlight
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Game News Management */}
+      <div className="mb-6 space-y-4 rounded-lg border p-6">
+        <div>
+          <label className="text-sm font-medium">Game News Management</label>
+          <p className="mt-1 text-xs text-zinc-500">
+            Fetch and store the latest gaming news articles from the news API
+            into the database. Duplicate articles will be automatically skipped
+            based on URL.
+          </p>
+        </div>
+
+        <div className="flex gap-4">
+          <Button
+            onClick={handleLoadGameNews}
+            disabled={isLoadingNews}
+            className="w-full"
+          >
+            {isLoadingNews ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading News...
+              </>
+            ) : (
+              <>
+                <Search className="mr-2 h-4 w-4" />
+                Load Game News
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* News Results */}
+        {newsResults && (
+          <div className="mt-4 space-y-4 rounded-lg border p-4">
+            <h3 className="font-medium">News Processing Results</h3>
+
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-green-600">
+                  {newsResults.successful.length}
+                </div>
+                <div className="text-muted-foreground text-sm">Added</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {newsResults.skipped.length}
+                </div>
+                <div className="text-muted-foreground text-sm">Skipped</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-red-600">
+                  {newsResults.failed.length}
+                </div>
+                <div className="text-muted-foreground text-sm">Failed</div>
+              </div>
+            </div>
+
+            {/* Show details if there are failures or skipped items */}
+            {(newsResults.failed.length > 0 ||
+              newsResults.skipped.length > 0) && (
+              <div className="space-y-2">
+                {newsResults.skipped.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-yellow-600">
+                      Skipped Articles:
+                    </h4>
+                    <div className="max-h-32 space-y-1 overflow-y-auto">
+                      {newsResults.skipped.map((item, index) => (
+                        <div
+                          key={index}
+                          className="text-muted-foreground text-xs"
+                        >
+                          • {item.article.title} - {item.reason}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {newsResults.failed.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-red-600">
+                      Failed Articles:
+                    </h4>
+                    <div className="max-h-32 space-y-1 overflow-y-auto">
+                      {newsResults.failed.map((item, index) => (
+                        <div key={index} className="text-xs text-red-500">
+                          • {item.article.title} - {item.error}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {newsResults.successful.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-green-600">
+                  Successfully Added:
+                </h4>
+                <div className="max-h-32 space-y-1 overflow-y-auto">
+                  {newsResults.successful.slice(0, 5).map((article, index) => (
+                    <div key={index} className="text-muted-foreground text-xs">
+                      • {article.title} (
+                      {article.publisher || 'Unknown Publisher'})
+                    </div>
+                  ))}
+                  {newsResults.successful.length > 5 && (
+                    <div className="text-muted-foreground text-xs">
+                      ... and {newsResults.successful.length - 5} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Add OpenCritic Reviews */}
+      <div className="mb-6 space-y-4 rounded-lg border p-6">
+        <div>
+          <label className="text-sm font-medium">
+            Add OpenCritic Reviews to Game
+          </label>
+          <p className="mt-1 text-xs text-zinc-500">
+            Add OpenCritic reviews to a specific game in your database by
+            providing both the OpenCritic game ID and the Supabase game ID.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <label className="text-sm font-medium">OpenCritic Game ID</label>
+            <input
+              type="number"
+              placeholder="e.g., 12345"
+              value={openCriticGameId}
+              onChange={(e) => setOpenCriticGameId(e.target.value)}
+              disabled={isAddingReviews}
+              className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Supabase Game ID</label>
+            <input
+              type="number"
+              placeholder="e.g., 67890"
+              value={supabaseGameId}
+              onChange={(e) => setSupabaseGameId(e.target.value)}
+              disabled={isAddingReviews}
+              className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+
+        <Button
+          onClick={handleAddOpenCriticReviews}
+          disabled={
+            isAddingReviews ||
+            !openCriticGameId.trim() ||
+            !supabaseGameId.trim()
+          }
+          className="w-full"
+        >
+          {isAddingReviews ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Adding Reviews...
+            </>
+          ) : (
+            <>
+              <Upload className="mr-2 h-4 w-4" />
+              Add OpenCritic Reviews
+            </>
+          )}
+        </Button>
+
+        {/* Review Results */}
+        {reviewResults && (
+          <div
+            className={`mt-4 rounded-lg border p-4 ${
+              reviewResults.success
+                ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20'
+                : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
+            }`}
+          >
+            <h3 className="font-medium">
+              {reviewResults.success ? 'Success' : 'Failed'}
+            </h3>
+            <div className="mt-2 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Reviews Added:</span>
+                <span
+                  className={`text-sm font-medium ${
+                    reviewResults.success ? 'text-green-600' : 'text-red-600'
+                  }`}
+                >
+                  {reviewResults.reviewsAdded}
+                </span>
+              </div>
+              <p
+                className={`text-sm ${
+                  reviewResults.success
+                    ? 'text-green-700 dark:text-green-400'
+                    : 'text-red-700 dark:text-red-400'
+                }`}
+              >
+                {reviewResults.message}
+              </p>
+              {reviewResults.error && (
+                <p className="text-sm text-red-600">
+                  Error: {reviewResults.error}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Results */}
+      {searchResults.length > 0 && (
+        <div className="space-y-6">
+          {/* Results Header */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold">
+                Found {searchResults.length} games
+              </h2>
+              <div className="text-muted-foreground flex gap-2 text-sm">
+                <span>Selected: {selectedCount}</span>
+                <span>•</span>
+                <span>
+                  On Steam: {searchResults.filter((r) => r.isInSteam).length}
+                </span>
+                <span>•</span>
+                <span>
+                  New:{' '}
+                  {
+                    searchResults.filter((r) => !r.existsInDb && !r.error)
+                      .length
+                  }
+                </span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {searchResults.filter((r) => r.isInSteam).length > 0 && (
+                <Badge variant="outline" className="text-blue-600">
+                  Steam: {searchResults.filter((r) => r.isInSteam).length}
+                </Badge>
+              )}
+              <Badge variant="outline">{selectedCount} selected</Badge>
+            </div>
+          </div>
+
+          {/* Game List */}
+          <div className="space-y-3">
+            {searchResults.map((result, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between rounded-lg border p-4"
+              >
+                <div className="flex items-center space-x-4">
+                  <Checkbox
+                    checked={result.selected}
+                    onCheckedChange={(checked: boolean) =>
+                      handleGameSelection(index, checked)
+                    }
+                    disabled={
+                      !!result.error ||
+                      batchProcessing ||
+                      isSearchingById ||
+                      isAddingById ||
+                      isSearchingHeroById ||
+                      isAddingHeroById
+                    }
+                  />
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">
+                        {result.igdbData?.name || result.name}
+                      </span>
+
+                      {result.existsInDb && (
+                        <Badge variant="secondary">In DB</Badge>
+                      )}
+                      {result.isInSteam && (
+                        <Badge variant="outline" className="text-blue-600">
+                          Steam
+                        </Badge>
+                      )}
+                      {result.error && (
+                        <Badge variant="destructive">Error</Badge>
+                      )}
+                      {result.status === 'processing' && (
+                        <Badge variant="outline">
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          Processing
+                        </Badge>
+                      )}
+                      {result.status === 'completed' && (
+                        <Badge variant="outline" className="text-green-600">
+                          <CheckCircle className="mr-1 h-3 w-3" />
+                          Done
+                        </Badge>
+                      )}
+                      {result.status === 'failed' && (
+                        <Badge variant="destructive">
+                          <XCircle className="mr-1 h-3 w-3" />
+                          Failed
+                        </Badge>
+                      )}
+                    </div>
+
+                    {result.igdbId > 0 && (
+                      <p className="text-muted-foreground text-sm">
+                        ID: {result.igdbId}
+                      </p>
+                    )}
+
+                    <p className="text-muted-foreground text-sm">
+                      Steam: {result.isInSteam ? 'Yes' : 'No'}
+                    </p>
+
+                    {(result.error || result.errorMessage) && (
+                      <p className="text-sm text-red-500">
+                        {result.error || result.errorMessage}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Banner Upload */}
+                {result.selected && !result.error && (
+                  <div className="flex items-center gap-2">
+                    <FileUpload
+                      label=""
+                      onFileSelect={(file) => handleBannerUpload(index, file)}
+                      accept="image/jpeg,image/png,image/webp"
+                      maxSize={5 * 1024 * 1024}
+                      className="w-32"
+                    />
+                    {result.bannerFile && (
+                      <span className="text-xs text-green-600">✓ Banner</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Batch Controls */}
+          {selectedCount > 0 && (
+            <div className="space-y-4 border-t pt-6">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">
+                  Ready to upload {selectedCount} games
+                </span>
+
+                {!batchProcessing ? (
+                  <Button onClick={handleBatchProcess}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Start Upload
+                  </Button>
+                ) : (
+                  <Button onClick={handleStopBatch} variant="destructive">
+                    Stop
+                  </Button>
+                )}
+              </div>
+
+              {batchProcessing && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>
+                      Batch {currentBatch}/{totalBatches}
+                    </span>
+                    <span>{Math.round(progress)}%</span>
+                  </div>
+                  <Progress value={progress} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Report */}
+          {batchReport && (
+            <div className="rounded-lg border p-4">
+              <h3 className="mb-4 font-medium">Upload Complete</h3>
+
+              <div className="mb-4 grid grid-cols-4 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {batchReport.successful}
+                  </div>
+                  <div className="text-muted-foreground text-sm">Success</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {batchReport.failed}
+                  </div>
+                  <div className="text-muted-foreground text-sm">Failed</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">{batchReport.total}</div>
+                  <div className="text-muted-foreground text-sm">Total</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {
+                      searchResults.filter(
+                        (r) => r.isInSteam && r.status === 'completed',
+                      ).length
+                    }
+                  </div>
+                  <div className="text-muted-foreground text-sm">
+                    Steam Games
+                  </div>
+                </div>
+              </div>
+
+              <div className="max-h-48 space-y-1 overflow-y-auto">
+                {batchReport.details.map((detail, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    {detail.status === 'success' ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-red-600" />
+                    )}
+                    <span>
+                      {detail.name}: {detail.message}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

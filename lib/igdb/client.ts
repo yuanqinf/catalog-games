@@ -76,7 +76,7 @@ class IgdbClient {
       body: `
         search "${query}";
         fields id, name, slug, category, total_rating_count, cover.url, screenshots.url, artworks.url, videos, summary, storyline, first_release_date, involved_companies.company.name;
-        where category = (0,1,2,8,9,10);
+        where category = (0,1,2,4,8,9,10,11) | category = null;
         limit 10;
       `,
     });
