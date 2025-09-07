@@ -95,17 +95,18 @@ export default function DynamicTrendChart({
     );
   }
 
-  // Show error state with placeholder
-  if (error) {
+  // Show error or no data state
+  if (error || !trends || chartData.length === 0) {
+    const isError = !!error;
     return (
       <TrendChart
         description={description}
-        data={[{ date: 'Error', value: 0 }]}
+        data={[{ date: isError ? 'Error' : 'No Data', value: 0 }]}
         dataKey="value"
         xKey="date"
         hideXAxis={hideXAxis}
         hideYAxis={hideYAxis}
-        strokeColor="#ef4444"
+        strokeColor={isError ? "#ef4444" : "#9ca3af"}
       />
     );
   }
