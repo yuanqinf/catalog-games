@@ -50,7 +50,7 @@ export const SearchSuggestions = ({
           <>
             {recentSearches.length > 0 && (
               <>
-                <CommandGroup heading="Recent">
+                <CommandGroup>
                   <div className="flex items-center justify-between px-2 py-1">
                     <span className="text-xs text-zinc-500">
                       Recent Searches
@@ -61,7 +61,7 @@ export const SearchSuggestions = ({
                         e.stopPropagation();
                         onClearRecentSearches();
                       }}
-                      className="text-xs text-zinc-400 transition-colors hover:text-zinc-200"
+                      className="cursor-pointer text-xs text-zinc-400 transition-colors hover:text-zinc-200"
                     >
                       Clear
                     </button>
