@@ -46,7 +46,6 @@ function findFirstGameUrl($: cheerio.CheerioAPI): string | null {
   return gameUrl;
 }
 
-
 function extractPlaytime($: cheerio.CheerioAPI): string | null {
   // Target the specific playtime structure
   const playtimeElement = $('.big-stat-number');
@@ -80,7 +79,6 @@ function extractPlaytime($: cheerio.CheerioAPI): string | null {
 
   return null;
 }
-
 
 export async function GET(request: NextRequest) {
   try {

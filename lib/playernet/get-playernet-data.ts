@@ -27,7 +27,6 @@ export async function getPlaytrackerData(
 
     console.log(`🎮 Fetched playtracker data for: ${gameName}`);
     console.log(`⏱️ Average playtime: ${data.averagePlaytime || 'N/A'}`);
-    console.log(`🎯 Recommendations: ${data.playersAlsoLiked.length} games`);
 
     return data;
   } catch (error) {

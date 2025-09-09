@@ -89,23 +89,25 @@ const SearchSection = ({
         isAddingGame={props.isAddingGame}
       />
 
-      {props.showSuggestions && !props.isAddingGame && (
-        <SearchSuggestions
-          inputValue={props.inputValue}
-          onSelectSuggestion={(text: string) => {
-            props.setInputValue(text);
-            props.handleFocus();
-          }}
-          onSelectGame={props.handleSelectSuggestion}
-          onSelectIgdbGame={props.handleSelectIgdbGame}
-          supabaseGames={props.supabaseGames}
-          igdbGames={props.igdbGames}
-          recentSearches={props.recentSearches}
-          onClearRecentSearches={props.handleClearRecentSearches}
-          isLoading={props.isLoading}
-          isAddingGame={props.isAddingGame}
-        />
-      )}
+      {props.showSuggestions &&
+        !props.isAddingGame &&
+        props.inputValue.trim() && (
+          <SearchSuggestions
+            inputValue={props.inputValue}
+            onSelectSuggestion={(text: string) => {
+              props.setInputValue(text);
+              props.handleFocus();
+            }}
+            onSelectGame={props.handleSelectSuggestion}
+            onSelectIgdbGame={props.handleSelectIgdbGame}
+            supabaseGames={props.supabaseGames}
+            igdbGames={props.igdbGames}
+            recentSearches={props.recentSearches}
+            onClearRecentSearches={props.handleClearRecentSearches}
+            isLoading={props.isLoading}
+            isAddingGame={props.isAddingGame}
+          />
+        )}
     </Command>
   );
 };

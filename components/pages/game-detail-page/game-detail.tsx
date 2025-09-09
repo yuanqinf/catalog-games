@@ -423,7 +423,6 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
             {/* Featured User Reviews Section */}
             {game.id && <FeaturedUserReviews gameId={game.id} />}
-
           </div>
 
           {/* Right Column */}

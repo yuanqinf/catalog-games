@@ -106,7 +106,7 @@ export default function DynamicTrendChart({
         xKey="date"
         hideXAxis={hideXAxis}
         hideYAxis={hideYAxis}
-        strokeColor={isError ? "#ef4444" : "#9ca3af"}
+        strokeColor={isError ? '#ef4444' : '#9ca3af'}
       />
     );
   }

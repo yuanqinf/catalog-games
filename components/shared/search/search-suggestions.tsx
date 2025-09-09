@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/command';
 import { GameDbData, IgdbGame } from '@/types';
 import { RecentSearchItem } from '@/utils/recent-searches';
-import { TRENDING_ITEMS } from '@/constants/mock-search-result';
 import { SuggestionItem } from './suggestion-item';
 
 interface SearchSuggestionsProps {
@@ -78,16 +77,6 @@ export const SearchSuggestions = ({
                 <CommandSeparator />
               </>
             )}
-
-            <CommandGroup heading="Trending">
-              {TRENDING_ITEMS.map((item) => (
-                <SuggestionItem
-                  key={item.text}
-                  item={item}
-                  onSelect={onSelectSuggestion}
-                />
-              ))}
-            </CommandGroup>
           </>
         ) : (
           !isLoading &&
