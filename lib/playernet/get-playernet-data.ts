@@ -1,14 +1,7 @@
-export interface RecommendedGame {
-  name: string;
-  url: string;
-  imageUrl?: string;
-}
-
 export interface PlaytimeData {
   gameName: string;
   averagePlaytime: string | null;
   url: string | null;
-  playersAlsoLiked: RecommendedGame[];
   message?: string;
 }
 

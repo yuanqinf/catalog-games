@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 
-interface RecommendedGame {
-  name: string;
-  url: string;
-  imageUrl?: string;
-}
-
 interface PlaytimeData {
   gameName: string;
   averagePlaytime: string | null;
   url: string | null;
-  playersAlsoLiked: RecommendedGame[];
 }
 
 // Standard browser headers to avoid blocking
@@ -53,13 +46,6 @@ function findFirstGameUrl($: cheerio.CheerioAPI): string | null {
   return gameUrl;
 }
 
-function cleanGameName(rawName: string): string {
-  return rawName
-    .split('\n')[0] // Take only the first line
-    .replace(/\s*\d+%\s*audience\s*match.*$/i, '') // Remove audience match text
-    .replace(/\s*\d+\s*popularity.*$/i, '') // Remove popularity text
-    .trim();
-}
 
 function extractPlaytime($: cheerio.CheerioAPI): string | null {
   // Target the specific playtime structure
@@ -95,113 +81,6 @@ function extractPlaytime($: cheerio.CheerioAPI): string | null {
   return null;
 }
 
-function extractRecommendations(
-  $: cheerio.CheerioAPI,
-  currentGameUrl: string,
-): RecommendedGame[] {
-  const recommendations: RecommendedGame[] = [];
-
-  // Target the specific "Players also liked" section
-  const selectors = [
-    'h3:contains("Players also liked")',
-    'h2:contains("Players also liked")', // fallback
-  ];
-
-  // Try to find dedicated recommendation section
-  for (const selector of selectors) {
-    let sectionElement = $(selector);
-
-    // If heading found, get next container
-    if (sectionElement.is('h2, h3')) {
-      sectionElement = sectionElement.nextAll().first();
-    }
-
-    if (sectionElement.length > 0) {
-      sectionElement
-        .find('a[href*="/game/"], a[href*="/insight/game/"]')
-        .each((index, element) => {
-          if (index < 5 && recommendations.length < 5) {
-            const gameLink = $(element);
-            const href = gameLink.attr('href');
-            const rawName =
-              gameLink.text().trim() ||
-              gameLink.find('img').attr('alt') ||
-              gameLink.attr('title');
-
-            if (href && rawName) {
-              const gameName = cleanGameName(rawName);
-              const fullUrl = href.startsWith('http')
-                ? href
-                : `https://playtracker.net${href}`;
-
-              // Get image if available
-              const img = gameLink.find('img');
-              const imageUrl = img.attr('src') || img.attr('data-src');
-
-              recommendations.push({
-                name: gameName,
-                url: fullUrl,
-                imageUrl: imageUrl
-                  ? imageUrl.startsWith('http')
-                    ? imageUrl
-                    : `https://playtracker.net${imageUrl}`
-                  : undefined,
-              });
-            }
-          }
-        });
-
-      if (recommendations.length > 0) {
-        console.log(`🎮 Found ${recommendations.length} recommended games`);
-        break;
-      }
-    }
-  }
-
-  // Fallback: scan for game links if no dedicated section found
-  if (recommendations.length === 0) {
-    console.log(
-      '🔍 No recommendations section found, trying fallback approach...',
-    );
-
-    const pageText = $.text().toLowerCase();
-    if (
-      pageText.includes('also liked') ||
-      pageText.includes('similar') ||
-      pageText.includes('recommend')
-    ) {
-      $('a[href*="/game/"], a[href*="/insight/game/"]').each(
-        (index, element) => {
-          if (recommendations.length >= 5) return false;
-
-          const gameLink = $(element);
-          const href = gameLink.attr('href');
-          const rawName =
-            gameLink.text().trim() ||
-            gameLink.find('img').attr('alt') ||
-            gameLink.attr('title');
-
-          if (href && rawName && href !== currentGameUrl) {
-            const gameName = cleanGameName(rawName);
-            const fullUrl = href.startsWith('http')
-              ? href
-              : `https://playtracker.net${href}`;
-
-            // Avoid duplicates
-            if (!recommendations.some((g) => g.name === gameName)) {
-              recommendations.push({
-                name: gameName,
-                url: fullUrl,
-              });
-            }
-          }
-        },
-      );
-    }
-  }
-
-  return recommendations;
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -231,7 +110,6 @@ export async function GET(request: NextRequest) {
         gameName,
         averagePlaytime: null,
         url: null,
-        playersAlsoLiked: [],
         message: 'No game found in search results',
       });
     }
@@ -245,14 +123,10 @@ export async function GET(request: NextRequest) {
     // Step 4: Extract average playtime data
     const averagePlaytime = extractPlaytime(gameDoc);
 
-    // Step 5: Extract "Players also liked" recommendations
-    const playersAlsoLiked = extractRecommendations(gameDoc, gameUrl);
-
     const result: PlaytimeData = {
       gameName,
       averagePlaytime,
       url: gameUrl,
-      playersAlsoLiked,
     };
 
     console.log(`✅ Playtracker result:`, result);
