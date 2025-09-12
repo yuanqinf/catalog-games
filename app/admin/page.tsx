@@ -8,7 +8,6 @@ import {
   GameBatchSearch,
   SingleGameAdd,
   HeroGameManager,
-  UpcomingGamesManager,
   OpenCriticReviewsManager,
 } from '@/components/admin';
 
@@ -41,11 +40,10 @@ export default function AdminPage() {
         </div>
 
         <Tabs defaultValue="batch-search" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="batch-search">Batch Search</TabsTrigger>
             <TabsTrigger value="single-add">Single Add</TabsTrigger>
             <TabsTrigger value="hero-games">Hero Games</TabsTrigger>
-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
           </TabsList>
 
@@ -61,9 +59,6 @@ export default function AdminPage() {
             <HeroGameManager />
           </TabsContent>
 
-          <TabsContent value="upcoming" className="space-y-6">
-            <UpcomingGamesManager />
-          </TabsContent>
 
 
           <TabsContent value="reviews" className="space-y-6">

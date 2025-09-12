@@ -1,6 +1,5 @@
 'use client';
 import HeroGames from '@/components/pages/homepage/hero-games';
-import UpcomingGames from '@/components/pages/homepage/upcoming-games';
 import GameRanks from '@/components/pages/homepage/game-ranks';
 
 const HomePage = () => {
@@ -9,8 +8,6 @@ const HomePage = () => {
       <HeroGames />
 
       {/* <MonthlyWorstGames /> */}
-
-      <UpcomingGames />
 
       <hr className="border-zinc-700" />
 
