@@ -59,8 +59,6 @@ export default function AdminPage() {
             <HeroGameManager />
           </TabsContent>
 
-
-
           <TabsContent value="reviews" className="space-y-6">
             <OpenCriticReviewsManager />
           </TabsContent>

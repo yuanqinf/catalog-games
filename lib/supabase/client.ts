@@ -568,8 +568,6 @@ export class GameService {
     return { gameId, heroGame: await this.checkHeroGameExists(gameId) };
   }
 
-
-
   /**
    * Search for a game on OpenCritic with smart matching
    */
