@@ -1,18 +1,59 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import useSWR from 'swr';
-import { Bookmark, Gamepad2, Star } from 'lucide-react';
+import { ThumbsDown, Gamepad2, Trophy, Loader2 } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselApi,
 } from '@/components/ui/carousel';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import PaginationDots from '@/components/shared/pagination-dots';
 
-// Types for hero games data
+// CSS Animation thumbs down reactions
+const floatingThumbsStyle = `
+  .floating-thumbs-container {
+    position: relative;
+  }
+  
+  @keyframes zoomReaction {
+    0% {
+      opacity: 0;
+      transform: translateY(0) scale(0.2);
+    }
+    15% {
+      opacity: 1;
+      transform: translateY(-30px) scale(1.2);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-200px) scale(0.8);
+    }
+  }
+  
+  .zoom-reaction {
+    animation: zoomReaction 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+`;
+
+// Types for Top 10 GameOver data
+interface GameOverEntry {
+  id: string;
+  title: string;
+  bannerUrl: string;
+  developer: string;
+  dislikeCount: number;
+  rank: number;
+}
+
+interface UserVoteState {
+  dailyCost: number;
+  maxDailyCost: number;
+  votesUsed: number;
+}
+
+// Types for hero games data from Supabase
 interface HeroGame {
   id: number;
   game_id: number;
@@ -39,7 +80,15 @@ const HeroGames = () => {
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const thumbnailRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Fetch hero games data
+  // Animation states - Zoom-style emoji reactions
+  const [floatingThumbs, setFloatingThumbs] = useState<Array<{
+    id: string;
+    gameId: string;
+    timestamp: number;
+    startX: number; // Random start position (0-100%)
+  }>>([]);
+
+  // Fetch hero games data from Supabase
   const {
     data: heroGamesResponse,
     error,
@@ -57,58 +106,76 @@ const HeroGames = () => {
     },
   );
 
-  // Transform hero games data to match the expected format
-  const transformedGames =
-    heroGamesResponse?.data?.map((heroGame) => ({
-      id: heroGame.games.igdb_id,
-      name: heroGame.games.name,
-      developer: heroGame.games.developers?.[0] || 'Unknown Developer',
-      images: {
-        banner: heroGame.games.banner_url || heroGame.games.cover_url || '',
-        thumbnail: heroGame.games.cover_url || '',
-      },
-      slug: heroGame.games.slug,
-    })) || [];
+  // Transform hero games to GameOver format with mock dislike counts
+  const [gameOverData, setGameOverData] = useState<GameOverEntry[]>([]);
+
+  // Update gameOverData when hero games data changes
+  useEffect(() => {
+    if (heroGamesResponse?.data) {
+      const transformedData = heroGamesResponse.data.map((heroGame, index) => ({
+        id: heroGame.games.igdb_id.toString(),
+        title: heroGame.games.name,
+        bannerUrl: heroGame.games.banner_url || heroGame.games.cover_url || '',
+        developer: heroGame.games.developers?.[0] || 'Unknown Developer',
+        dislikeCount: Math.floor(Math.random() * 5000) + 3000, // Mock dislike count
+        rank: index + 1,
+      }));
+      setGameOverData(transformedData);
+    }
+  }, [heroGamesResponse]);
+
+  // User voting state - simplified to just track votes
+  const [userVoteState, setUserVoteState] = useState<UserVoteState>({
+    dailyCost: 0, // Not used anymore
+    maxDailyCost: 0, // Not used anymore  
+    votesUsed: 0,
+  });
+
+  // Handle dislike vote with Zoom-style reactions
+  const handleDislikeVote = (gameId: string) => {
+    // Create Zoom-style floating reaction
+    const newThumb = {
+      id: `thumb-${Date.now()}-${Math.random()}`,
+      gameId,
+      timestamp: Date.now(),
+      startX: Math.random() * 70 + 15, // Random start position between 15% and 85%
+    };
+
+    setFloatingThumbs(prev => {
+      const updated = [...prev, newThumb];
+      return updated;
+    });
+
+    // Update game dislike count
+    setGameOverData(prev =>
+      prev.map(game =>
+        game.id === gameId
+          ? { ...game, dislikeCount: game.dislikeCount + 1 }
+          : game
+      )
+    );
+
+    // Update user vote state
+    setUserVoteState(prev => ({
+      ...prev,
+      votesUsed: prev.votesUsed + 1,
+    }));
+
+    // Remove floating thumb after animation completes
+    setTimeout(() => {
+      setFloatingThumbs(prev => prev.filter(thumb => thumb.id !== newThumb.id));
+    }, 2000); // 2 seconds animation duration
+  };
 
   // Scroll the active thumbnail into view when activeIndex changes
   useEffect(() => {
-    if (thumbnailRefs.current[activeIndex] && transformedGames.length > 0) {
+    if (thumbnailRefs.current[activeIndex] && gameOverData.length > 0) {
       thumbnailRefs.current[activeIndex]?.scrollIntoView({
         behavior: 'smooth',
         block: 'nearest',
       });
     }
-  }, [activeIndex, transformedGames.length]);
-
-  // Loading skeleton component
-  const LoadingSkeleton = () => (
-    <section className="relative mb-12">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-        {/* Main Carousel Skeleton */}
-        <div className="relative lg:col-span-3">
-          <Skeleton className="aspect-[16/9] w-full rounded-lg" />
-        </div>
-
-        {/* Sidebar Skeleton */}
-        <div className="hidden h-full rounded-lg bg-zinc-800 p-4 lg:block">
-          <div className="grid h-full grid-rows-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 rounded-md p-2"
-              >
-                <Skeleton className="h-12 w-12 rounded-md" />
-                <div className="min-w-0 space-y-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-3 w-16" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+  }, [activeIndex, gameOverData.length]);
 
   // Error state
   if (error) {
@@ -116,7 +183,7 @@ const HeroGames = () => {
       <section className="relative mb-12">
         <div className="flex h-64 items-center justify-center rounded-lg border border-red-800 bg-red-900/20 text-red-400">
           <div className="text-center">
-            <p className="mb-2">Failed to load hero games</p>
+            <p className="mb-2">Failed to load GameOver games</p>
             <p className="text-sm opacity-75">Please try again later</p>
           </div>
         </div>
@@ -126,17 +193,55 @@ const HeroGames = () => {
 
   // Loading state
   if (isLoading) {
-    return <LoadingSkeleton />;
+    return (
+      <section className="relative mb-12">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Trophy className="h-6 w-6 text-yellow-500" />
+            <h2 className="text-2xl font-bold">Top 10 GameOver of 2025</h2>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg bg-zinc-800 px-4 py-2">
+            <ThumbsDown className="h-4 w-4 text-red-500" />
+            <span className="text-sm">
+              Total Dislikes: <span className="font-bold text-red-500">
+                {gameOverData.reduce((sum, game) => sum + game.dislikeCount, 0).toLocaleString()}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+          {/* Main Banner Area */}
+          <div className="relative lg:col-span-3">
+            <div className="aspect-[16/9] w-full flex items-center justify-center rounded-lg bg-zinc-800/50">
+              <Loader2 className="h-8 w-8 animate-spin text-yellow-500" />
+            </div>
+          </div>
+
+          {/* Sidebar Area */}
+          <div className="hidden h-full rounded-lg bg-zinc-800 p-4 lg:block">
+            <div className="mb-4">
+              <h3 className="mb-2 font-bold text-red-400">Attack Panel</h3>
+              <p className="text-xs text-zinc-400">Cast your vote to increase the shame!</p>
+            </div>
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-yellow-500" />
+            </div>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   // Empty state
-  if (!transformedGames || transformedGames.length === 0) {
+  if (!gameOverData || gameOverData.length === 0) {
     return (
       <section className="relative mb-12">
         <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-zinc-400">
           <div className="text-center">
-            <Gamepad2 size={48} className="mx-auto mb-4 opacity-50" />
-            <p className="mb-2">No hero games available</p>
+            <Trophy size={48} className="mx-auto mb-4 opacity-50" />
+            <p className="mb-2">No GameOver entries available</p>
             <p className="text-sm opacity-75">
               Hero games will appear here once added by admins
             </p>
@@ -148,8 +253,25 @@ const HeroGames = () => {
 
   return (
     <section className="relative mb-12">
+      {/* Inject CSS Animation */}
+      <style jsx>{floatingThumbsStyle}</style>
+
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Trophy className="h-6 w-6 text-yellow-500" />
+          <h2 className="text-2xl font-bold">Top 10 GameOver of 2025</h2>
+        </div>
+        <div className="flex items-center gap-2 rounded-lg bg-zinc-800 px-4 py-2">
+          <ThumbsDown className="h-4 w-4 text-red-500" />
+          <span className="text-sm">
+            Total Dislikes: <span className="font-bold text-red-500">0</span>
+          </span>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-        {/* Main Carousel - Takes 3/4 of the width on large screens */}
+        {/* Main Banner - Takes 3/4 of the width on large screens */}
         <div className="relative lg:col-span-3">
           <Carousel
             opts={{
@@ -170,33 +292,40 @@ const HeroGames = () => {
             }}
           >
             <CarouselContent>
-              {transformedGames.map((game) => (
+              {gameOverData.map((game) => (
                 <CarouselItem key={game.id}>
-                  <Link href={`/detail/${game.slug}`} className="block">
-                    <div className="game-card relative aspect-[16/9]">
-                      <div className="absolute top-0 right-0 z-10 p-6">
-                        <Bookmark
-                          size={24}
-                          className="cursor-pointer text-white hover:text-yellow-400"
-                          fill="rgba(0,0,0,0.5)"
-                        />
+                  <div className="game-card relative aspect-[16/9] overflow-hidden rounded-lg">
+                    {/* Dislike Count Overlay */}
+                    <div className="absolute top-4 left-4 z-20 rounded-lg bg-black/70 px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <ThumbsDown className="h-4 w-4 text-red-400" />
+                        <span className="font-bold text-white">
+                          {game.dislikeCount.toLocaleString()}
+                        </span>
                       </div>
-                      {game.images && game.images.banner ? (
-                        <Image
-                          src={game.images.banner}
-                          alt={`Banner image for ${game.name}`}
-                          width={1920}
-                          height={1080}
-                          className="h-full w-full object-cover"
-                          priority={true}
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-zinc-800">
-                          <Gamepad2 size={60} className="text-zinc-500" />
-                        </div>
-                      )}
                     </div>
-                  </Link>
+
+                    {/* Rank Badge */}
+                    <div className="absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 font-bold text-white">
+                      #{game.rank}
+                    </div>
+
+                    {/* Banner Image */}
+                    {game.bannerUrl ? (
+                      <Image
+                        src={game.bannerUrl}
+                        alt={`Banner image for ${game.title}`}
+                        width={1920}
+                        height={1080}
+                        className="h-full w-full object-cover"
+                        priority={activeIndex === gameOverData.indexOf(game)}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-zinc-800">
+                        <Gamepad2 size={60} className="text-zinc-500" />
+                      </div>
+                    )}
+                  </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -204,62 +333,95 @@ const HeroGames = () => {
 
           {/* Mobile pagination dots */}
           <PaginationDots
-            totalItems={transformedGames.length}
+            totalItems={gameOverData.length}
             activeIndex={activeIndex}
             carouselApi={carouselApi}
             className="lg:hidden"
           />
         </div>
 
-        {/* Right Sidebar - Takes 1/4 of the width on large screens */}
-        <div className="hidden h-full rounded-lg bg-zinc-800 p-4 lg:block">
-          <div className="grid h-full grid-rows-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
-            {transformedGames.map((game, index) => (
+        {/* Right Sidebar - Vote/Attack Panel */}
+        <div className="hidden h-full rounded-lg bg-zinc-800 p-4 lg:block relative overflow-hidden floating-thumbs-container">
+          {/* Zoom-style Floating Emoji Reactions - Simplified */}
+          {floatingThumbs.map((thumb) => (
+            <div
+              key={thumb.id}
+              className="absolute z-40 pointer-events-none animate-pulse"
+              style={{
+                left: `${thumb.startX}%`,
+                bottom: '0px',
+                transform: 'translateY(0)',
+                transition: 'all 2s ease-out',
+                animation: 'zoomReaction 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+              }}
+            >
+              <ThumbsDown
+                className="h-6 w-6 text-red-500 drop-shadow-lg"
+                fill="currentColor"
+              />
+            </div>
+          ))}
+
+          <div className="mb-4">
+            <h3 className="mb-2 font-bold text-red-400">Attack Panel</h3>
+            <p className="text-xs text-zinc-400">Cast your vote to increase the shame!</p>
+          </div>
+
+          <div className="space-y-3">
+            {gameOverData.map((game, index) => (
               <div
-                key={`thumb-${game.id}`}
+                key={`vote-${game.id}`}
                 ref={(el) => {
                   thumbnailRefs.current[index] = el;
                 }}
-                className={`flex cursor-pointer items-center gap-3 rounded-md p-2 transition-all ${activeIndex === index ? 'bg-zinc-700' : 'hover:bg-zinc-700/50'}`}
+                className={`group relative rounded-md border-2 p-3 transition-all ${activeIndex === index
+                  ? 'border-red-500 bg-red-900/20'
+                  : 'border-zinc-700 hover:border-zinc-600 hover:bg-zinc-700/50'
+                  }`}
                 onClick={() => {
                   setActiveIndex(index);
                   carouselApi?.scrollTo(index);
                 }}
               >
-                <div
-                  className={`h-12 w-12 flex-shrink-0 overflow-hidden rounded-md transition-all duration-200 ${
-                    activeIndex === index ? 'scale-110' : ''
-                  }`}
-                >
-                  {game.images.thumbnail ? (
-                    <Image
-                      src={game.images.thumbnail}
-                      alt={`Thumbnail image for ${game.name}`}
-                      width={48}
-                      height={48}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-zinc-700">
-                      <Gamepad2 size={20} className="text-zinc-500" />
-                    </div>
-                  )}
+                {/* Rank */}
+                <div className="absolute -top-2 -left-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
+                  #{game.rank}
                 </div>
 
-                <div className="flex min-w-0 flex-col gap-1">
-                  <h4 className="hidden text-sm font-medium break-words xl:block">
-                    {game.name}
-                  </h4>
-                  <p className="truncate text-xs text-zinc-400">
-                    {game.developer}
-                  </p>
-                  <div className="flex items-center gap-1 text-yellow-400">
-                    <Star size={12} fill="currentColor" />
-                    <p className="text-xs font-bold">{'0.0'}</p>
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <h4 className="truncate text-sm font-medium">{game.title}</h4>
+                    <p className="truncate text-xs text-zinc-400">{game.developer}</p>
+                    <div className="mt-1 flex items-center gap-1 text-red-400">
+                      <ThumbsDown size={12} />
+                      <span className="text-xs font-bold">
+                        {game.dislikeCount.toLocaleString()}
+                      </span>
+                    </div>
                   </div>
+
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="ml-2 h-8 w-8 p-0 transition-all hover:scale-110"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDislikeVote(game.id);
+                    }}
+                  >
+                    <ThumbsDown size={14} />
+                  </Button>
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Vote Stats */}
+          <div className="mt-4 rounded-md bg-zinc-900 p-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-400">Your votes cast:</span>
+              <span className="font-bold text-red-500">{userVoteState.votesUsed}</span>
+            </div>
           </div>
         </div>
       </div>
