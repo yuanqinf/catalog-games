@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import useSWR from 'swr';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ThumbsDown, Gamepad2, Trophy, Loader2 } from 'lucide-react';
 import {
   Carousel,
@@ -11,31 +12,6 @@ import {
 import { Button } from '@/components/ui/button';
 import PaginationDots from '@/components/shared/pagination-dots';
 
-// CSS Animation thumbs down reactions
-const floatingThumbsStyle = `
-  .floating-thumbs-container {
-    position: relative;
-  }
-  
-  @keyframes zoomReaction {
-    0% {
-      opacity: 0;
-      transform: translateY(0) scale(0.2);
-    }
-    15% {
-      opacity: 1;
-      transform: translateY(-30px) scale(1.2);
-    }
-    100% {
-      opacity: 0;
-      transform: translateY(-200px) scale(0.8);
-    }
-  }
-  
-  .zoom-reaction {
-    animation: zoomReaction 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-  }
-`;
 
 // Types for Top 10 GameOver data
 interface GameOverEntry {
@@ -161,10 +137,7 @@ const HeroGames = () => {
       votesUsed: prev.votesUsed + 1,
     }));
 
-    // Remove floating thumb after animation completes
-    setTimeout(() => {
-      setFloatingThumbs(prev => prev.filter(thumb => thumb.id !== newThumb.id));
-    }, 2000); // 2 seconds animation duration
+    // Note: Framer Motion will auto-remove via onAnimationComplete
   };
 
   // Scroll the active thumbnail into view when activeIndex changes
@@ -253,8 +226,6 @@ const HeroGames = () => {
 
   return (
     <section className="relative mb-12">
-      {/* Inject CSS Animation */}
-      <style jsx>{floatingThumbsStyle}</style>
 
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
@@ -341,26 +312,49 @@ const HeroGames = () => {
         </div>
 
         {/* Right Sidebar - Vote/Attack Panel */}
-        <div className="hidden h-full rounded-lg bg-zinc-800 p-4 lg:block relative overflow-hidden floating-thumbs-container">
-          {/* Zoom-style Floating Emoji Reactions - Simplified */}
-          {floatingThumbs.map((thumb) => (
-            <div
-              key={thumb.id}
-              className="absolute z-40 pointer-events-none animate-pulse"
-              style={{
-                left: `${thumb.startX}%`,
-                bottom: '0px',
-                transform: 'translateY(0)',
-                transition: 'all 2s ease-out',
-                animation: 'zoomReaction 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
-              }}
-            >
-              <ThumbsDown
-                className="h-6 w-6 text-red-500 drop-shadow-lg"
-                fill="currentColor"
-              />
-            </div>
-          ))}
+        <div className="hidden h-full rounded-lg bg-zinc-800 p-4 lg:block relative overflow-hidden">
+          {/* Framer Motion Zoom-style Floating Reactions */}
+          <AnimatePresence>
+            {floatingThumbs.map((thumb) => (
+              <motion.div
+                key={thumb.id}
+                className="absolute z-40 pointer-events-none"
+                style={{
+                  left: `${thumb.startX}%`,
+                  bottom: '20px',
+                }}
+                initial={{
+                  opacity: 0,
+                  scale: 0.2,
+                  y: 0,
+                }}
+                animate={{
+                  opacity: [0, 1, 1, 0],
+                  scale: [0.2, 1.2, 1.1, 0.8],
+                  y: [0, -30, -100, -200],
+                }}
+                exit={{
+                  opacity: 0,
+                  scale: 0.6,
+                  y: -250,
+                }}
+                transition={{
+                  duration: 2,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  times: [0, 0.15, 0.6, 1],
+                }}
+                onAnimationComplete={() => {
+                  // Auto-remove when animation completes
+                  setFloatingThumbs(prev => prev.filter(t => t.id !== thumb.id));
+                }}
+              >
+                <ThumbsDown
+                  className="h-6 w-6 text-red-500 drop-shadow-lg"
+                  fill="currentColor"
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
 
           <div className="mb-4">
             <h3 className="mb-2 font-bold text-red-400">Attack Panel</h3>
