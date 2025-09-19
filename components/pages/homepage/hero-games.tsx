@@ -244,6 +244,51 @@ const HeroGames = () => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
         {/* Main Banner - Takes 3/4 of the width on large screens */}
         <div className="relative lg:col-span-3">
+          {/* Framer Motion Zoom-style Floating Reactions - Moved to Banner */}
+          <AnimatePresence>
+            {floatingThumbs
+              .filter(thumb => thumb.gameId === gameOverData[activeIndex]?.id)
+              .map((thumb) => (
+                <motion.div
+                  key={thumb.id}
+                  className="absolute z-50 pointer-events-none"
+                  style={{
+                    left: `${thumb.startX}%`,
+                    bottom: '10%',
+                  }}
+                  initial={{
+                    opacity: 0,
+                    scale: 0.2,
+                    y: 0,
+                  }}
+                  animate={{
+                    opacity: [0, 1, 1, 0],
+                    scale: [0.2, 1.5, 1.3, 0.9],
+                    y: [0, -40, -120, -250],
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0.6,
+                    y: -300,
+                  }}
+                  transition={{
+                    duration: 2.5,
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                    times: [0, 0.15, 0.6, 1],
+                  }}
+                  onAnimationComplete={() => {
+                    // Auto-remove when animation completes
+                    setFloatingThumbs(prev => prev.filter(t => t.id !== thumb.id));
+                  }}
+                >
+                  <ThumbsDown
+                    className="h-8 w-8 text-red-500 drop-shadow-2xl"
+                    fill="currentColor"
+                  />
+                </motion.div>
+              ))}
+          </AnimatePresence>
+
           <Carousel
             opts={{
               loop: true,
@@ -313,48 +358,6 @@ const HeroGames = () => {
 
         {/* Right Sidebar - Vote/Attack Panel */}
         <div className="hidden h-full rounded-lg bg-zinc-800 p-4 lg:block relative overflow-hidden">
-          {/* Framer Motion Zoom-style Floating Reactions */}
-          <AnimatePresence>
-            {floatingThumbs.map((thumb) => (
-              <motion.div
-                key={thumb.id}
-                className="absolute z-40 pointer-events-none"
-                style={{
-                  left: `${thumb.startX}%`,
-                  bottom: '20px',
-                }}
-                initial={{
-                  opacity: 0,
-                  scale: 0.2,
-                  y: 0,
-                }}
-                animate={{
-                  opacity: [0, 1, 1, 0],
-                  scale: [0.2, 1.2, 1.1, 0.8],
-                  y: [0, -30, -100, -200],
-                }}
-                exit={{
-                  opacity: 0,
-                  scale: 0.6,
-                  y: -250,
-                }}
-                transition={{
-                  duration: 2,
-                  ease: [0.25, 0.46, 0.45, 0.94],
-                  times: [0, 0.15, 0.6, 1],
-                }}
-                onAnimationComplete={() => {
-                  // Auto-remove when animation completes
-                  setFloatingThumbs(prev => prev.filter(t => t.id !== thumb.id));
-                }}
-              >
-                <ThumbsDown
-                  className="h-6 w-6 text-red-500 drop-shadow-lg"
-                  fill="currentColor"
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
 
           <div className="mb-4">
             <h3 className="mb-2 font-bold text-red-400">Attack Panel</h3>
