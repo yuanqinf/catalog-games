@@ -109,6 +109,15 @@ const HeroGames = () => {
 
   // Handle dislike vote with Zoom-style reactions
   const handleDislikeVote = (gameId: string) => {
+    // Find the index of the voted game
+    const gameIndex = gameOverData.findIndex(game => game.id === gameId);
+
+    // Switch to the voted game if it's not currently active
+    if (gameIndex !== -1 && gameIndex !== activeIndex) {
+      setActiveIndex(gameIndex);
+      carouselApi?.scrollTo(gameIndex);
+    }
+
     // Create Zoom-style floating reaction
     const newThumb = {
       id: `thumb-${Date.now()}-${Math.random()}`,
