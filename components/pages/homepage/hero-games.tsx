@@ -26,6 +26,9 @@ interface UserVoteState {
   dailyCost: number;
   maxDailyCost: number;
   votesUsed: number;
+  continuousClicks: number;
+  lastClickTime: number;
+  isPowerMode: boolean;
 }
 
 // Types for hero games data from Supabase
@@ -62,6 +65,7 @@ const HeroGames = () => {
       gameId: string;
       timestamp: number;
       startX: number; // Random start position (0-100%)
+      isPowerMode?: boolean;
     }>
   >([]);
 
@@ -106,10 +110,30 @@ const HeroGames = () => {
     dailyCost: 0, // Not used anymore
     maxDailyCost: 0, // Not used anymore
     votesUsed: 0,
+    continuousClicks: 0,
+    lastClickTime: 0,
+    isPowerMode: false,
   });
+
+  // Button click animations state
+  const [clickingButtons, setClickingButtons] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Handle dislike vote with Zoom-style reactions
   const handleDislikeVote = (gameId: string) => {
+    const currentTime = Date.now();
+
+    // Add button click animation
+    setClickingButtons((prev) => new Set([...prev, gameId]));
+    setTimeout(() => {
+      setClickingButtons((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(gameId);
+        return newSet;
+      });
+    }, 200);
+
     // Find the index of the voted game
     const gameIndex = gameOverData.findIndex((game) => game.id === gameId);
 
@@ -119,12 +143,31 @@ const HeroGames = () => {
       carouselApi?.scrollTo(gameIndex);
     }
 
-    // Create Zoom-style floating reaction
+    // Update continuous click tracking and power mode
+    setUserVoteState((prev) => {
+      const timeSinceLastClick = currentTime - prev.lastClickTime;
+      const isConsecutive = timeSinceLastClick < 5000; // Within 5 seconds
+
+      const newContinuousClicks = isConsecutive ? prev.continuousClicks + 1 : 1;
+      const newIsPowerMode = newContinuousClicks >= 10;
+
+      return {
+        ...prev,
+        votesUsed: prev.votesUsed + 1,
+        continuousClicks: newContinuousClicks,
+        lastClickTime: currentTime,
+        isPowerMode: newIsPowerMode,
+      };
+    });
+
+    // Create Zoom-style floating reaction (bigger if in power mode)
+    const isPowerMode = userVoteState.continuousClicks >= 9; // Use previous state to check
     const newThumb = {
       id: `thumb-${Date.now()}-${Math.random()}`,
       gameId,
       timestamp: Date.now(),
       startX: Math.random() * 70 + 15, // Random start position between 15% and 85%
+      isPowerMode,
     };
 
     setFloatingThumbs((prev) => {
@@ -132,23 +175,33 @@ const HeroGames = () => {
       return updated;
     });
 
-    // Update game dislike count
+    // Update game dislike count (more if in power mode)
+    const increment = isPowerMode ? 3 : 1;
     setGameOverData((prev) =>
       prev.map((game) =>
         game.id === gameId
-          ? { ...game, dislikeCount: game.dislikeCount + 1 }
+          ? { ...game, dislikeCount: game.dislikeCount + increment }
           : game,
       ),
     );
 
-    // Update user vote state
-    setUserVoteState((prev) => ({
-      ...prev,
-      votesUsed: prev.votesUsed + 1,
-    }));
-
     // Note: Framer Motion will auto-remove via onAnimationComplete
   };
+
+  // Reset power mode after 3 seconds of inactivity
+  useEffect(() => {
+    if (userVoteState.isPowerMode) {
+      const timer = setTimeout(() => {
+        setUserVoteState((prev) => ({
+          ...prev,
+          isPowerMode: false,
+          continuousClicks: 0,
+        }));
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [userVoteState.lastClickTime, userVoteState.isPowerMode]);
 
   // Scroll the active thumbnail into view when activeIndex changes
   useEffect(() => {
@@ -277,16 +330,20 @@ const HeroGames = () => {
                   }}
                   animate={{
                     opacity: [0, 1, 1, 0],
-                    scale: [0.2, 1.5, 1.3, 0.9],
-                    y: [0, -40, -120, -250],
+                    scale: thumb.isPowerMode
+                      ? [0.2, 2.2, 2.0, 1.3]
+                      : [0.2, 1.5, 1.3, 0.9],
+                    y: thumb.isPowerMode
+                      ? [0, -60, -180, -350]
+                      : [0, -40, -120, -250],
                   }}
                   exit={{
                     opacity: 0,
-                    scale: 0.6,
-                    y: -300,
+                    scale: thumb.isPowerMode ? 1.0 : 0.6,
+                    y: thumb.isPowerMode ? -400 : -300,
                   }}
                   transition={{
-                    duration: 2.5,
+                    duration: thumb.isPowerMode ? 3.5 : 2.5,
                     ease: [0.25, 0.46, 0.45, 0.94],
                     times: [0, 0.15, 0.6, 1],
                   }}
@@ -298,9 +355,27 @@ const HeroGames = () => {
                   }}
                 >
                   <ThumbsDown
-                    className="h-8 w-8 text-red-500 drop-shadow-2xl"
+                    className={`drop-shadow-2xl ${
+                      thumb.isPowerMode
+                        ? 'h-12 w-12 text-red-400'
+                        : 'h-8 w-8 text-red-500'
+                    }`}
                     fill="currentColor"
                   />
+                  {thumb.isPowerMode && (
+                    <motion.div
+                      className="absolute -inset-2 rounded-full bg-red-500/30"
+                      animate={{
+                        scale: [0.8, 1.2, 0.8],
+                        opacity: [0.8, 0.3, 0.8],
+                      }}
+                      transition={{
+                        duration: 0.5,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
+                    />
+                  )}
                 </motion.div>
               ))}
           </AnimatePresence>
@@ -442,17 +517,46 @@ const HeroGames = () => {
                     </div>
 
                     {/* Vote Button */}
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="h-8 w-8 flex-shrink-0 p-0 transition-all hover:scale-110"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDislikeVote(game.id);
-                      }}
+                    <motion.div
+                      animate={
+                        clickingButtons.has(game.id)
+                          ? {
+                              scale: [1, 0.8, 1.1, 1],
+                            }
+                          : {}
+                      }
+                      transition={{ duration: 0.2 }}
                     >
-                      <ThumbsDown size={14} />
-                    </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className={`relative h-8 w-8 flex-shrink-0 p-0 transition-all hover:scale-110 ${
+                          userVoteState.isPowerMode
+                            ? 'bg-red-600 shadow-lg shadow-red-500/50 hover:bg-red-700'
+                            : ''
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDislikeVote(game.id);
+                        }}
+                      >
+                        <ThumbsDown size={14} />
+                        {userVoteState.isPowerMode && (
+                          <motion.div
+                            className="absolute -inset-1 -z-10 rounded bg-red-500/30"
+                            animate={{
+                              scale: [0.9, 1.1, 0.9],
+                              opacity: [0.5, 0.8, 0.5],
+                            }}
+                            transition={{
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: 'easeInOut',
+                            }}
+                          />
+                        )}
+                      </Button>
+                    </motion.div>
                   </div>
                 </div>
               );
