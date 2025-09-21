@@ -12,7 +12,6 @@ import {
 import { Button } from '@/components/ui/button';
 import PaginationDots from '@/components/shared/pagination-dots';
 
-
 // Types for Top 10 GameOver data
 interface GameOverEntry {
   id: string;
@@ -57,12 +56,14 @@ const HeroGames = () => {
   const thumbnailRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Animation states - Zoom-style emoji reactions
-  const [floatingThumbs, setFloatingThumbs] = useState<Array<{
-    id: string;
-    gameId: string;
-    timestamp: number;
-    startX: number; // Random start position (0-100%)
-  }>>([]);
+  const [floatingThumbs, setFloatingThumbs] = useState<
+    Array<{
+      id: string;
+      gameId: string;
+      timestamp: number;
+      startX: number; // Random start position (0-100%)
+    }>
+  >([]);
 
   // Fetch hero games data from Supabase
   const {
@@ -103,14 +104,14 @@ const HeroGames = () => {
   // User voting state - simplified to just track votes
   const [userVoteState, setUserVoteState] = useState<UserVoteState>({
     dailyCost: 0, // Not used anymore
-    maxDailyCost: 0, // Not used anymore  
+    maxDailyCost: 0, // Not used anymore
     votesUsed: 0,
   });
 
   // Handle dislike vote with Zoom-style reactions
   const handleDislikeVote = (gameId: string) => {
     // Find the index of the voted game
-    const gameIndex = gameOverData.findIndex(game => game.id === gameId);
+    const gameIndex = gameOverData.findIndex((game) => game.id === gameId);
 
     // Switch to the voted game if it's not currently active
     if (gameIndex !== -1 && gameIndex !== activeIndex) {
@@ -126,22 +127,22 @@ const HeroGames = () => {
       startX: Math.random() * 70 + 15, // Random start position between 15% and 85%
     };
 
-    setFloatingThumbs(prev => {
+    setFloatingThumbs((prev) => {
       const updated = [...prev, newThumb];
       return updated;
     });
 
     // Update game dislike count
-    setGameOverData(prev =>
-      prev.map(game =>
+    setGameOverData((prev) =>
+      prev.map((game) =>
         game.id === gameId
           ? { ...game, dislikeCount: game.dislikeCount + 1 }
-          : game
-      )
+          : game,
+      ),
     );
 
     // Update user vote state
-    setUserVoteState(prev => ({
+    setUserVoteState((prev) => ({
       ...prev,
       votesUsed: prev.votesUsed + 1,
     }));
@@ -186,8 +187,11 @@ const HeroGames = () => {
           <div className="flex items-center gap-2 rounded-lg bg-zinc-800 px-4 py-2">
             <ThumbsDown className="h-4 w-4 text-red-500" />
             <span className="text-sm">
-              Total Dislikes: <span className="font-bold text-red-500">
-                {gameOverData.reduce((sum, game) => sum + game.dislikeCount, 0).toLocaleString()}
+              Total Dislikes:{' '}
+              <span className="font-bold text-red-500">
+                {gameOverData
+                  .reduce((sum, game) => sum + game.dislikeCount, 0)
+                  .toLocaleString()}
               </span>
             </span>
           </div>
@@ -196,7 +200,7 @@ const HeroGames = () => {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
           {/* Main Banner Area */}
           <div className="relative lg:col-span-3">
-            <div className="aspect-[16/9] w-full flex items-center justify-center rounded-lg bg-zinc-800/50">
+            <div className="flex aspect-[16/9] w-full items-center justify-center rounded-lg bg-zinc-800/50">
               <Loader2 className="h-8 w-8 animate-spin text-yellow-500" />
             </div>
           </div>
@@ -205,7 +209,9 @@ const HeroGames = () => {
           <div className="hidden h-full rounded-lg bg-zinc-800 p-4 lg:block">
             <div className="mb-4">
               <h3 className="mb-2 font-bold text-red-400">Attack Panel</h3>
-              <p className="text-xs text-zinc-400">Cast your vote to increase the shame!</p>
+              <p className="text-xs text-zinc-400">
+                Cast your vote to increase the shame!
+              </p>
             </div>
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-yellow-500" />
@@ -235,7 +241,6 @@ const HeroGames = () => {
 
   return (
     <section className="relative mb-12">
-
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -256,11 +261,11 @@ const HeroGames = () => {
           {/* Framer Motion Zoom-style Floating Reactions - Moved to Banner */}
           <AnimatePresence>
             {floatingThumbs
-              .filter(thumb => thumb.gameId === gameOverData[activeIndex]?.id)
+              .filter((thumb) => thumb.gameId === gameOverData[activeIndex]?.id)
               .map((thumb) => (
                 <motion.div
                   key={thumb.id}
-                  className="absolute z-50 pointer-events-none"
+                  className="pointer-events-none absolute z-50"
                   style={{
                     left: `${thumb.startX}%`,
                     bottom: '10%',
@@ -287,7 +292,9 @@ const HeroGames = () => {
                   }}
                   onAnimationComplete={() => {
                     // Auto-remove when animation completes
-                    setFloatingThumbs(prev => prev.filter(t => t.id !== thumb.id));
+                    setFloatingThumbs((prev) =>
+                      prev.filter((t) => t.id !== thumb.id),
+                    );
                   }}
                 >
                   <ThumbsDown
@@ -366,68 +373,90 @@ const HeroGames = () => {
         </div>
 
         {/* Right Sidebar - Vote/Attack Panel */}
-        <div className="hidden h-full rounded-lg bg-zinc-800 p-4 lg:block relative overflow-hidden">
-
+        <div className="relative hidden overflow-hidden rounded-lg bg-zinc-800 p-4 lg:block">
           <div className="mb-4">
             <h3 className="mb-2 font-bold text-red-400">Attack Panel</h3>
-            <p className="text-xs text-zinc-400">Cast your vote to increase the shame!</p>
+            <p className="text-xs text-zinc-400">
+              Cast your vote to increase the shame!
+            </p>
           </div>
 
-          <div className="space-y-3">
-            {gameOverData.map((game, index) => (
-              <div
-                key={`vote-${game.id}`}
-                ref={(el) => {
-                  thumbnailRefs.current[index] = el;
-                }}
-                className={`group relative rounded-md border-2 p-3 transition-all ${activeIndex === index
-                  ? 'border-red-500 bg-red-900/20'
-                  : 'border-zinc-700 hover:border-zinc-600 hover:bg-zinc-700/50'
-                  }`}
-                onClick={() => {
-                  setActiveIndex(index);
-                  carouselApi?.scrollTo(index);
-                }}
-              >
-                {/* Rank */}
-                <div className="absolute -top-2 -left-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
-                  #{game.rank}
-                </div>
+          <div className="space-y-4">
+            {gameOverData.map((game, index) => {
+              // Find the corresponding hero game data to get cover_url
+              const heroGame = heroGamesResponse?.data?.find(
+                (hg) => hg.games.igdb_id.toString() === game.id,
+              );
+              const coverUrl = heroGame?.games.cover_url;
 
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <h4 className="truncate text-sm font-medium">{game.title}</h4>
-                    <p className="truncate text-xs text-zinc-400">{game.developer}</p>
-                    <div className="mt-1 flex items-center gap-1 text-red-400">
-                      <ThumbsDown size={12} />
-                      <span className="text-xs font-bold">
-                        {game.dislikeCount.toLocaleString()}
-                      </span>
-                    </div>
+              return (
+                <div
+                  key={`vote-${game.id}`}
+                  ref={(el) => {
+                    thumbnailRefs.current[index] = el;
+                  }}
+                  className={`group relative cursor-pointer rounded-md border-2 p-3 transition-all ${
+                    activeIndex === index
+                      ? 'border-red-500 bg-red-900/20'
+                      : 'border-zinc-700 hover:border-zinc-600 hover:bg-zinc-700/50'
+                  }`}
+                  onClick={() => {
+                    setActiveIndex(index);
+                    carouselApi?.scrollTo(index);
+                  }}
+                >
+                  {/* Rank */}
+                  <div className="absolute -top-2 -left-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
+                    #{game.rank}
                   </div>
 
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    className="ml-2 h-8 w-8 p-0 transition-all hover:scale-110"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDislikeVote(game.id);
-                    }}
-                  >
-                    <ThumbsDown size={14} />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+                  <div className="flex items-center gap-3">
+                    {/* Cover Image */}
+                    <div className="flex-shrink-0">
+                      {coverUrl ? (
+                        <Image
+                          src={coverUrl}
+                          alt={`${game.title} cover`}
+                          width={48}
+                          height={64}
+                          className="h-16 w-12 rounded object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-16 w-12 items-center justify-center rounded bg-zinc-700">
+                          <Gamepad2 size={20} className="text-zinc-500" />
+                        </div>
+                      )}
+                    </div>
 
-          {/* Vote Stats */}
-          <div className="mt-4 rounded-md bg-zinc-900 p-3">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400">Your votes cast:</span>
-              <span className="font-bold text-red-500">{userVoteState.votesUsed}</span>
-            </div>
+                    {/* Game Info */}
+                    <div className="min-w-0 flex-1">
+                      <h4 className="truncate text-sm font-medium">
+                        {game.title}
+                      </h4>
+                      <div className="mt-1 flex items-center gap-1 text-red-400">
+                        <ThumbsDown size={12} />
+                        <span className="text-xs font-bold">
+                          {game.dislikeCount.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Vote Button */}
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-8 w-8 flex-shrink-0 p-0 transition-all hover:scale-110"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDislikeVote(game.id);
+                      }}
+                    >
+                      <ThumbsDown size={14} />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
