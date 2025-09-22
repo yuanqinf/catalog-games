@@ -49,7 +49,6 @@ import {
   PlaytimeData,
 } from '@/lib/playernet/get-playernet-data';
 import { useSteamReviews } from '@/hooks/useSteamReviews';
-import FeaturedUserReviews from './game-detail-featured-review';
 
 const GameDetail = ({ game }: { game: GameDbData }) => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -421,8 +420,6 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
               />
             </div>
 
-            {/* Featured User Reviews Section */}
-            {game.id && <FeaturedUserReviews gameId={game.id} />}
           </div>
 
           {/* Right Column */}

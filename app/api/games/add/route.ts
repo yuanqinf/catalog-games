@@ -74,8 +74,6 @@ export async function POST(request: NextRequest) {
       true,
     );
 
-    // Note: We no longer fetch detailed Steam reviews since we've pivoted to using OpenCritic
-    // Steam review summary (overall rating like "Very Positive") is still preserved in the game data
 
     console.log(`✅ Successfully added game: ${igdbData.name}`);
 

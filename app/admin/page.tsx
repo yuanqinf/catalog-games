@@ -8,7 +8,6 @@ import {
   GameBatchSearch,
   SingleGameAdd,
   HeroGameManager,
-  OpenCriticReviewsManager,
 } from '@/components/admin';
 
 // TODO: Only allow admin users to access this page
@@ -34,17 +33,15 @@ export default function AdminPage() {
         <div className="mb-8">
           <h1 className="mb-2 text-3xl font-bold">Game Administration</h1>
           <p className="text-zinc-400">
-            Manage games, hero games, upcoming games, news, and reviews for the
-            catalog.
+            Manage games, hero games, and upcoming games for the catalog.
           </p>
         </div>
 
         <Tabs defaultValue="batch-search" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="batch-search">Batch Search</TabsTrigger>
             <TabsTrigger value="single-add">Single Add</TabsTrigger>
             <TabsTrigger value="hero-games">Hero Games</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews</TabsTrigger>
           </TabsList>
 
           <TabsContent value="batch-search" className="space-y-6">
@@ -57,10 +54,6 @@ export default function AdminPage() {
 
           <TabsContent value="hero-games" className="space-y-6">
             <HeroGameManager />
-          </TabsContent>
-
-          <TabsContent value="reviews" className="space-y-6">
-            <OpenCriticReviewsManager />
           </TabsContent>
         </Tabs>
       </div>

@@ -2,20 +2,6 @@ import useSWR from 'swr';
 import { GameService } from '@/lib/supabase/client';
 import type { GameRating } from '@/types';
 
-// Define the new third party review interface
-interface ThirdPartyGameReview {
-  id: number;
-  game_id: number;
-  published_date?: string;
-  external_url: string;
-  snippet_content?: string;
-  score?: number;
-  np_score?: number;
-  outlet_name?: string;
-  author_name?: string;
-  created_at: string;
-  updated_at: string;
-}
 
 interface UseGameRatingReturn {
   rating: GameRating;
@@ -143,35 +129,3 @@ export function useGameRating(
   }
 }
 
-/**
- * Hook for fetching third party game reviews (OpenCritic)
- */
-export function useGameReviews(gameId: number | string | undefined) {
-  const numericGameId = typeof gameId === 'string' ? parseInt(gameId) : gameId;
-
-  const { data, error, isLoading, mutate } = useSWR(
-    numericGameId ? ['third-party-reviews', numericGameId] : null,
-    async ([, gId]) => {
-      const gameService = new GameService();
-      return await gameService.getGameReviews(gId as number);
-    },
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 5 * 60 * 1000, // 5 minutes
-      errorRetryCount: 2,
-      errorRetryInterval: 1000,
-      onSuccess: () =>
-        console.log(`💾 Cached third party reviews for game ${numericGameId}`),
-      onError: (err) =>
-        console.error('Failed to fetch third party reviews:', err),
-    },
-  );
-
-  return {
-    reviews: (data as ThirdPartyGameReview[]) || [],
-    isLoading,
-    error,
-    mutate,
-  };
-}
