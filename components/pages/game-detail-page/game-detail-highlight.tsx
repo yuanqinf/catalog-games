@@ -44,7 +44,7 @@ export default function GameDetailHighlight({
   ];
 
   return (
-    <div className="space-y-6 lg:sticky lg:top-8 lg:col-span-1 lg:self-start">
+    <div className="space-y-6 lg:col-span-1">
       {carouselImages.length > 0 && (
         <div className="relative">
           <Carousel className="w-full">
@@ -123,11 +123,10 @@ export default function GameDetailHighlight({
 
         {/* Steam Review - client-side real-time data only with slide-in animation */}
         <div
-          className={`transition-all duration-500 ease-out ${
-            steamReviews?.steam_all_review
-              ? 'translate-x-0 opacity-100'
-              : 'translate-x-4 opacity-0'
-          }`}
+          className={`transition-all duration-500 ease-out ${steamReviews?.steam_all_review
+            ? 'translate-x-0 opacity-100'
+            : 'translate-x-4 opacity-0'
+            }`}
         >
           <SteamReviewBadge
             review={steamReviews?.steam_all_review ?? undefined}
