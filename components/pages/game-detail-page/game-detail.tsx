@@ -30,6 +30,7 @@ import GameDetailCard, {
 } from '@/components/pages/game-detail-page/game-detail-card';
 
 import GameDetailHighlight from './game-detail-highlight';
+import GameDetailHeadline from './game-detail-headline';
 
 import { GameDbData } from '@/types';
 import { getAvatarBorderColor } from '@/utils/steam-utils';
@@ -192,6 +193,9 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
   return (
     <div className="bg-background text-foreground min-h-screen w-full p-4">
       <main className="container-3xl container mx-auto px-8">
+        {/* Headline Section */}
+        <GameDetailHeadline gameId={game.id || 0} gameName={game.name} />
+
         {/* Game Detail Main Section */}
         <section className="grid grid-cols-1 gap-16 lg:grid-cols-3">
           {/* Left Column */}
@@ -225,11 +229,10 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                           <Button
                             onClick={() => handleVideoChange(index)}
                             variant="ghost"
-                            className={`relative mx-2 mt-2 aspect-video h-auto w-full overflow-hidden rounded-md p-0 transition-all duration-200 ${
-                              index === currentVideoIndex
-                                ? 'ring-primary ring-2 ring-offset-1'
-                                : 'hover:opacity-80'
-                            }`}
+                            className={`relative mx-2 mt-2 aspect-video h-auto w-full overflow-hidden rounded-md p-0 transition-all duration-200 ${index === currentVideoIndex
+                              ? 'ring-primary ring-2 ring-offset-1'
+                              : 'hover:opacity-80'
+                              }`}
                           >
                             <div className="bg-muted relative h-full w-full">
                               <Image
@@ -289,15 +292,15 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                     <p className="text-muted-foreground">
                       {game.first_release_date
                         ? (() => {
-                            const releaseDate = new Date(
-                              game.first_release_date,
-                            );
-                            const now = new Date();
-                            const isFuture = releaseDate > now;
-                            return isFuture
-                              ? `Expected to release on ${releaseDate.toLocaleDateString()}`
-                              : `Released on ${releaseDate.toLocaleDateString()}`;
-                          })()
+                          const releaseDate = new Date(
+                            game.first_release_date,
+                          );
+                          const now = new Date();
+                          const isFuture = releaseDate > now;
+                          return isFuture
+                            ? `Expected to release on ${releaseDate.toLocaleDateString()}`
+                            : `Released on ${releaseDate.toLocaleDateString()}`;
+                        })()
                         : 'N/A'}
                     </p>
                   </div>
@@ -308,9 +311,8 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
               {game.summary && (
                 <div>
                   <h4
-                    className={`leading-relaxed ${
-                      isSummaryExpanded ? '' : 'line-clamp-3'
-                    }`}
+                    className={`leading-relaxed ${isSummaryExpanded ? '' : 'line-clamp-3'
+                      }`}
                   >
                     {game.summary}
                   </h4>
@@ -394,7 +396,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                 value={getDisplayValue(
                   isLoadingSteamSpy && isLoadingPlaytracker,
                   steamSpyData?.averagePlaytime ||
-                    playtrackerData?.averagePlaytime,
+                  playtrackerData?.averagePlaytime,
                   (value) =>
                     steamSpyData?.averagePlaytime ? `~ ${value} hours` : value,
                 )}
