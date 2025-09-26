@@ -152,18 +152,6 @@ export class GameService {
       gameId = result.data.id;
     }
 
-    // Fetch and add OpenCritic reviews
-    try {
-      console.log(`📝 Fetching OpenCritic reviews for: ${igdbData.name}`);
-      await this.addOpenCriticReviews(gameId, igdbData.name);
-    } catch (reviewError) {
-      console.warn(
-        'Failed to fetch/save OpenCritic reviews, but game data was saved:',
-        reviewError,
-      );
-      // Don't throw here - we want game data to be saved even if reviews fail
-    }
-
     return result;
   }
 

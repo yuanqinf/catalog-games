@@ -154,14 +154,11 @@ class IgdbClient {
         'Content-Type': 'text/plain',
       },
       body: `
-        fields id, name, storyline, summary, slug, first_release_date, updated_at, total_rating, total_rating_count, hypes,
-        
+        fields id, name, storyline, summary, slug, first_release_date, updated_at, total_rating, total_rating_count,
         genres.name, platforms.name, involved_companies.developer, involved_companies.publisher, involved_companies.company.name, game_engines.name, game_modes.name,
-
         cover.url, screenshots.url, artworks.url, videos.video_id, rating;
-
         where id = ${id};
-        limit 10;
+        limit 1;
       `,
     });
 
@@ -173,7 +170,7 @@ class IgdbClient {
     }
 
     const data: IgdbGame[] = await res.json();
-    const game = data[0] ?? null;
+    const game = data[0] || null;
 
     if (game) {
       if (game.cover && typeof game.cover === 'object' && 'url' in game.cover) {
@@ -276,9 +273,6 @@ class IgdbClient {
         break;
       }
 
-      console.log(
-        `Fetched ${data.data.length} streams (batch ${i + 1}), total so far: ${allStreams.length}`,
-      );
     }
 
     if (allStreams.length === 0) {
@@ -293,9 +287,6 @@ class IgdbClient {
       0,
     );
 
-    console.log(
-      `Total streams fetched: ${allStreams.length}, Total viewers: ${totalLiveViewers}`,
-    );
 
     return totalLiveViewers;
   }
