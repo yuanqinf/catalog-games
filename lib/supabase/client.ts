@@ -533,4 +533,56 @@ export class GameService {
 
     return { gameId, heroGame: await this.checkHeroGameExists(gameId) };
   }
+
+  /**
+   * Get top disliked games ordered by dislike count
+   */
+  async getTopDislikedGames(limit: number = 5) {
+    const { data, error } = await this.supabase
+      .from('games')
+      .select(
+        'id, igdb_id, name, slug, cover_url, banner_url, developers, dislike_count',
+      )
+      .order('dislike_count', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw new Error(error.message || 'Failed to fetch top disliked games');
+    }
+
+    return data || [];
+  }
+
+  /**
+   * Increment dislike count for a game by game ID
+   */
+  async incrementGameDislike(gameId: number, incrementBy: number = 1) {
+    const { data, error } = await this.supabase.rpc('increment_game_dislike', {
+      game_id: gameId,
+      increment_amount: incrementBy,
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Failed to increment game dislike');
+    }
+
+    return data;
+  }
+
+  /**
+   * Get game by IGDB ID for dislike functionality
+   */
+  async getGameByIgdbId(igdbId: number) {
+    const { data, error } = await this.supabase
+      .from('games')
+      .select('id, igdb_id, name, dislike_count')
+      .eq('igdb_id', igdbId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message || 'Failed to fetch game by IGDB ID');
+    }
+
+    return data;
+  }
 }

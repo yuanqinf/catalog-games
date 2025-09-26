@@ -12,7 +12,24 @@ import {
 import { Button } from '@/components/ui/button';
 import PaginationDots from '@/components/shared/pagination-dots';
 
-// Types for Top 10 GameOver data
+// Types for Top Disliked Games data
+interface TopDislikedGame {
+  id: number;
+  igdb_id: number;
+  name: string;
+  slug: string;
+  cover_url: string | null;
+  banner_url: string | null;
+  developers: string[] | null;
+  dislike_count: number;
+}
+
+interface TopDislikedGamesResponse {
+  success: boolean;
+  data: TopDislikedGame[];
+  error?: string;
+}
+
 interface GameOverEntry {
   id: string;
   title: string;
@@ -31,29 +48,18 @@ interface UserVoteState {
   isPowerMode: boolean;
 }
 
-// Types for hero games data from Supabase
-interface HeroGame {
-  id: number;
-  game_id: number;
-  added_at: string;
-  games: {
-    id: number;
-    name: string;
-    slug: string;
-    cover_url: string | null;
-    banner_url: string | null;
-    developers: string[] | null;
-    igdb_id: number;
-  };
-}
-
-interface HeroGamesResponse {
+interface DislikeResponse {
   success: boolean;
-  data: HeroGame[];
+  data?: {
+    gameId: number;
+    igdbId: number;
+    newDislikeCount: number;
+    incrementBy: number;
+  };
   error?: string;
 }
 
-const HeroGames = () => {
+const TopDislikeGames = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const thumbnailRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -69,41 +75,44 @@ const HeroGames = () => {
     }>
   >([]);
 
-  // Fetch hero games data from Supabase
+  // Fetch top disliked games data from Supabase
   const {
-    data: heroGamesResponse,
+    data: topDislikedGamesResponse,
     error,
     isLoading,
-  } = useSWR<HeroGamesResponse>(
-    '/api/hero-games',
+    mutate,
+  } = useSWR<TopDislikedGamesResponse>(
+    '/api/games/top-disliked',
     (url) =>
       fetch(url).then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch hero games');
+        if (!res.ok) throw new Error('Failed to fetch top disliked games');
         return res.json();
       }),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 300000, // 5 minutes cache
+      dedupingInterval: 60000, // 1 minute cache (shorter for real-time updates)
     },
   );
 
-  // Transform hero games to GameOver format with mock dislike counts
+  // Transform top disliked games to GameOver format
   const [gameOverData, setGameOverData] = useState<GameOverEntry[]>([]);
 
-  // Update gameOverData when hero games data changes
+  // Update gameOverData when top disliked games data changes
   useEffect(() => {
-    if (heroGamesResponse?.data) {
-      const transformedData = heroGamesResponse.data.map((heroGame, index) => ({
-        id: heroGame.games.igdb_id.toString(),
-        title: heroGame.games.name,
-        bannerUrl: heroGame.games.banner_url || heroGame.games.cover_url || '',
-        developer: heroGame.games.developers?.[0] || 'Unknown Developer',
-        dislikeCount: Math.floor(Math.random() * 5000) + 3000, // Mock dislike count
-        rank: index + 1,
-      }));
+    if (topDislikedGamesResponse?.data) {
+      const transformedData = topDislikedGamesResponse.data.map(
+        (game, index) => ({
+          id: game.igdb_id.toString(),
+          title: game.name,
+          bannerUrl: game.banner_url || game.cover_url || '',
+          developer: game.developers?.[0] || 'Unknown Developer',
+          dislikeCount: game.dislike_count,
+          rank: index + 1,
+        }),
+      );
       setGameOverData(transformedData);
     }
-  }, [heroGamesResponse]);
+  }, [topDislikedGamesResponse]);
 
   // User voting state - simplified to just track votes
   const [userVoteState, setUserVoteState] = useState<UserVoteState>({
@@ -120,8 +129,8 @@ const HeroGames = () => {
     new Set(),
   );
 
-  // Handle dislike vote with Zoom-style reactions
-  const handleDislikeVote = (gameId: string) => {
+  // Handle dislike vote with Zoom-style reactions and backend API call
+  const handleDislikeVote = async (gameId: string) => {
     const currentTime = Date.now();
 
     // Add button click animation
@@ -144,6 +153,7 @@ const HeroGames = () => {
     }
 
     // Update continuous click tracking and power mode
+    let newUserVoteState: UserVoteState;
     setUserVoteState((prev) => {
       const timeSinceLastClick = currentTime - prev.lastClickTime;
       const isConsecutive = timeSinceLastClick < 5000; // Within 5 seconds
@@ -151,17 +161,21 @@ const HeroGames = () => {
       const newContinuousClicks = isConsecutive ? prev.continuousClicks + 1 : 1;
       const newIsPowerMode = newContinuousClicks >= 10;
 
-      return {
+      newUserVoteState = {
         ...prev,
         votesUsed: prev.votesUsed + 1,
         continuousClicks: newContinuousClicks,
         lastClickTime: currentTime,
         isPowerMode: newIsPowerMode,
       };
+
+      return newUserVoteState;
     });
 
     // Create Zoom-style floating reaction (bigger if in power mode)
     const isPowerMode = userVoteState.continuousClicks >= 9; // Use previous state to check
+    const increment = isPowerMode ? 3 : 1;
+
     const newThumb = {
       id: `thumb-${Date.now()}-${Math.random()}`,
       gameId,
@@ -175,8 +189,7 @@ const HeroGames = () => {
       return updated;
     });
 
-    // Update game dislike count (more if in power mode)
-    const increment = isPowerMode ? 3 : 1;
+    // Optimistically update the UI immediately
     setGameOverData((prev) =>
       prev.map((game) =>
         game.id === gameId
@@ -185,7 +198,45 @@ const HeroGames = () => {
       ),
     );
 
-    // Note: Framer Motion will auto-remove via onAnimationComplete
+    // Call backend API to update the database
+    try {
+      const response = await fetch('/api/games/dislike', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          igdbId: parseInt(gameId),
+          incrementBy: increment,
+        }),
+      });
+
+      const result: DislikeResponse = await response.json();
+
+      if (!result.success) {
+        console.error('Failed to update dislike count:', result.error);
+        // Revert optimistic update on error
+        setGameOverData((prev) =>
+          prev.map((game) =>
+            game.id === gameId
+              ? { ...game, dislikeCount: game.dislikeCount - increment }
+              : game,
+          ),
+        );
+      }
+      // Note: We don't call mutate() here to avoid race conditions with rapid clicks
+      // The optimistic updates will keep the UI in sync
+    } catch (error) {
+      console.error('Error calling dislike API:', error);
+      // Revert optimistic update on error
+      setGameOverData((prev) =>
+        prev.map((game) =>
+          game.id === gameId
+            ? { ...game, dislikeCount: game.dislikeCount - increment }
+            : game,
+        ),
+      );
+    }
   };
 
   // Reset power mode after 3 seconds of inactivity
@@ -203,6 +254,18 @@ const HeroGames = () => {
     }
   }, [userVoteState.lastClickTime, userVoteState.isPowerMode]);
 
+  // Debounced sync with server after user stops clicking (to ensure data consistency)
+  useEffect(() => {
+    if (userVoteState.lastClickTime > 0) {
+      const syncTimer = setTimeout(() => {
+        // Only sync if it's been 2 seconds since last click
+        mutate();
+      }, 2000);
+
+      return () => clearTimeout(syncTimer);
+    }
+  }, [userVoteState.lastClickTime, mutate]);
+
   // Scroll the active thumbnail into view when activeIndex changes
   useEffect(() => {
     if (thumbnailRefs.current[activeIndex] && gameOverData.length > 0) {
@@ -219,7 +282,7 @@ const HeroGames = () => {
       <section className="relative mb-12">
         <div className="flex h-64 items-center justify-center rounded-lg border border-red-800 bg-red-900/20 text-red-400">
           <div className="text-center">
-            <p className="mb-2">Failed to load GameOver games</p>
+            <p className="mb-2">Failed to load top disliked games</p>
             <p className="text-sm opacity-75">Please try again later</p>
           </div>
         </div>
@@ -235,18 +298,11 @@ const HeroGames = () => {
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Trophy className="h-6 w-6 text-yellow-500" />
-            <h2 className="text-2xl font-bold">Top 10 GameOver of 2025</h2>
+            <h2 className="text-2xl font-bold">Top 5 GameOver of 2025</h2>
           </div>
           <div className="flex items-center gap-2 rounded-lg bg-zinc-800 px-4 py-2">
             <ThumbsDown className="h-4 w-4 text-red-500" />
-            <span className="text-sm">
-              Total Dislikes:{' '}
-              <span className="font-bold text-red-500">
-                {gameOverData
-                  .reduce((sum, game) => sum + game.dislikeCount, 0)
-                  .toLocaleString()}
-              </span>
-            </span>
+            <span className="text-sm">Loading...</span>
           </div>
         </div>
 
@@ -282,9 +338,9 @@ const HeroGames = () => {
         <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-zinc-400">
           <div className="text-center">
             <Trophy size={48} className="mx-auto mb-4 opacity-50" />
-            <p className="mb-2">No GameOver entries available</p>
+            <p className="mb-2">No disliked games yet</p>
             <p className="text-sm opacity-75">
-              Hero games will appear here once added by admins
+              Games will appear here once users start disliking them
             </p>
           </div>
         </div>
@@ -298,12 +354,17 @@ const HeroGames = () => {
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Trophy className="h-6 w-6 text-yellow-500" />
-          <h2 className="text-2xl font-bold">Top 10 GameOver of 2025</h2>
+          <h2 className="text-2xl font-bold">Top 5 GameOver of 2025</h2>
         </div>
         <div className="flex items-center gap-2 rounded-lg bg-zinc-800 px-4 py-2">
           <ThumbsDown className="h-4 w-4 text-red-500" />
           <span className="text-sm">
-            Total Dislikes: <span className="font-bold text-red-500">0</span>
+            Total Dislikes:{' '}
+            <span className="font-bold text-red-500">
+              {gameOverData
+                .reduce((sum, game) => sum + game.dislikeCount, 0)
+                .toLocaleString()}
+            </span>
           </span>
         </div>
       </div>
@@ -458,11 +519,11 @@ const HeroGames = () => {
 
           <div className="space-y-4">
             {gameOverData.map((game, index) => {
-              // Find the corresponding hero game data to get cover_url
-              const heroGame = heroGamesResponse?.data?.find(
-                (hg) => hg.games.igdb_id.toString() === game.id,
+              // Find the corresponding top disliked game data to get cover_url
+              const topDislikedGame = topDislikedGamesResponse?.data?.find(
+                (tdg) => tdg.igdb_id.toString() === game.id,
               );
-              const coverUrl = heroGame?.games.cover_url;
+              const coverUrl = topDislikedGame?.cover_url;
 
               return (
                 <div
@@ -568,4 +629,4 @@ const HeroGames = () => {
   );
 };
 
-export default HeroGames;
+export default TopDislikeGames;
