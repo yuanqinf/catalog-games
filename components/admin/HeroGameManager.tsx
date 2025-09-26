@@ -18,6 +18,7 @@ import {
   searchAndProcessGameById,
   validateIgdbId,
 } from './AdminContext';
+import { IgdbGameData } from '@/types';
 
 export const HeroGameManager = () => {
   const { gameService } = useAdmin();
@@ -417,7 +418,7 @@ export const HeroGameManager = () => {
               <div className="mt-4 border-t border-zinc-700 pt-4">
                 <h5 className="mb-2 text-sm font-medium">Game Details:</h5>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  {heroSearchResult.igdbData.summary && (
+                  {heroSearchResult.igdbData?.summary && (
                     <div className="col-span-2">
                       <span className="font-medium text-zinc-300">
                         Summary:
@@ -428,7 +429,7 @@ export const HeroGameManager = () => {
                     </div>
                   )}
 
-                  {heroSearchResult.igdbData.first_release_date && (
+                  {heroSearchResult.igdbData?.first_release_date && (
                     <div>
                       <span className="font-medium text-zinc-300">
                         Release Date:
@@ -441,7 +442,7 @@ export const HeroGameManager = () => {
                     </div>
                   )}
 
-                  {heroSearchResult.igdbData.total_rating && (
+                  {heroSearchResult.igdbData?.total_rating && (
                     <div>
                       <span className="font-medium text-zinc-300">
                         IGDB Rating:

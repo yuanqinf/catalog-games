@@ -2,7 +2,6 @@ import useSWR from 'swr';
 import { GameService } from '@/lib/supabase/client';
 import type { GameRating } from '@/types';
 
-
 interface UseGameRatingReturn {
   rating: GameRating;
   overallAverage?: number; // Only available for average ratings
@@ -128,4 +127,3 @@ export function useGameRating(
     };
   }
 }
-

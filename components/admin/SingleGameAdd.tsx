@@ -74,7 +74,7 @@ export const SingleGameAdd = () => {
         error: errorMessage,
         selected: false,
         status: 'pending',
-      });
+      } as GameResult);
 
       toast.error(`Failed to find game: ${errorMessage}`);
     } finally {

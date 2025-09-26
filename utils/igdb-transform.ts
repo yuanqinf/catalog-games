@@ -17,17 +17,12 @@ export async function transformIgdbData(
   return {
     igdb_id: data.id,
     name: data.name,
-    storyline: data.storyline,
     summary: data.summary,
     slug: data.slug,
     first_release_date: data.first_release_date
       ? new Date(data.first_release_date * 1000).toISOString()
       : null,
-    igdb_update_date: data.updated_at
-      ? new Date(data.updated_at * 1000).toISOString()
-      : null,
     total_rating: data.total_rating,
-    total_rating_count: data.total_rating_count,
     genres: data.genres ? data.genres.map((g) => g.name) : null,
     platforms: data.platforms ? data.platforms.map((p) => p.name) : null,
     game_engines: data.game_engines

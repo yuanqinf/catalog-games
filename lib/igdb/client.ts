@@ -75,7 +75,7 @@ class IgdbClient {
       },
       body: `
         search "${query}";
-        fields id, name, slug, category, total_rating_count, cover.url, screenshots.url, artworks.url, videos, summary, storyline, first_release_date, involved_companies.company.name;
+        fields id, name, slug, category, cover.url, screenshots.url, artworks.url, videos, summary, first_release_date, involved_companies.company.name;
         where category = (0,1,2,4,8,9,10,11) | category = null;
         limit 10;
       `,
@@ -154,7 +154,7 @@ class IgdbClient {
         'Content-Type': 'text/plain',
       },
       body: `
-        fields id, name, storyline, summary, slug, first_release_date, updated_at, total_rating, total_rating_count,
+        fields id, name, summary, slug, first_release_date, updated_at, total_rating,
         genres.name, platforms.name, involved_companies.developer, involved_companies.publisher, involved_companies.company.name, game_engines.name, game_modes.name,
         cover.url, screenshots.url, artworks.url, videos.video_id, rating;
         where id = ${id};
@@ -272,7 +272,6 @@ class IgdbClient {
       if (!cursor) {
         break;
       }
-
     }
 
     if (allStreams.length === 0) {
@@ -286,7 +285,6 @@ class IgdbClient {
       },
       0,
     );
-
 
     return totalLiveViewers;
   }

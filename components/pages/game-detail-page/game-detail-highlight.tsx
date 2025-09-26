@@ -123,10 +123,11 @@ export default function GameDetailHighlight({
 
         {/* Steam Review - client-side real-time data only with slide-in animation */}
         <div
-          className={`transition-all duration-500 ease-out ${steamReviews?.steam_all_review
-            ? 'translate-x-0 opacity-100'
-            : 'translate-x-4 opacity-0'
-            }`}
+          className={`transition-all duration-500 ease-out ${
+            steamReviews?.steam_all_review
+              ? 'translate-x-0 opacity-100'
+              : 'translate-x-4 opacity-0'
+          }`}
         >
           <SteamReviewBadge
             review={steamReviews?.steam_all_review ?? undefined}

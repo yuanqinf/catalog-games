@@ -51,7 +51,7 @@ const GameDetailHeadline = ({ gameId, gameName }: GameDetailHeadlineProps) => {
 
   return (
     <section className="mb-8">
-      <Card className="bg-gradient-to-r from-red-900/20 to-red-800/10 border-red-800/50">
+      <Card className="border-red-800/50 bg-gradient-to-r from-red-900/20 to-red-800/10">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             {/* Left: Ranking Info */}
@@ -59,7 +59,7 @@ const GameDetailHeadline = ({ gameId, gameName }: GameDetailHeadlineProps) => {
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <Crown className="h-8 w-8 text-yellow-500" />
-                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
                     #{rankingData.currentRank}
                   </span>
                 </div>
@@ -67,7 +67,7 @@ const GameDetailHeadline = ({ gameId, gameName }: GameDetailHeadlineProps) => {
                   <h2 className="text-2xl font-bold text-white">
                     Rank #{rankingData.currentRank}
                   </h2>
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-sm text-gray-400">
                     of {rankingData.totalGames} games
                   </p>
                 </div>
@@ -81,7 +81,7 @@ const GameDetailHeadline = ({ gameId, gameName }: GameDetailHeadlineProps) => {
                   <h3 className="text-2xl font-bold text-red-400">
                     {rankingData.dislikeCount.toLocaleString()}
                   </h3>
-                  <p className="text-gray-400 text-sm">total dislikes</p>
+                  <p className="text-sm text-gray-400">total dislikes</p>
                 </div>
               </div>
             </div>
@@ -93,15 +93,17 @@ const GameDetailHeadline = ({ gameId, gameName }: GameDetailHeadlineProps) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-red-700/50 hover:border-red-600 hover:bg-red-900/20 text-gray-300 hover:text-white"
-                  onClick={() => handleNavigation(rankingData.previousGame!.slug)}
+                  className="border-red-700/50 text-gray-300 hover:border-red-600 hover:bg-red-900/20 hover:text-white"
+                  onClick={() =>
+                    handleNavigation(rankingData.previousGame!.slug)
+                  }
                 >
-                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  <ChevronLeft className="mr-2 h-4 w-4" />
                   <div className="text-left">
                     <div className="text-xs text-gray-400">
                       #{rankingData.previousGame.rank}
                     </div>
-                    <div className="text-sm font-medium truncate max-w-24">
+                    <div className="max-w-24 truncate text-sm font-medium">
                       {rankingData.previousGame.name}
                     </div>
                   </div>
@@ -113,18 +115,18 @@ const GameDetailHeadline = ({ gameId, gameName }: GameDetailHeadlineProps) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-red-700/50 hover:border-red-600 hover:bg-red-900/20 text-gray-300 hover:text-white"
+                  className="border-red-700/50 text-gray-300 hover:border-red-600 hover:bg-red-900/20 hover:text-white"
                   onClick={() => handleNavigation(rankingData.nextGame!.slug)}
                 >
                   <div className="text-right">
                     <div className="text-xs text-gray-400">
                       #{rankingData.nextGame.rank}
                     </div>
-                    <div className="text-sm font-medium truncate max-w-24">
+                    <div className="max-w-24 truncate text-sm font-medium">
                       {rankingData.nextGame.name}
                     </div>
                   </div>
-                  <ChevronRight className="h-4 w-4 ml-2" />
+                  <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
             </div>

@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { BookmarkCheck, MessageSquareDiff } from 'lucide-react';
-import HighlightGameCard from '@/components/shared/cards/highlight-game-card';
 
 const UserProfilePage = () => {
   const { isLoaded, isSignedIn, user } = useUser();

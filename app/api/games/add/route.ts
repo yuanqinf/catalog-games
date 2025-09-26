@@ -74,7 +74,6 @@ export async function POST(request: NextRequest) {
       true,
     );
 
-
     console.log(`✅ Successfully added game: ${igdbData.name}`);
 
     return NextResponse.json(result);

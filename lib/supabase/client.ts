@@ -79,7 +79,6 @@ export class GameService {
     return data;
   }
 
-
   /**
    * Add or update a game from IGDB data with optional banner and Steam data
    */
@@ -119,7 +118,6 @@ export class GameService {
     const existingGame = await this.checkGameExists(igdbData.id);
 
     let result;
-    let gameId: number;
 
     if (existingGame) {
       // Update existing game
@@ -134,8 +132,6 @@ export class GameService {
       if (result.error) {
         throw new Error(result.error.message || 'Failed to update game data');
       }
-
-      gameId = result.data.id;
     } else {
       // Insert new game
       console.log(`➕ Creating new game: ${igdbData.name}`);
@@ -148,8 +144,6 @@ export class GameService {
       if (result.error) {
         throw new Error(result.error.message || 'Failed to create game data');
       }
-
-      gameId = result.data.id;
     }
 
     return result;
@@ -529,7 +523,7 @@ export class GameService {
   /**
    * Add game to hero_games by IGDB ID (will add to games table first if doesn't exist)
    */
-  async addHeroGameByIgdbId(igdbData: IgdbGameData, bannerFile?: File) {
+  async addHeroGameByIgdbId(igdbData: any, bannerFile?: File) {
     // First, add or update the game in the games table
     const gameResult = await this.addOrUpdateGame(igdbData, bannerFile);
     const gameId = gameResult.data.id;
@@ -539,6 +533,4 @@ export class GameService {
 
     return { gameId, heroGame: await this.checkHeroGameExists(gameId) };
   }
-
-
 }

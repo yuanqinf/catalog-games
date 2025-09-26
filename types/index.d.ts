@@ -3,13 +3,10 @@ export interface GameDbData {
   id?: number; // Optional since Supabase auto-generates this
   igdb_id: number;
   name: string;
-  storyline?: string;
   summary?: string;
   slug?: string;
   first_release_date?: string | null;
-  igdb_update_date?: string | null;
   total_rating?: number;
-  total_rating_count?: number;
   genres?: string[] | null;
   platforms?: string[] | null;
   game_engines?: string[] | null;
@@ -34,13 +31,11 @@ export interface GameDbData {
 export interface IgdbGameData {
   id: number; // IGDB id
   name: string;
-  storyline?: string;
   summary?: string;
   slug: string;
   first_release_date?: number;
   updated_at?: number;
   total_rating?: number;
-  total_rating_count?: number;
   genres?: Array<{ name: string }>;
   platforms?: Array<{ name: string }>;
   game_engines?: Array<{ name: string }>;
