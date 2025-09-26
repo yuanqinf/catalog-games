@@ -89,6 +89,22 @@ body {
   font-family: var(--font-bricolage);
 }
 
+/* Global scrollbar gutter fix - prevents layout shift when scrollbar appears/disappears */
+html {
+  /* Modern approach: reserves space for scrollbar */
+  scrollbar-gutter: stable;
+
+  /* Fallback for browsers that don't support scrollbar-gutter */
+  overflow-y: scroll;
+}
+
+/* For browsers that support scrollbar-gutter, remove the fallback overflow */
+@supports (scrollbar-gutter: stable) {
+  html {
+    overflow-y: auto;
+  }
+}
+
 /* Tailwind layers */
 @layer base {
   * {

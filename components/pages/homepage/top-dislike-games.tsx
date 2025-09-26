@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ThumbsDown, Gamepad2, Trophy, Loader2 } from 'lucide-react';
+import { ThumbsDown, Gamepad2, Loader2, ExternalLink } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -297,13 +298,19 @@ const TopDislikeGames = () => {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Trophy className="h-6 w-6 text-yellow-500" />
-            <h2 className="text-2xl font-bold">Top 5 GameOver of 2025</h2>
+            <ThumbsDown className="h-6 w-6 text-yellow-500" />
+            <h2 className="text-2xl font-bold">Hall of Shame</h2>
           </div>
-          <div className="flex items-center gap-2 rounded-lg bg-zinc-800 px-4 py-2">
-            <ThumbsDown className="h-4 w-4 text-red-500" />
-            <span className="text-sm">Loading...</span>
-          </div>
+          <Link href="/explore">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 border-zinc-600 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span className="text-sm">Explore More</span>
+            </Button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
@@ -337,7 +344,7 @@ const TopDislikeGames = () => {
       <section className="relative mb-12">
         <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-zinc-400">
           <div className="text-center">
-            <Trophy size={48} className="mx-auto mb-4 opacity-50" />
+            <ThumbsDown size={48} className="mx-auto mb-4 opacity-50" />
             <p className="mb-2">No disliked games yet</p>
             <p className="text-sm opacity-75">
               Games will appear here once users start disliking them
@@ -353,20 +360,19 @@ const TopDislikeGames = () => {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Trophy className="h-6 w-6 text-yellow-500" />
-          <h2 className="text-2xl font-bold">Top 5 GameOver of 2025</h2>
+          <ThumbsDown className="h-6 w-6 text-yellow-500" />
+          <h2 className="text-2xl font-bold">Hall of Shame</h2>
         </div>
-        <div className="flex items-center gap-2 rounded-lg bg-zinc-800 px-4 py-2">
-          <ThumbsDown className="h-4 w-4 text-red-500" />
-          <span className="text-sm">
-            Total Dislikes:{' '}
-            <span className="font-bold text-red-500">
-              {gameOverData
-                .reduce((sum, game) => sum + game.dislikeCount, 0)
-                .toLocaleString()}
-            </span>
-          </span>
-        </div>
+        <Link href="/explore">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 border-zinc-600 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white"
+          >
+            <ExternalLink className="h-4 w-4" />
+            <span className="text-sm">Explore More</span>
+          </Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">

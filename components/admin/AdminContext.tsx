@@ -18,7 +18,6 @@ export interface GameResult {
   errorMessage?: string;
 }
 
-
 export interface UpcomingGameResult {
   name: string;
   igdbId?: number;
@@ -92,7 +91,6 @@ export const searchAndProcessGameById = async (
   // Check if game exists in our games table
   const existingGame = await gameService.checkGameExists(igdbId);
   const existsInDb = !!existingGame;
-
 
   // Check Steam availability
   let isInSteam = false;

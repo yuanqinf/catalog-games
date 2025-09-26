@@ -431,7 +431,6 @@ export class GameService {
     return averages;
   }
 
-
   /**
    * Get top disliked games ordered by dislike count
    */
