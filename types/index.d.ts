@@ -18,7 +18,6 @@ export interface GameDbData {
   updated_at?: string;
   publishers?: string[] | null;
   developers?: string[] | null;
-  featured_comment_tags?: string[] | null;
   banner_url?: string | null;
   steam_app_id?: number | null;
   steam_all_review?: string | null;

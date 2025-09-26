@@ -47,17 +47,6 @@ export interface UpcomingGameResult {
   errorMessage?: string;
 }
 
-export interface BatchReport {
-  total: number;
-  successful: number;
-  failed: number;
-  details: Array<{
-    name: string;
-    status: 'success' | 'failed';
-    message: string;
-  }>;
-}
-
 // Context interface
 interface AdminContextType {
   gameService: GameService;
@@ -91,13 +80,6 @@ export const useAdmin = () => {
 // Shared validation utilities
 export const validateIgdbId = (id: string): boolean => {
   return id.trim() !== '' && !isNaN(Number(id));
-};
-
-export const validateGameNames = (names: string): string[] => {
-  return names
-    .split('\n')
-    .map((name) => name.trim())
-    .filter((name) => name.length > 0);
 };
 
 // Shared processing logic

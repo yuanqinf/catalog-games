@@ -5,7 +5,6 @@ import { useSession } from '@clerk/nextjs';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AdminProvider,
-  GameBatchSearch,
   SingleGameAdd,
   HeroGameManager,
 } from '@/components/admin';
@@ -33,20 +32,15 @@ export default function AdminPage() {
         <div className="mb-8">
           <h1 className="mb-2 text-3xl font-bold">Game Administration</h1>
           <p className="text-zinc-400">
-            Manage games, hero games, and upcoming games for the catalog.
+            Add individual games and manage hero games for the catalog.
           </p>
         </div>
 
-        <Tabs defaultValue="batch-search" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="batch-search">Batch Search</TabsTrigger>
+        <Tabs defaultValue="single-add" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="single-add">Single Add</TabsTrigger>
             <TabsTrigger value="hero-games">Hero Games</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="batch-search" className="space-y-6">
-            <GameBatchSearch />
-          </TabsContent>
 
           <TabsContent value="single-add" className="space-y-6">
             <SingleGameAdd />

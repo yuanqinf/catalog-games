@@ -82,20 +82,21 @@ export const SingleGameAdd = () => {
     }
   }, [igdbId, gameService]);
 
-  // Handle add single game by ID
+  // Handle add single game by ID or update existing game
   const handleAddById = useCallback(async () => {
-    if (!idSearchResult || idSearchResult.error || idSearchResult.existsInDb) {
+    if (!idSearchResult || idSearchResult.error) {
       return;
     }
 
     setIsAddingById(true);
 
     try {
+      const isUpdate = idSearchResult.existsInDb;
       console.log(
-        `🚀 Adding game: ${idSearchResult.name} (ID: ${idSearchResult.igdbId})`,
+        `🚀 ${isUpdate ? 'Updating' : 'Adding'} game: ${idSearchResult.name} (ID: ${idSearchResult.igdbId})`,
       );
 
-      // Add the game to database
+      // Add or update the game in database
       await gameService.addOrUpdateGame(
         idSearchResult.igdbData,
         idSearchResult.bannerFile || undefined,
@@ -106,9 +107,11 @@ export const SingleGameAdd = () => {
         prev ? { ...prev, status: 'completed', existsInDb: true } : null,
       );
 
-      toast.success(`Successfully added "${idSearchResult.name}" to database`);
+      toast.success(
+        `Successfully ${isUpdate ? 'updated' : 'added'} "${idSearchResult.name}" ${isUpdate ? 'in' : 'to'} database`,
+      );
     } catch (error) {
-      console.error('Failed to add game:', error);
+      console.error('Failed to add/update game:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
 
@@ -122,7 +125,9 @@ export const SingleGameAdd = () => {
           : null,
       );
 
-      toast.error(`Failed to add game: ${errorMessage}`);
+      toast.error(
+        `Failed to ${idSearchResult.existsInDb ? 'update' : 'add'} game: ${errorMessage}`,
+      );
     } finally {
       setIsAddingById(false);
     }
@@ -135,7 +140,7 @@ export const SingleGameAdd = () => {
 
   // Handle retry
   const handleRetryGame = useCallback(async () => {
-    if (!idSearchResult || idSearchResult.error || idSearchResult.existsInDb) {
+    if (!idSearchResult || idSearchResult.error) {
       return;
     }
 
@@ -156,7 +161,10 @@ export const SingleGameAdd = () => {
         prev ? { ...prev, status: 'completed', existsInDb: true } : null,
       );
 
-      toast.success(`Successfully added "${idSearchResult.name}"`);
+      const isUpdate = idSearchResult.existsInDb;
+      toast.success(
+        `Successfully ${isUpdate ? 'updated' : 'added'} "${idSearchResult.name}"`,
+      );
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
@@ -169,10 +177,8 @@ export const SingleGameAdd = () => {
     }
   }, [idSearchResult, gameService]);
 
-  const canAddGame =
-    idSearchResult && !idSearchResult.error && !idSearchResult.existsInDb;
+  const canAddOrUpdateGame = idSearchResult && !idSearchResult.error;
   const gameDisabled =
-    idSearchResult?.existsInDb ||
     !!idSearchResult?.error ||
     isAddingById ||
     idSearchResult?.status === 'processing';
@@ -264,24 +270,29 @@ export const SingleGameAdd = () => {
                 )}
 
                 {idSearchResult.existsInDb && (
-                  <p className="text-sm text-green-400">
-                    ✅ Game already exists in database
+                  <p className="text-sm text-yellow-400">
+                    ⚠️ Game exists in database (can update with new banner)
                   </p>
                 )}
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Banner Upload */}
-                {canAddGame && (
-                  <FileUpload
-                    onFileSelect={handleIdBannerUpload}
-                    label="Upload Banner"
-                    className="w-40"
-                    accept="image/jpeg,image/png,image/webp"
-                    maxSize={5 * 1024 * 1024}
-                    preview={true}
-                  />
-                )}
+                {/* Banner Upload - Now available for both new and existing games */}
+                {canAddOrUpdateGame &&
+                  idSearchResult.status !== 'completed' && (
+                    <FileUpload
+                      onFileSelect={handleIdBannerUpload}
+                      label={
+                        idSearchResult.existsInDb
+                          ? 'Update Banner'
+                          : 'Upload Banner'
+                      }
+                      className="w-40"
+                      accept="image/jpeg,image/png,image/webp"
+                      maxSize={5 * 1024 * 1024}
+                      preview={true}
+                    />
+                  )}
 
                 {/* Retry Button */}
                 {idSearchResult.status === 'failed' && (
@@ -296,26 +307,35 @@ export const SingleGameAdd = () => {
                   </Button>
                 )}
 
-                {/* Add Button */}
-                {canAddGame && idSearchResult.status !== 'completed' && (
-                  <Button
-                    onClick={handleAddById}
-                    disabled={gameDisabled}
-                    size="sm"
-                  >
-                    {isAddingById || idSearchResult.status === 'processing' ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Adding...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Add to Database
-                      </>
-                    )}
-                  </Button>
-                )}
+                {/* Add/Update Button */}
+                {canAddOrUpdateGame &&
+                  idSearchResult.status !== 'completed' && (
+                    <Button
+                      onClick={handleAddById}
+                      disabled={gameDisabled}
+                      size="sm"
+                      variant={
+                        idSearchResult.existsInDb ? 'outline' : 'default'
+                      }
+                    >
+                      {isAddingById ||
+                      idSearchResult.status === 'processing' ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {idSearchResult.existsInDb
+                            ? 'Updating...'
+                            : 'Adding...'}
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          {idSearchResult.existsInDb
+                            ? 'Update Game'
+                            : 'Add to Database'}
+                        </>
+                      )}
+                    </Button>
+                  )}
               </div>
             </div>
 

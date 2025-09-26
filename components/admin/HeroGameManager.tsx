@@ -18,7 +18,6 @@ import {
   searchAndProcessGameById,
   validateIgdbId,
 } from './AdminContext';
-import { IgdbGameData } from '@/types';
 
 export const HeroGameManager = () => {
   const { gameService } = useAdmin();
