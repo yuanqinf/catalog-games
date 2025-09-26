@@ -18,18 +18,6 @@ export interface GameResult {
   errorMessage?: string;
 }
 
-export interface HeroGameResult {
-  name: string;
-  igdbId: number;
-  existsInDb: boolean;
-  existsInHeroGames: boolean;
-  isInSteam?: boolean;
-  igdbData?: any;
-  error?: string;
-  bannerFile?: File | null;
-  status?: 'pending' | 'processing' | 'completed' | 'failed';
-  errorMessage?: string;
-}
 
 export interface UpcomingGameResult {
   name: string;
@@ -87,7 +75,6 @@ export const searchAndProcessGameById = async (
   gameService: GameService,
   igdbId: number,
   options: {
-    checkHeroGames?: boolean;
     checkUpcomingGames?: boolean;
     skipSteamCheck?: boolean;
   } = {},
@@ -106,14 +93,6 @@ export const searchAndProcessGameById = async (
   const existingGame = await gameService.checkGameExists(igdbId);
   const existsInDb = !!existingGame;
 
-  // Check hero games if requested
-  let existsInHeroGames = false;
-  if (options.checkHeroGames && existingGame) {
-    const existingHeroGame = await gameService.checkHeroGameExists(
-      existingGame.id,
-    );
-    existsInHeroGames = !!existingHeroGame;
-  }
 
   // Check Steam availability
   let isInSteam = false;
@@ -130,7 +109,6 @@ export const searchAndProcessGameById = async (
     igdbId,
     name: igdbData?.name || `Game ID ${igdbId}`,
     existsInDb,
-    existsInHeroGames,
     isInSteam,
     igdbData,
   };
