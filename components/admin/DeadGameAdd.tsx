@@ -31,7 +31,7 @@ const DeadGameAdd: React.FC = () => {
     igdbId: '',
     deadDate: '',
     deadStatus: 'Shutdown',
-    userReactionCount: '0'
+    userReactionCount: '0',
   });
 
   const [searchedGame, setSearchedGame] = useState<IgdbGameData | null>(null);
@@ -39,7 +39,7 @@ const DeadGameAdd: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: keyof DeadGameForm, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSearchGame = async () => {
@@ -61,7 +61,9 @@ const DeadGameAdd: React.FC = () => {
       toast.success(`Found game: ${data.name}`);
     } catch (error) {
       console.error('Error searching game:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to search game');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to search game',
+      );
       setSearchedGame(null);
     } finally {
       setIsSearching(false);
@@ -103,19 +105,23 @@ const DeadGameAdd: React.FC = () => {
         throw new Error(result.error || 'Failed to add dead game');
       }
 
-      toast.success(`Successfully added ${searchedGame.name} to Game Graveyard`);
+      toast.success(
+        `Successfully added ${searchedGame.name} to Game Graveyard`,
+      );
 
       // Reset form
       setForm({
         igdbId: '',
         deadDate: '',
         deadStatus: 'Shutdown',
-        userReactionCount: '0'
+        userReactionCount: '0',
       });
       setSearchedGame(null);
     } catch (error) {
       console.error('Error adding dead game:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to add dead game');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to add dead game',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -126,7 +132,7 @@ const DeadGameAdd: React.FC = () => {
       igdbId: '',
       deadDate: '',
       deadStatus: 'Shutdown',
-      userReactionCount: '0'
+      userReactionCount: '0',
     });
     setSearchedGame(null);
   };
@@ -134,7 +140,7 @@ const DeadGameAdd: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Game Search Section */}
-      <Card className="p-6 bg-zinc-900/50 border-zinc-700">
+      <Card className="border-zinc-700 bg-zinc-900/50 p-6">
         <div className="mb-4 flex items-center gap-2">
           <Search className="h-5 w-5 text-blue-400" />
           <h3 className="text-lg font-semibold">Search Game</h3>
@@ -147,7 +153,7 @@ const DeadGameAdd: React.FC = () => {
               value={form.igdbId}
               onChange={(e) => handleInputChange('igdbId', e.target.value)}
               type="number"
-              className="bg-zinc-800 border-zinc-600"
+              className="border-zinc-600 bg-zinc-800"
             />
           </div>
           <Button
@@ -161,30 +167,38 @@ const DeadGameAdd: React.FC = () => {
 
         {/* Game Preview */}
         {searchedGame && (
-          <div className="mt-4 p-4 bg-zinc-800/50 rounded-lg border border-zinc-600">
+          <div className="mt-4 rounded-lg border border-zinc-600 bg-zinc-800/50 p-4">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0">
                 {searchedGame.cover?.url ? (
                   <img
-                    src={searchedGame.cover.url.replace('t_thumb', 't_cover_small')}
+                    src={searchedGame.cover.url.replace(
+                      't_thumb',
+                      't_cover_small',
+                    )}
                     alt={searchedGame.name}
-                    className="w-16 h-20 object-cover rounded"
+                    className="h-20 w-16 rounded object-cover"
                   />
                 ) : (
-                  <div className="w-16 h-20 bg-zinc-700 rounded flex items-center justify-center">
+                  <div className="flex h-20 w-16 items-center justify-center rounded bg-zinc-700">
                     <Gamepad2 className="h-6 w-6 text-zinc-500" />
                   </div>
                 )}
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-white">{searchedGame.name}</h4>
+                <h4 className="font-semibold text-white">
+                  {searchedGame.name}
+                </h4>
                 {searchedGame.first_release_date && (
                   <p className="text-sm text-zinc-400">
-                    Released: {new Date(searchedGame.first_release_date * 1000).getFullYear()}
+                    Released:{' '}
+                    {new Date(
+                      searchedGame.first_release_date * 1000,
+                    ).getFullYear()}
                   </p>
                 )}
                 {searchedGame.summary && (
-                  <p className="text-sm text-zinc-400 mt-1 line-clamp-2">
+                  <p className="mt-1 line-clamp-2 text-sm text-zinc-400">
                     {searchedGame.summary}
                   </p>
                 )}
@@ -195,7 +209,7 @@ const DeadGameAdd: React.FC = () => {
       </Card>
 
       {/* Dead Game Information Form */}
-      <Card className="p-6 bg-zinc-900/50 border-zinc-700">
+      <Card className="border-zinc-700 bg-zinc-900/50 p-6">
         <div className="mb-4 flex items-center gap-2">
           <Skull className="h-5 w-5 text-red-400" />
           <h3 className="text-lg font-semibold">Dead Game Information</h3>
@@ -204,8 +218,8 @@ const DeadGameAdd: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Dead Date */}
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">
-              <Calendar className="inline h-4 w-4 mr-1" />
+            <label className="mb-2 block text-sm font-medium text-zinc-300">
+              <Calendar className="mr-1 inline h-4 w-4" />
               Dead Date *
             </label>
             <Input
@@ -213,14 +227,14 @@ const DeadGameAdd: React.FC = () => {
               value={form.deadDate}
               onChange={(e) => handleInputChange('deadDate', e.target.value)}
               required
-              className="bg-zinc-800 border-zinc-600"
+              className="border-zinc-600 bg-zinc-800"
             />
           </div>
 
           {/* Dead Status */}
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">
-              <AlertTriangle className="inline h-4 w-4 mr-1" />
+            <label className="mb-2 block text-sm font-medium text-zinc-300">
+              <AlertTriangle className="mr-1 inline h-4 w-4" />
               Status *
             </label>
             <div className="flex gap-4">
@@ -230,7 +244,12 @@ const DeadGameAdd: React.FC = () => {
                   name="deadStatus"
                   value="Shutdown"
                   checked={form.deadStatus === 'Shutdown'}
-                  onChange={(e) => handleInputChange('deadStatus', e.target.value as 'Shutdown' | 'Abandoned')}
+                  onChange={(e) =>
+                    handleInputChange(
+                      'deadStatus',
+                      e.target.value as 'Shutdown' | 'Abandoned',
+                    )
+                  }
                   className="mr-2"
                 />
                 <span className="text-red-300">Shutdown</span>
@@ -241,7 +260,12 @@ const DeadGameAdd: React.FC = () => {
                   name="deadStatus"
                   value="Abandoned"
                   checked={form.deadStatus === 'Abandoned'}
-                  onChange={(e) => handleInputChange('deadStatus', e.target.value as 'Shutdown' | 'Abandoned')}
+                  onChange={(e) =>
+                    handleInputChange(
+                      'deadStatus',
+                      e.target.value as 'Shutdown' | 'Abandoned',
+                    )
+                  }
                   className="mr-2"
                 />
                 <span className="text-orange-300">Abandoned</span>
@@ -251,18 +275,20 @@ const DeadGameAdd: React.FC = () => {
 
           {/* Initial Reaction Count */}
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-zinc-300">
               Initial Reaction Count (optional)
             </label>
             <Input
               type="number"
               min="0"
               value={form.userReactionCount}
-              onChange={(e) => handleInputChange('userReactionCount', e.target.value)}
+              onChange={(e) =>
+                handleInputChange('userReactionCount', e.target.value)
+              }
               placeholder="0"
-              className="bg-zinc-800 border-zinc-600"
+              className="border-zinc-600 bg-zinc-800"
             />
-            <p className="text-xs text-zinc-500 mt-1">
+            <p className="mt-1 text-xs text-zinc-500">
               Starting number of user reactions (defaults to 0)
             </p>
           </div>
@@ -274,7 +300,9 @@ const DeadGameAdd: React.FC = () => {
               disabled={!searchedGame || isSubmitting}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isSubmitting ? 'Adding to Graveyard...' : 'Add to Game Graveyard'}
+              {isSubmitting
+                ? 'Adding to Graveyard...'
+                : 'Add to Game Graveyard'}
             </Button>
             <Button
               type="button"

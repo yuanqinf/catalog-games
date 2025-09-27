@@ -1,6 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
-import { Skull, Gamepad2, Ghost } from 'lucide-react';
+import useSWR from 'swr';
+import {
+  Skull,
+  Gamepad2,
+  Ghost,
+  Loader2,
+  ChevronUp,
+  ChevronDown,
+  ArrowUpDown,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -11,137 +20,220 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-// Mock data for game graveyard - replace with real API data later
-interface DeadGame {
-  id: string;
-  name: string;
-  deadDate: string;
-  genre: string;
-  status: 'Shutdown' | 'Abandoned';
-  developer: string;
-  publisher: string;
-  coverUrl?: string; // Optional thumbnail/cover image URL
-  reactionCount: number; // Number of emoji reactions
-}
-
-const mockDeadGames: DeadGame[] = [
-  {
-    id: '1',
-    name: 'Anthem',
-    deadDate: '2026/01/12',
-    genre: 'Action RPG',
-    status: 'Shutdown',
-    developer: 'BioWare',
-    publisher: 'Electronic Arts',
-    reactionCount: 234,
-  },
-  {
-    id: '2',
-    name: 'Dauntless',
-    deadDate: '2025/05/29',
-    genre: 'Action RPG',
-    status: 'Shutdown',
-    developer: 'Phoenix Labs',
-    publisher: 'Phoenix Labs',
-    reactionCount: 89,
-  },
-  {
-    id: '3',
-    name: 'Concord',
-    deadDate: '2024/09/06',
-    genre: 'Hero Shooter',
-    status: 'Shutdown',
-    developer: 'Firewalk Studios',
-    publisher: 'Sony Interactive Entertainment',
-    reactionCount: 1247,
-  },
-  {
-    id: '4',
-    name: 'Apex Legends Mobile',
-    deadDate: '2023/05/01',
-    genre: 'Battle Royale',
-    status: 'Shutdown',
-    developer: 'Respawn Entertainment',
-    publisher: 'Electronic Arts',
-    reactionCount: 156,
-  },
-  {
-    id: '5',
-    name: 'Rumbleverse',
-    deadDate: '2023/02/28',
-    genre: 'Battle Royale',
-    status: 'Shutdown',
-    developer: 'Iron Galaxy',
-    publisher: 'Epic Games',
-    reactionCount: 67,
-  },
-  {
-    id: '6',
-    name: "Babylon's Fall",
-    deadDate: '2023/02/27',
-    genre: 'Action RPG',
-    status: 'Shutdown',
-    developer: 'PlatinumGames',
-    publisher: 'Square Enix',
-    reactionCount: 445,
-  },
-  {
-    id: '7',
-    name: 'Heroes of the Storm',
-    deadDate: '2022/07/01',
-    genre: 'MOBA',
-    status: 'Abandoned',
-    developer: 'Blizzard Entertainment',
-    publisher: 'Blizzard Entertainment',
-    reactionCount: 892,
-  },
-  {
-    id: '8',
-    name: 'Artifact',
-    deadDate: '2021/03/01',
-    genre: 'Digital Card Game',
-    status: 'Abandoned',
-    developer: 'Valve Corporation',
-    publisher: 'Valve Corporation',
-    reactionCount: 1034,
-  },
-];
+import { DeadGameFromAPI, DeadGame } from '@/types';
 
 const DeadGames = () => {
-  const [reactionCounts, setReactionCounts] = useState<Record<string, number>>(
-    mockDeadGames.reduce(
-      (acc, game) => ({
-        ...acc,
-        [game.id]: game.reactionCount,
+  // Fetch dead games data from Supabase
+  const {
+    data: deadGamesResponse,
+    error,
+    isLoading,
+  } = useSWR<{ success: boolean; data: DeadGameFromAPI[]; error?: string }>(
+    '/api/dead-games',
+    (url) =>
+      fetch(url).then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch dead games');
+        return res.json();
       }),
-      {},
-    ),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000, // 1 minute cache
+    },
   );
 
+  // State declarations
+  const [reactionCounts, setReactionCounts] = useState<Record<string, number>>(
+    {},
+  );
   const [clickingButtons, setClickingButtons] = useState<Set<string>>(
     new Set(),
   );
+  const [sortByReactions, setSortByReactions] = useState<
+    'none' | 'asc' | 'desc'
+  >('none');
 
-  const handleReaction = (gameId: string) => {
+  // Transform and sort API data
+  const deadGames: DeadGame[] = useMemo(() => {
+    const transformedData =
+      deadGamesResponse?.data?.map((deadGame) => {
+        const date = new Date(deadGame.dead_date);
+        const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}/${date.getFullYear()}`;
+
+        return {
+          id: deadGame.id,
+          name: deadGame.games.name,
+          deadDate: formattedDate,
+          status: deadGame.dead_status,
+          developer: deadGame.games.developers?.[0] || 'Unknown Developer',
+          publisher: deadGame.games.publishers?.[0] || 'Unknown Publisher',
+          coverUrl:
+            deadGame.games.cover_url || deadGame.games.banner_url || undefined,
+          reactionCount: deadGame.user_reaction_count,
+        };
+      }) || [];
+
+    // Apply sorting if reaction sort is active
+    if (sortByReactions !== 'none') {
+      return [...transformedData].sort((a, b) => {
+        const aCount = reactionCounts[a.id] ?? a.reactionCount;
+        const bCount = reactionCounts[b.id] ?? b.reactionCount;
+
+        if (sortByReactions === 'asc') {
+          return aCount - bCount;
+        } else {
+          return bCount - aCount;
+        }
+      });
+    }
+
+    return transformedData;
+  }, [deadGamesResponse?.data, sortByReactions, reactionCounts]);
+
+  // Initialize reaction counts when data loads (only when API data changes, not when sorting changes)
+  useEffect(() => {
+    if (deadGamesResponse?.data && deadGamesResponse.data.length > 0) {
+      const counts = deadGamesResponse.data.reduce(
+        (acc, deadGame) => ({
+          ...acc,
+          [deadGame.id]: deadGame.user_reaction_count,
+        }),
+        {},
+      );
+      setReactionCounts(counts);
+    }
+  }, [deadGamesResponse?.data]);
+
+  const handleReaction = async (deadGameId: string) => {
     // Add button click animation
-    setClickingButtons((prev) => new Set([...prev, gameId]));
+    setClickingButtons((prev) => new Set([...prev, deadGameId]));
     setTimeout(() => {
       setClickingButtons((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(gameId);
+        newSet.delete(deadGameId);
         return newSet;
       });
     }, 200);
 
-    // Increment reaction count
+    // Optimistically update the UI
     setReactionCounts((prev) => ({
       ...prev,
-      [gameId]: prev[gameId] + 1,
+      [deadGameId]: (prev[deadGameId] || 0) + 1,
     }));
 
-    // TODO: Here you would call an API to update the backend
-    // Example: await fetch('/api/dead-games/react', { method: 'POST', body: JSON.stringify({ gameId }) })
+    // Call backend API to update the database
+    try {
+      const response = await fetch('/api/dead-games/react', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          deadGameId,
+          incrementBy: 1,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        console.error('Failed to update reaction count:', result.error);
+        // Revert optimistic update on error
+        setReactionCounts((prev) => ({
+          ...prev,
+          [deadGameId]: Math.max((prev[deadGameId] || 0) - 1, 0),
+        }));
+      }
+    } catch (error) {
+      console.error('Error calling reaction API:', error);
+      // Revert optimistic update on error
+      setReactionCounts((prev) => ({
+        ...prev,
+        [deadGameId]: Math.max((prev[deadGameId] || 0) - 1, 0),
+      }));
+    }
   };
+
+  const handleSortByReactions = () => {
+    if (sortByReactions === 'none') {
+      setSortByReactions('desc'); // First click: highest reactions first
+    } else if (sortByReactions === 'desc') {
+      setSortByReactions('asc'); // Second click: lowest reactions first
+    } else {
+      setSortByReactions('none'); // Third click: back to default (date order)
+    }
+  };
+
+  // Error state
+  if (error) {
+    return (
+      <section className="relative mb-16 px-4 sm:px-6 lg:px-8">
+        <div className="mb-12 text-center">
+          <div className="mb-6 flex items-center justify-center gap-4">
+            <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
+            <h2 className="text-2xl font-bold text-white sm:text-3xl lg:text-4xl">
+              Game Graveyard
+            </h2>
+            <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
+          </div>
+        </div>
+        <div className="flex h-64 items-center justify-center rounded-lg border border-red-800 bg-red-900/20 text-red-400">
+          <div className="text-center">
+            <p className="mb-2">Failed to load dead games</p>
+            <p className="text-sm opacity-75">Please try again later</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <section className="relative mb-16 px-4 sm:px-6 lg:px-8">
+        <div className="mb-12 text-center">
+          <div className="mb-6 flex items-center justify-center gap-4">
+            <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
+            <h2 className="text-2xl font-bold text-white sm:text-3xl lg:text-4xl">
+              Game Graveyard
+            </h2>
+            <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
+          </div>
+        </div>
+        <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50">
+          <div className="flex items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
+            <p className="text-zinc-400">Loading dead games...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Empty state
+  if (!deadGames || deadGames.length === 0) {
+    return (
+      <section className="relative mb-16 px-4 sm:px-6 lg:px-8">
+        <div className="mb-12 text-center">
+          <div className="mb-6 flex items-center justify-center gap-4">
+            <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
+            <h2 className="text-2xl font-bold text-white sm:text-3xl lg:text-4xl">
+              Game Graveyard
+            </h2>
+            <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
+          </div>
+        </div>
+        <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-zinc-400">
+          <div className="text-center">
+            <Skull size={48} className="mx-auto mb-4 opacity-50" />
+            <p className="mb-2">The graveyard is empty</p>
+            <p className="text-sm opacity-75">
+              No dead games have been added yet
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative mb-16 px-4 sm:px-6 lg:px-8">
@@ -167,9 +259,6 @@ const DeadGames = () => {
                 <TableHead className="hidden px-6 py-6 sm:table-cell">
                   Date
                 </TableHead>
-                <TableHead className="hidden px-6 py-6 md:table-cell">
-                  Genre
-                </TableHead>
                 <TableHead className="px-6 py-6">Status</TableHead>
                 <TableHead className="hidden px-6 py-6 lg:table-cell">
                   Developer
@@ -177,11 +266,29 @@ const DeadGames = () => {
                 <TableHead className="hidden px-6 py-6 xl:table-cell">
                   Publisher
                 </TableHead>
-                <TableHead className="px-6 py-6 text-center" />
+                <TableHead className="px-6 py-6 text-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSortByReactions}
+                    className="mx-auto flex items-center gap-1 px-2 py-1 text-zinc-400 hover:text-zinc-200"
+                  >
+                    <Ghost className="h-4 w-4" />
+                    {sortByReactions === 'none' && (
+                      <ArrowUpDown className="h-3 w-3" />
+                    )}
+                    {sortByReactions === 'desc' && (
+                      <ChevronDown className="h-3 w-3" />
+                    )}
+                    {sortByReactions === 'asc' && (
+                      <ChevronUp className="h-3 w-3" />
+                    )}
+                  </Button>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockDeadGames.map((game) => (
+              {deadGames.map((game) => (
                 <TableRow key={game.id} className="group">
                   <TableCell className="w-20 px-6 py-6">
                     <div className="flex h-16 w-12 items-center justify-center overflow-hidden rounded-lg bg-zinc-800 shadow-md">
@@ -205,9 +312,6 @@ const DeadGames = () => {
                   </TableCell>
                   <TableCell className="text-muted-foreground hidden px-6 py-6 sm:table-cell">
                     {game.deadDate}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground hidden px-6 py-6 md:table-cell">
-                    {game.genre}
                   </TableCell>
                   <TableCell className="px-6 py-6">
                     <span

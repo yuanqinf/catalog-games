@@ -142,3 +142,32 @@ export interface NewsResponse {
   size?: number;
   totalHits?: number;
 }
+
+// Dead games types
+export interface DeadGameFromAPI {
+  id: string;
+  dead_date: string;
+  dead_status: 'Shutdown' | 'Abandoned';
+  user_reaction_count: number;
+  games: {
+    id: number;
+    igdb_id: number;
+    name: string;
+    slug: string;
+    cover_url: string | null;
+    banner_url: string | null;
+    developers: string[] | null;
+    publishers: string[] | null;
+  };
+}
+
+export interface DeadGame {
+  id: string;
+  name: string;
+  deadDate: string;
+  status: 'Shutdown' | 'Abandoned';
+  developer: string;
+  publisher: string;
+  coverUrl?: string;
+  reactionCount: number;
+}

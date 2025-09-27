@@ -486,7 +486,12 @@ export class GameService {
   /**
    * Add a dead game entry to the dead_games table
    */
-  async addDeadGame(gameId: number, deadDate: string, deadStatus: 'Shutdown' | 'Abandoned', userReactionCount: number = 0) {
+  async addDeadGame(
+    gameId: number,
+    deadDate: string,
+    deadStatus: 'Shutdown' | 'Abandoned',
+    userReactionCount: number = 0,
+  ) {
     const { data, error } = await this.supabase
       .from('dead_games')
       .insert({
@@ -511,7 +516,8 @@ export class GameService {
   async getDeadGames() {
     const { data, error } = await this.supabase
       .from('dead_games')
-      .select(`
+      .select(
+        `
         id,
         dead_date,
         dead_status,
@@ -524,10 +530,12 @@ export class GameService {
           slug,
           cover_url,
           banner_url,
-          developers
+          developers,
+          publishers
         )
-      `)
-      .order('user_reaction_count', { ascending: false });
+      `,
+      )
+      .order('dead_date', { ascending: false });
 
     if (error) {
       throw new Error(error.message || 'Failed to fetch dead games');
@@ -540,14 +548,18 @@ export class GameService {
    * Update reaction count for a dead game
    */
   async incrementDeadGameReaction(deadGameId: string, incrementBy: number = 1) {
-    const { data, error } = await this.supabase
-      .rpc('increment_dead_game_reaction', {
+    const { data, error } = await this.supabase.rpc(
+      'increment_dead_game_reaction',
+      {
         dead_game_id: deadGameId,
-        increment_amount: incrementBy
-      });
+        increment_amount: incrementBy,
+      },
+    );
 
     if (error) {
-      throw new Error(error.message || 'Failed to increment dead game reaction');
+      throw new Error(
+        error.message || 'Failed to increment dead game reaction',
+      );
     }
 
     return data;

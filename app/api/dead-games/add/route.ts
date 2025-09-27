@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: 'Missing required fields: igdbGameData, deadDate, deadStatus',
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Step 1: Check if game exists in games table, if not add it
     let gameId: number;
     const existingGame = await gameService.checkGameExists(igdbGameData.id);
-    
+
     if (existingGame) {
       gameId = existingGame.id;
       console.log(`Game already exists with ID: ${gameId}`);
@@ -49,7 +49,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 2: Add to dead_games table
-    const data = await gameService.addDeadGame(gameId, deadDate, deadStatus, userReactionCount);
+    const data = await gameService.addDeadGame(
+      gameId,
+      deadDate,
+      deadStatus,
+      userReactionCount,
+    );
 
     return NextResponse.json({
       success: true,
