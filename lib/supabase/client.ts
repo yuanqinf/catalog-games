@@ -482,4 +482,74 @@ export class GameService {
 
     return data;
   }
+
+  /**
+   * Add a dead game entry to the dead_games table
+   */
+  async addDeadGame(gameId: number, deadDate: string, deadStatus: 'Shutdown' | 'Abandoned', userReactionCount: number = 0) {
+    const { data, error } = await this.supabase
+      .from('dead_games')
+      .insert({
+        game_id: gameId,
+        dead_date: deadDate,
+        dead_status: deadStatus,
+        user_reaction_count: userReactionCount,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message || 'Failed to add dead game');
+    }
+
+    return data;
+  }
+
+  /**
+   * Get all dead games for the graveyard page
+   */
+  async getDeadGames() {
+    const { data, error } = await this.supabase
+      .from('dead_games')
+      .select(`
+        id,
+        dead_date,
+        dead_status,
+        user_reaction_count,
+        created_at,
+        games:game_id (
+          id,
+          igdb_id,
+          name,
+          slug,
+          cover_url,
+          banner_url,
+          developers
+        )
+      `)
+      .order('user_reaction_count', { ascending: false });
+
+    if (error) {
+      throw new Error(error.message || 'Failed to fetch dead games');
+    }
+
+    return data;
+  }
+
+  /**
+   * Update reaction count for a dead game
+   */
+  async incrementDeadGameReaction(deadGameId: string, incrementBy: number = 1) {
+    const { data, error } = await this.supabase
+      .rpc('increment_dead_game_reaction', {
+        dead_game_id: deadGameId,
+        increment_amount: incrementBy
+      });
+
+    if (error) {
+      throw new Error(error.message || 'Failed to increment dead game reaction');
+    }
+
+    return data;
+  }
 }
