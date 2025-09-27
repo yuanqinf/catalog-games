@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import useSWR from 'swr';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Skull,
   Gamepad2,
@@ -51,6 +52,17 @@ const DeadGames = () => {
   const [sortByReactions, setSortByReactions] = useState<
     'none' | 'asc' | 'desc'
   >('none');
+
+  // Floating ghost animations state
+  const [floatingGhosts, setFloatingGhosts] = useState<
+    Array<{
+      id: string;
+      gameId: string;
+      timestamp: number;
+      startX: number;
+      startY: number;
+    }>
+  >([]);
 
   // Transform and sort API data
   const deadGames: DeadGame[] = useMemo(() => {
@@ -103,7 +115,41 @@ const DeadGames = () => {
     }
   }, [deadGamesResponse?.data]);
 
-  const handleReaction = async (deadGameId: string) => {
+  const handleReaction = async (
+    deadGameId: string,
+    event: React.MouseEvent,
+  ) => {
+    // Get button position for ghost spawn location
+    const buttonRect = (event.target as HTMLElement).getBoundingClientRect();
+    const containerRect = (event.target as HTMLElement)
+      .closest('section')
+      ?.getBoundingClientRect();
+
+    if (buttonRect && containerRect) {
+      // Add random offset around the button position
+      const randomOffsetX = (Math.random() - 0.5) * 200; // ±100px horizontal
+      const randomOffsetY = (Math.random() - 0.5) * 30; // ±15px vertical
+
+      // Create floating ghost animation with random position
+      const newGhost = {
+        id: `ghost-${Date.now()}-${Math.random()}`,
+        gameId: deadGameId,
+        timestamp: Date.now(),
+        startX:
+          buttonRect.left -
+          containerRect.left * 1.5 +
+          buttonRect.width / 2 +
+          randomOffsetX,
+        startY:
+          buttonRect.top -
+          containerRect.top +
+          buttonRect.height / 2 +
+          randomOffsetY,
+      };
+
+      setFloatingGhosts((prev) => [...prev, newGhost]);
+    }
+
     // Add button click animation
     setClickingButtons((prev) => new Set([...prev, deadGameId]));
     setTimeout(() => {
@@ -248,6 +294,51 @@ const DeadGames = () => {
         </div>
       </div>
 
+      {/* Floating Ghost Animations */}
+      <AnimatePresence>
+        {floatingGhosts.map((ghost) => (
+          <motion.div
+            key={ghost.id}
+            className="pointer-events-none absolute z-50"
+            style={{
+              left: ghost.startX,
+              top: ghost.startY,
+            }}
+            initial={{
+              opacity: 0,
+              scale: 0.2,
+              y: 0,
+            }}
+            animate={{
+              opacity: [0, 1, 1, 0],
+              scale: [0.2, 1.5, 1.3, 0.9],
+              y: [0, -40, -120, -250],
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.6,
+              y: -300,
+            }}
+            transition={{
+              duration: 2.5,
+              ease: [0.25, 0.46, 0.45, 0.94],
+              times: [0, 0.15, 0.6, 1],
+            }}
+            onAnimationComplete={() => {
+              // Auto-remove when animation completes
+              setFloatingGhosts((prev) =>
+                prev.filter((g) => g.id !== ghost.id),
+              );
+            }}
+          >
+            <Ghost
+              className="h-8 w-8 text-zinc-300 drop-shadow-2xl"
+              fill="currentColor"
+            />
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
       {/* Dead Games List */}
       <div className="max-w-8xl mx-auto">
         <div className="overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900/50 shadow-2xl">
@@ -339,7 +430,7 @@ const DeadGames = () => {
                           ? 'scale-95 bg-zinc-600'
                           : ''
                       }`}
-                      onClick={() => handleReaction(game.id)}
+                      onClick={(e) => handleReaction(game.id, e)}
                     >
                       <Ghost className="mr-2 h-4 w-4 text-zinc-400 transition-colors group-hover:text-white" />
                       <span className="font-medium text-zinc-300 group-hover:text-white">
