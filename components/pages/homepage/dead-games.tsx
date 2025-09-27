@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Skull, Gamepad2 } from 'lucide-react';
+import { Skull, Gamepad2, Ghost } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -162,26 +162,28 @@ const DeadGames = () => {
           <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-20"></TableHead>
-                <TableHead>Game</TableHead>
-                <TableHead className="hidden sm:table-cell">
-                  Dead Date
+                <TableHead className="w-20 px-6 py-6" />
+                <TableHead className="px-6 py-6">Game</TableHead>
+                <TableHead className="hidden px-6 py-6 sm:table-cell">
+                  Date
                 </TableHead>
-                <TableHead className="hidden md:table-cell">Genre</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="hidden lg:table-cell">
+                <TableHead className="hidden px-6 py-6 md:table-cell">
+                  Genre
+                </TableHead>
+                <TableHead className="px-6 py-6">Status</TableHead>
+                <TableHead className="hidden px-6 py-6 lg:table-cell">
                   Developer
                 </TableHead>
-                <TableHead className="hidden xl:table-cell">
+                <TableHead className="hidden px-6 py-6 xl:table-cell">
                   Publisher
                 </TableHead>
-                <TableHead className="text-center">Reactions</TableHead>
+                <TableHead className="px-6 py-6 text-center" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {mockDeadGames.map((game) => (
                 <TableRow key={game.id} className="group">
-                  <TableCell className="w-20">
+                  <TableCell className="w-20 px-6 py-6">
                     <div className="flex h-16 w-12 items-center justify-center overflow-hidden rounded-lg bg-zinc-800 shadow-md">
                       {game.coverUrl ? (
                         <Image
@@ -196,18 +198,18 @@ const DeadGames = () => {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="font-semibold">
+                  <TableCell className="px-6 py-6 font-semibold">
                     <div className="text-base text-white group-hover:text-zinc-100 sm:text-lg">
                       {game.name}
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground hidden sm:table-cell">
+                  <TableCell className="text-muted-foreground hidden px-6 py-6 sm:table-cell">
                     {game.deadDate}
                   </TableCell>
-                  <TableCell className="text-muted-foreground hidden md:table-cell">
+                  <TableCell className="text-muted-foreground hidden px-6 py-6 md:table-cell">
                     {game.genre}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-6 py-6">
                     <span
                       className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${
                         game.status === 'Shutdown'
@@ -218,23 +220,25 @@ const DeadGames = () => {
                       {game.status}
                     </span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground hidden lg:table-cell">
+                  <TableCell className="text-muted-foreground hidden px-6 py-6 lg:table-cell">
                     {game.developer}
                   </TableCell>
-                  <TableCell className="text-muted-foreground hidden xl:table-cell">
+                  <TableCell className="text-muted-foreground hidden px-6 py-6 xl:table-cell">
                     {game.publisher}
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="px-6 py-6 text-center">
                     <Button
                       size="sm"
-                      variant="ghost"
-                      className={`transition-all duration-200 ${
-                        clickingButtons.has(game.id) ? 'scale-95' : ''
+                      variant="outline"
+                      className={`group w-20 border-zinc-600 bg-zinc-800/50 transition-all duration-200 hover:scale-105 hover:border-zinc-500 hover:bg-zinc-700 ${
+                        clickingButtons.has(game.id)
+                          ? 'scale-95 bg-zinc-600'
+                          : ''
                       }`}
                       onClick={() => handleReaction(game.id)}
                     >
-                      <span className="mr-2 text-lg">😢</span>
-                      <span className="font-medium">
+                      <Ghost className="mr-2 h-4 w-4 text-zinc-400 transition-colors group-hover:text-white" />
+                      <span className="font-medium text-zinc-300 group-hover:text-white">
                         {reactionCounts[game.id]?.toLocaleString() || 0}
                       </span>
                     </Button>
