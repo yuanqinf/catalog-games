@@ -92,7 +92,7 @@ export const useSearchBar = () => {
       if (response.ok) {
         const data: HybridSearchResult = await response.json();
         setSupabaseGames([...data.supabaseGames].sort(sortSupabaseGamesByDate));
-        setIgdbGames([...data.igdbGames].sort(sortIgdbGamesByDate).slice(0, 3));
+        setIgdbGames([...data.igdbGames]);
         // Show results panel after search completes
         setShowSuggestions(true);
       } else {

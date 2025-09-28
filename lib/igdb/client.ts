@@ -75,8 +75,8 @@ class IgdbClient {
       },
       body: `
         search "${query}";
-        fields id, name, slug, category, cover.url, screenshots.url, artworks.url, videos, summary, first_release_date, involved_companies.company.name;
-        where category = (0,1,2,4,8,9,10,11) | category = null;
+        fields id, name, aggregated_rating_count, slug, game_type, cover.url, screenshots.url, artworks.url, videos, summary, first_release_date, involved_companies.company.name;
+        where game_type = (0,1) & aggregated_rating_count > 0;
         limit 10;
       `,
     });
