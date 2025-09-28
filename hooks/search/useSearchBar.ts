@@ -145,18 +145,26 @@ export const useSearchBar = () => {
 
   const handleActivate = () => setIsInputActive(true);
   const handleFocus = () => {
-    // Only show recent searches, no automatic search
-    setSupabaseGames([]);
-    setIgdbGames([]);
-    setIsLoading(false);
+    // If there's input but no current results, clear and show recent searches
+    // If there's input and current results, keep showing results
     if (!inputValue.trim()) {
+      // No input - show recent searches
+      setSupabaseGames([]);
+      setIgdbGames([]);
+      setIsLoading(false);
+      setShowSuggestions(true);
+    } else {
+      // Has input - show suggestions panel with current results
       setShowSuggestions(true);
     }
   };
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
-    if (value.trim() && showSuggestions) {
+    // When user changes input, clear current results and hide suggestions
+    if (value.trim() !== inputValue.trim()) {
+      setSupabaseGames([]);
+      setIgdbGames([]);
       setShowSuggestions(false);
     }
   };

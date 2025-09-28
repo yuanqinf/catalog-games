@@ -5,6 +5,7 @@ interface RecentSearchItem {
   cover_url?: string;
   developers?: string[];
   searchedAt: string;
+  dislike_count?: number;
 }
 
 const RECENT_SEARCHES_KEY = 'catalog-recent-searches';
@@ -41,6 +42,7 @@ export class RecentSearches {
     slug: string;
     cover_url?: string;
     developers?: string[];
+    dislike_count?: number;
   }): void {
     if (typeof window === 'undefined') return;
 
@@ -59,6 +61,7 @@ export class RecentSearches {
         slug: game.slug,
         cover_url: game.cover_url,
         developers: game.developers,
+        dislike_count: game.dislike_count,
         searchedAt: new Date().toISOString(),
       };
 

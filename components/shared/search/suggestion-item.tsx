@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Gamepad2, Loader2 } from 'lucide-react';
+import { Gamepad2, Loader2, ThumbsDown } from 'lucide-react';
 import { CommandItem } from '@/components/ui/command';
 import {
   GameDbData,
@@ -37,20 +37,13 @@ const getGameDetails = (game: GameDbData | RecentSearchItem | IgdbGame) => {
     }
   }
 
-  // Handle first release date
-  let releaseYear = '';
-  if ('first_release_date' in game && game.first_release_date) {
-    if (typeof game.first_release_date === 'string') {
-      releaseYear = new Date(game.first_release_date).getFullYear().toString();
-    } else {
-      // IGDB format - Unix timestamp
-      releaseYear = new Date(game.first_release_date * 1000)
-        .getFullYear()
-        .toString();
-    }
+  // Handle dislike count (for both Supabase games and recent searches)
+  let dislikeCount = null;
+  if ('dislike_count' in game && game.dislike_count && game.dislike_count > 0) {
+    dislikeCount = game.dislike_count;
   }
 
-  return { isIgdbGame, developer, releaseYear };
+  return { isIgdbGame, developer, dislikeCount };
 };
 
 export const SuggestionItem = ({
@@ -61,7 +54,7 @@ export const SuggestionItem = ({
 }: SuggestionItemProps) => {
   if (isGame) {
     const game = item as GameDbData | RecentSearchItem | IgdbGame;
-    const { isIgdbGame, developer, releaseYear } = getGameDetails(game);
+    const { isIgdbGame, developer, dislikeCount } = getGameDetails(game);
 
     console.log(game);
     return (
@@ -104,8 +97,20 @@ export const SuggestionItem = ({
               </span>
             )}
           </div>
-          {releaseYear && (
-            <span className="text-xs text-zinc-500">{releaseYear}</span>
+          {/* Dislike count or dislike button */}
+          {dislikeCount ? (
+            <div className="flex items-center gap-1 text-xs text-red-400">
+              <ThumbsDown
+                className="drop-shadow-2xl' h-3 w-3 text-red-500"
+                fill="currentColor"
+              />
+              <span>{dislikeCount.toLocaleString()}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 text-xs text-zinc-400">
+              <ThumbsDown className="h-3 w-3" />
+              <span>Be the first to dislike</span>
+            </div>
           )}
         </div>
       </CommandItem>

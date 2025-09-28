@@ -331,7 +331,9 @@ export class GameService {
       // First try: FTS on name field with ranking
       const { data: nameResults, error: nameError } = await this.supabase
         .from('games')
-        .select('id, name, slug, cover_url, developers, first_release_date')
+        .select(
+          'id, name, slug, cover_url, developers, first_release_date, dislike_count',
+        )
         .textSearch('name', `'${searchQuery}'`, {
           type: 'websearch',
           config: 'english',
@@ -363,7 +365,9 @@ export class GameService {
       const { data: fallbackResults, error: fallbackError } =
         await this.supabase
           .from('games')
-          .select('id, name, slug, cover_url, developers, first_release_date')
+          .select(
+            'id, name, slug, cover_url, developers, first_release_date, dislike_count',
+          )
           .or(`name.ilike.%${searchQuery}%,developers.cs.{${searchQuery}}`)
           .order('name')
           .limit(limit);

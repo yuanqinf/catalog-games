@@ -41,9 +41,12 @@ export const SearchSuggestions = ({
   return (
     <div className="search-dropdown">
       <CommandList>
-        <CommandEmpty>
-          {isLoading ? 'Searching...' : 'No results found.'}
-        </CommandEmpty>
+        {/* Only show CommandEmpty for search results (not for default suggestions) */}
+        {!showDefaultSuggestions && (
+          <CommandEmpty>
+            {isLoading ? 'Searching...' : 'No results found.'}
+          </CommandEmpty>
+        )}
 
         {showDefaultSuggestions ? (
           <>

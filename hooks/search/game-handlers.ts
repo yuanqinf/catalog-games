@@ -15,8 +15,18 @@ export const createGameHandlers = (
     setShowSuggestions(false);
     setIsInputActive(false);
 
-    // Save to recent searches
-    RecentSearches.addRecentSearch(game as RecentSearchItem);
+    // Save to recent searches with proper dislike_count
+    const recentSearchItem: RecentSearchItem = {
+      id: String(game.id),
+      name: game.name,
+      slug: game.slug || '',
+      cover_url: game.cover_url || undefined,
+      developers: game.developers || undefined,
+      dislike_count:
+        'dislike_count' in game ? game.dislike_count || undefined : undefined,
+      searchedAt: new Date().toISOString(), // This will be overwritten by addRecentSearch
+    };
+    RecentSearches.addRecentSearch(recentSearchItem);
     router.push(`/detail/${game.slug}`);
   };
 

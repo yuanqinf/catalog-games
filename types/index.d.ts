@@ -24,6 +24,7 @@ export interface GameDbData {
   steam_recent_review?: string | null;
   igdb_user_rating?: number | null;
   steam_popular_tags?: string[] | null;
+  dislike_count?: number | null;
 }
 
 // Type for IGDB game data from API
