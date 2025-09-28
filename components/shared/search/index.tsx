@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { Command } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 import { useSearchBar } from '@/hooks/search/useSearchBar';
@@ -57,6 +57,7 @@ const SearchBar = () => {
               onClear={props.handleClearInput}
               isActive={false}
               isAddingGame={props.isAddingGame}
+              isLoading={props.isLoading}
             />
           </Command>
 
@@ -67,8 +68,15 @@ const SearchBar = () => {
               currentOrder={currentOrder as SortOrder}
             />
           ) : (
-            <Button onClick={props.handleSearchClick}>
-              <Search />
+            <Button
+              onClick={props.handleSearchClick}
+              disabled={props.isLoading}
+            >
+              {props.isLoading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <Search />
+              )}
               <p>Search</p>
             </Button>
           )}
@@ -93,6 +101,7 @@ const SearchBar = () => {
             onClear={props.handleClearInput}
             isActive={true}
             isAddingGame={props.isAddingGame}
+            isLoading={props.isLoading}
           />
 
           {props.showSuggestions && !props.isAddingGame && (
@@ -114,8 +123,8 @@ const SearchBar = () => {
           )}
         </Command>
 
-        <Button onClick={props.handleSearchClick}>
-          <Search />
+        <Button onClick={props.handleSearchClick} disabled={props.isLoading}>
+          {props.isLoading ? <Loader2 className="animate-spin" /> : <Search />}
           <p>Search</p>
         </Button>
       </div>

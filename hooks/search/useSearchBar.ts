@@ -93,15 +93,20 @@ export const useSearchBar = () => {
         const data: HybridSearchResult = await response.json();
         setSupabaseGames([...data.supabaseGames].sort(sortSupabaseGamesByDate));
         setIgdbGames([...data.igdbGames].sort(sortIgdbGamesByDate).slice(0, 3));
+        // Show results panel after search completes
         setShowSuggestions(true);
       } else {
         setSupabaseGames([]);
         setIgdbGames([]);
+        // Show panel even with no results (will display "No results found")
+        setShowSuggestions(true);
       }
     } catch (error) {
       console.error('Search failed:', error);
       setSupabaseGames([]);
       setIgdbGames([]);
+      // Show panel on search failure (will display error info)
+      setShowSuggestions(true);
     } finally {
       setIsLoading(false);
     }
@@ -144,13 +149,22 @@ export const useSearchBar = () => {
     setSupabaseGames([]);
     setIgdbGames([]);
     setIsLoading(false);
-    setShowSuggestions(true);
+    if (!inputValue.trim()) {
+      setShowSuggestions(true);
+    }
+  };
+
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    if (value.trim() && showSuggestions) {
+      setShowSuggestions(false);
+    }
   };
 
   return {
     // State
     inputValue,
-    setInputValue,
+    setInputValue: handleInputChange,
     supabaseGames,
     igdbGames,
     recentSearches,

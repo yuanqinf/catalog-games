@@ -13,6 +13,7 @@ interface SearchInputProps {
   onClear: (e: React.MouseEvent) => void;
   isActive: boolean;
   isAddingGame: boolean;
+  isLoading?: boolean;
 }
 
 export const SearchInput = ({
@@ -24,9 +25,10 @@ export const SearchInput = ({
   onClear,
   isActive,
   isAddingGame,
+  isLoading = false,
 }: SearchInputProps) => (
   <div className="search-input-wrapper">
-    {isAddingGame ? (
+    {isAddingGame || isLoading ? (
       <Loader2 className="search-icon animate-spin text-zinc-400" />
     ) : (
       <SearchIconLucide className="search-icon" />
