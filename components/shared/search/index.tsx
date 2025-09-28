@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Gamepad2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Command } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 import { useSearchBar } from '@/hooks/search/useSearchBar';
@@ -14,10 +13,9 @@ import SortingDropdown, {
   SortOrder,
 } from '../header-footer/sorting-dropdown';
 
-const SearchSection = ({
-  isInputActive,
-  ...props
-}: ReturnType<typeof useSearchBar>) => {
+const SearchBar = () => {
+  const searchProps = useSearchBar();
+  const { isInputActive, ...props } = searchProps;
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,12 +38,52 @@ const SearchSection = ({
 
   if (!isInputActive) {
     return (
+      <div
+        ref={searchProps.wrapperRef}
+        className="relative mx-auto w-full max-w-xl"
+      >
+        <div className="flex items-center gap-2">
+          <Command
+            shouldFilter={false}
+            className="cursor-pointer overflow-visible"
+            onClick={props.handleActivate}
+          >
+            <SearchInput
+              inputRef={props.inputRef}
+              value={props.inputValue}
+              onChange={props.setInputValue}
+              onFocus={props.handleFocus}
+              onKeyDown={props.handleInputKeyDown}
+              onClear={props.handleClearInput}
+              isActive={false}
+              isAddingGame={props.isAddingGame}
+            />
+          </Command>
+
+          {isExplorePage ? (
+            <SortingDropdown
+              onSortChange={handleSortChange}
+              currentOption={currentSortOption}
+              currentOrder={currentOrder as SortOrder}
+            />
+          ) : (
+            <Button onClick={props.handleSearchClick}>
+              <Search />
+              <p>Search</p>
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={searchProps.wrapperRef}
+      className="relative mx-auto w-full max-w-xl"
+    >
       <div className="flex items-center gap-2">
-        <Command
-          shouldFilter={false}
-          className="cursor-pointer overflow-visible"
-          onClick={props.handleActivate}
-        >
+        <Command shouldFilter={false} className="flex-1 overflow-visible">
           <SearchInput
             inputRef={props.inputRef}
             value={props.inputValue}
@@ -53,74 +91,34 @@ const SearchSection = ({
             onFocus={props.handleFocus}
             onKeyDown={props.handleInputKeyDown}
             onClear={props.handleClearInput}
-            isActive={false}
+            isActive={true}
             isAddingGame={props.isAddingGame}
           />
+
+          {props.showSuggestions && !props.isAddingGame && (
+            <SearchSuggestions
+              inputValue={props.inputValue}
+              onSelectSuggestion={(text: string) => {
+                props.setInputValue(text);
+                props.handleFocus();
+              }}
+              onSelectGame={props.handleSelectSuggestion}
+              onSelectIgdbGame={props.handleSelectIgdbGame}
+              supabaseGames={props.supabaseGames}
+              igdbGames={props.igdbGames}
+              recentSearches={props.recentSearches}
+              onClearRecentSearches={props.handleClearRecentSearches}
+              isLoading={props.isLoading}
+              isAddingGame={props.isAddingGame}
+            />
+          )}
         </Command>
 
-        {isExplorePage ? (
-          <SortingDropdown
-            onSortChange={handleSortChange}
-            currentOption={currentSortOption}
-            currentOrder={currentOrder as SortOrder}
-          />
-        ) : (
-          <Link href="/explore">
-            <Button>
-              <Gamepad2 />
-              <p>Explore</p>
-            </Button>
-          </Link>
-        )}
+        <Button onClick={props.handleSearchClick}>
+          <Search />
+          <p>Search</p>
+        </Button>
       </div>
-    );
-  }
-
-  return (
-    <Command shouldFilter={false} className="overflow-visible">
-      <SearchInput
-        inputRef={props.inputRef}
-        value={props.inputValue}
-        onChange={props.setInputValue}
-        onFocus={props.handleFocus}
-        onKeyDown={props.handleInputKeyDown}
-        onClear={props.handleClearInput}
-        isActive={true}
-        isAddingGame={props.isAddingGame}
-      />
-
-      {props.showSuggestions &&
-        !props.isAddingGame &&
-        props.inputValue.trim() && (
-          <SearchSuggestions
-            inputValue={props.inputValue}
-            onSelectSuggestion={(text: string) => {
-              props.setInputValue(text);
-              props.handleFocus();
-            }}
-            onSelectGame={props.handleSelectSuggestion}
-            onSelectIgdbGame={props.handleSelectIgdbGame}
-            supabaseGames={props.supabaseGames}
-            igdbGames={props.igdbGames}
-            recentSearches={props.recentSearches}
-            onClearRecentSearches={props.handleClearRecentSearches}
-            isLoading={props.isLoading}
-            isAddingGame={props.isAddingGame}
-          />
-        )}
-    </Command>
-  );
-};
-
-const SearchBar = () => {
-  const searchProps = useSearchBar();
-
-  return (
-    <div
-      ref={searchProps.wrapperRef}
-      className="relative mx-auto w-full max-w-xl"
-    >
-      <SearchSection {...searchProps} />
     </div>
   );
 };

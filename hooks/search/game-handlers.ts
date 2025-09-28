@@ -71,6 +71,7 @@ export const createGameHandlers = (
     if (!query.trim()) return;
     console.log('Perform immediate search for:', query.trim());
     setShowSuggestions(false);
+    setIsInputActive(false);
   };
 
   return {

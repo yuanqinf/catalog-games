@@ -72,9 +72,9 @@ export const useSearchBar = () => {
     }
   }, [showSuggestions]);
 
-  // Search logic with debouncing
-  useEffect(() => {
-    if (!inputValue.trim()) {
+  // Manual search function for suggestions
+  const performSuggestionSearch = async (query: string) => {
+    if (!query.trim()) {
       setSupabaseGames([]);
       setIgdbGames([]);
       setIsLoading(false);
@@ -84,35 +84,28 @@ export const useSearchBar = () => {
     setIsLoading(true);
     clearTimeout(debounceTimeoutRef.current as NodeJS.Timeout);
 
-    debounceTimeoutRef.current = setTimeout(async () => {
-      try {
-        const response = await fetch(
-          `/api/search/hybrid?q=${encodeURIComponent(inputValue.trim())}&limit=10`,
-        );
+    try {
+      const response = await fetch(
+        `/api/search/hybrid?q=${encodeURIComponent(query.trim())}&limit=10`,
+      );
 
-        if (response.ok) {
-          const data: HybridSearchResult = await response.json();
-          setSupabaseGames(
-            [...data.supabaseGames].sort(sortSupabaseGamesByDate),
-          );
-          setIgdbGames(
-            [...data.igdbGames].sort(sortIgdbGamesByDate).slice(0, 3),
-          );
-        } else {
-          setSupabaseGames([]);
-          setIgdbGames([]);
-        }
-      } catch (error) {
-        console.error('Search failed:', error);
+      if (response.ok) {
+        const data: HybridSearchResult = await response.json();
+        setSupabaseGames([...data.supabaseGames].sort(sortSupabaseGamesByDate));
+        setIgdbGames([...data.igdbGames].sort(sortIgdbGamesByDate).slice(0, 3));
+        setShowSuggestions(true);
+      } else {
         setSupabaseGames([]);
         setIgdbGames([]);
-      } finally {
-        setIsLoading(false);
       }
-    }, 300);
-
-    return () => clearTimeout(debounceTimeoutRef.current as NodeJS.Timeout);
-  }, [inputValue]);
+    } catch (error) {
+      console.error('Search failed:', error);
+      setSupabaseGames([]);
+      setIgdbGames([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Input handlers
   const handleClearRecentSearches = () => {
@@ -129,15 +122,30 @@ export const useSearchBar = () => {
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && inputValue.trim()) {
       e.preventDefault();
-      handleImmediateSearch(inputValue);
+      performSuggestionSearch(inputValue);
     } else if (e.key === 'Escape') {
       setShowSuggestions(false);
       setIsInputActive(false);
     }
   };
 
+  const handleSearchClick = () => {
+    if (inputValue.trim()) {
+      performSuggestionSearch(inputValue);
+    } else {
+      // If no input, activate the search bar
+      setIsInputActive(true);
+    }
+  };
+
   const handleActivate = () => setIsInputActive(true);
-  const handleFocus = () => setShowSuggestions(true);
+  const handleFocus = () => {
+    // Only show recent searches, no automatic search
+    setSupabaseGames([]);
+    setIgdbGames([]);
+    setIsLoading(false);
+    setShowSuggestions(true);
+  };
 
   return {
     // State
@@ -163,5 +171,6 @@ export const useSearchBar = () => {
     handleActivate,
     handleFocus,
     handleClearRecentSearches,
+    handleSearchClick,
   };
 };
