@@ -114,7 +114,7 @@ html {
     @apply bg-background text-foreground;
   }
   main {
-    @apply bg-background mx-auto flex min-h-screen flex-col gap-8;
+    @apply bg-background mx-auto flex min-h-screen flex-col gap-4;
   }
   h1 {
     @apply text-3xl font-bold;
@@ -142,7 +142,7 @@ html {
 @layer components {
   /* Header Components */
   .header {
-    @apply mx-auto flex w-full items-center justify-between bg-black px-12 py-4 max-sm:px-4;
+    @apply mx-auto flex w-full items-center justify-between bg-black px-12 py-2 max-sm:px-4;
   }
 
   .header-logo {

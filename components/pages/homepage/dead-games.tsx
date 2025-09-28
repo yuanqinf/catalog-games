@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Skull,
   Gamepad2,
-  Ghost,
   Loader2,
   ChevronUp,
   ChevronDown,
@@ -52,9 +52,10 @@ const DeadGames = () => {
   const [sortByReactions, setSortByReactions] = useState<
     'none' | 'asc' | 'desc'
   >('none');
+  const [sortByDate, setSortByDate] = useState<'none' | 'asc' | 'desc'>('desc');
 
-  // Floating ghost animations state
-  const [floatingGhosts, setFloatingGhosts] = useState<
+  // Floating Skull animations state
+  const [floatingSkulls, setFloatingSkulls] = useState<
     Array<{
       id: string;
       gameId: string;
@@ -74,6 +75,7 @@ const DeadGames = () => {
         return {
           id: deadGame.id,
           name: deadGame.games.name,
+          slug: deadGame.games.slug,
           deadDate: formattedDate,
           status: deadGame.dead_status,
           developer: deadGame.games.developers?.[0] || 'Unknown Developer',
@@ -84,7 +86,7 @@ const DeadGames = () => {
         };
       }) || [];
 
-    // Apply sorting if reaction sort is active
+    // Apply sorting based on active sort type
     if (sortByReactions !== 'none') {
       return [...transformedData].sort((a, b) => {
         const aCount = reactionCounts[a.id] ?? a.reactionCount;
@@ -98,8 +100,18 @@ const DeadGames = () => {
       });
     }
 
+    if (sortByDate !== 'none') {
+      return [...transformedData].sort((a, b) => {
+        const aDate = new Date(a.deadDate);
+        const bDate = new Date(b.deadDate);
+        return sortByDate === 'asc'
+          ? aDate.getTime() - bDate.getTime()
+          : bDate.getTime() - aDate.getTime();
+      });
+    }
+
     return transformedData;
-  }, [deadGamesResponse?.data, sortByReactions, reactionCounts]);
+  }, [deadGamesResponse?.data, sortByReactions, sortByDate, reactionCounts]);
 
   // Initialize reaction counts when data loads (only when API data changes, not when sorting changes)
   useEffect(() => {
@@ -119,7 +131,7 @@ const DeadGames = () => {
     deadGameId: string,
     event: React.MouseEvent,
   ) => {
-    // Get button position for ghost spawn location
+    // Get button position for Skull spawn location
     const buttonRect = (event.target as HTMLElement).getBoundingClientRect();
     const containerRect = (event.target as HTMLElement)
       .closest('section')
@@ -130,9 +142,9 @@ const DeadGames = () => {
       const randomOffsetX = (Math.random() - 0.5) * 200; // ±100px horizontal
       const randomOffsetY = (Math.random() - 0.5) * 30; // ±15px vertical
 
-      // Create floating ghost animation with random position
-      const newGhost = {
-        id: `ghost-${Date.now()}-${Math.random()}`,
+      // Create floating Skull animation with random position
+      const newSkull = {
+        id: `Skull-${Date.now()}-${Math.random()}`,
         gameId: deadGameId,
         timestamp: Date.now(),
         startX:
@@ -147,7 +159,7 @@ const DeadGames = () => {
           randomOffsetY,
       };
 
-      setFloatingGhosts((prev) => [...prev, newGhost]);
+      setFloatingSkulls((prev) => [...prev, newSkull]);
     }
 
     // Add button click animation
@@ -200,12 +212,28 @@ const DeadGames = () => {
   };
 
   const handleSortByReactions = () => {
+    // Reset date sorting when sorting by reactions
+    setSortByDate('none');
+
     if (sortByReactions === 'none') {
       setSortByReactions('desc'); // First click: highest reactions first
     } else if (sortByReactions === 'desc') {
       setSortByReactions('asc'); // Second click: lowest reactions first
     } else {
       setSortByReactions('none'); // Third click: back to default (date order)
+    }
+  };
+
+  const handleSortByDate = () => {
+    // Reset reaction sorting when sorting by date
+    setSortByReactions('none');
+
+    if (sortByDate === 'none') {
+      setSortByDate('desc'); // First click: newest deaths first
+    } else if (sortByDate === 'desc') {
+      setSortByDate('asc'); // Second click: oldest deaths first
+    } else {
+      setSortByDate('none'); // Third click: back to default
     }
   };
 
@@ -239,9 +267,7 @@ const DeadGames = () => {
         <div className="mb-12 text-center">
           <div className="mb-6 flex items-center justify-center gap-4">
             <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
-            <h2 className="text-2xl font-bold text-white sm:text-3xl lg:text-4xl">
-              Game Graveyard
-            </h2>
+            <h2 className="text-2xl font-bold text-white">Game Graveyard</h2>
             <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
           </div>
         </div>
@@ -262,9 +288,7 @@ const DeadGames = () => {
         <div className="mb-12 text-center">
           <div className="mb-6 flex items-center justify-center gap-4">
             <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
-            <h2 className="text-2xl font-bold text-white sm:text-3xl lg:text-4xl">
-              Game Graveyard
-            </h2>
+            <h2 className="text-2xl font-bold text-white">Game Graveyard</h2>
             <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
           </div>
         </div>
@@ -287,22 +311,20 @@ const DeadGames = () => {
       <div className="mb-12 text-center">
         <div className="mb-6 flex items-center justify-center gap-4">
           <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
-          <h2 className="text-2xl font-bold text-white sm:text-3xl lg:text-4xl">
-            Game Graveyard
-          </h2>
+          <h2 className="text-2xl font-bold text-white">Game Graveyard</h2>
           <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
         </div>
       </div>
 
-      {/* Floating Ghost Animations */}
+      {/* Floating Skull Animations */}
       <AnimatePresence>
-        {floatingGhosts.map((ghost) => (
+        {floatingSkulls.map((skull) => (
           <motion.div
-            key={ghost.id}
+            key={skull.id}
             className="pointer-events-none absolute z-50"
             style={{
-              left: ghost.startX,
-              top: ghost.startY,
+              left: skull.startX,
+              top: skull.startY,
             }}
             initial={{
               opacity: 0,
@@ -326,15 +348,12 @@ const DeadGames = () => {
             }}
             onAnimationComplete={() => {
               // Auto-remove when animation completes
-              setFloatingGhosts((prev) =>
-                prev.filter((g) => g.id !== ghost.id),
+              setFloatingSkulls((prev) =>
+                prev.filter((s) => s.id !== skull.id),
               );
             }}
           >
-            <Ghost
-              className="h-8 w-8 text-zinc-300 drop-shadow-2xl"
-              fill="currentColor"
-            />
+            <Skull className="h-8 w-8 text-zinc-300 drop-shadow-2xl" />
           </motion.div>
         ))}
       </AnimatePresence>
@@ -348,7 +367,21 @@ const DeadGames = () => {
                 <TableHead className="w-20 px-6 py-6" />
                 <TableHead className="px-6 py-6">Game</TableHead>
                 <TableHead className="hidden px-6 py-6 sm:table-cell">
-                  Date
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSortByDate}
+                    className="flex items-center gap-1 px-2 py-1 text-zinc-400 hover:text-zinc-200"
+                  >
+                    Date
+                    {sortByDate === 'none' && (
+                      <ArrowUpDown className="h-3 w-3" />
+                    )}
+                    {sortByDate === 'desc' && (
+                      <ChevronDown className="h-3 w-3" />
+                    )}
+                    {sortByDate === 'asc' && <ChevronUp className="h-3 w-3" />}
+                  </Button>
                 </TableHead>
                 <TableHead className="px-6 py-6">Status</TableHead>
                 <TableHead className="hidden px-6 py-6 lg:table-cell">
@@ -364,7 +397,7 @@ const DeadGames = () => {
                     onClick={handleSortByReactions}
                     className="mx-auto flex items-center gap-1 px-2 py-1 text-zinc-400 hover:text-zinc-200"
                   >
-                    <Ghost className="h-4 w-4" />
+                    <Skull className="h-4 w-4" />
                     {sortByReactions === 'none' && (
                       <ArrowUpDown className="h-3 w-3" />
                     )}
@@ -380,46 +413,64 @@ const DeadGames = () => {
             </TableHeader>
             <TableBody>
               {deadGames.map((game) => (
-                <TableRow key={game.id} className="group">
+                <TableRow
+                  key={game.id}
+                  className="group cursor-pointer transition-all duration-300 hover:bg-zinc-800/30 hover:shadow-lg hover:shadow-zinc-900/20"
+                >
                   <TableCell className="w-20 px-6 py-6">
-                    <div className="flex h-16 w-12 items-center justify-center overflow-hidden rounded-lg bg-zinc-800 shadow-md">
-                      {game.coverUrl ? (
-                        <Image
-                          src={game.coverUrl}
-                          alt={`${game.name} cover`}
-                          width={48}
-                          height={64}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <Gamepad2 className="h-6 w-6 text-zinc-500" />
-                      )}
-                    </div>
+                    <Link href={`/detail/${game.slug}`} className="block">
+                      <div className="flex h-16 w-12 items-center justify-center overflow-hidden rounded-lg bg-zinc-800 shadow-md transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl">
+                        {game.coverUrl ? (
+                          <Image
+                            src={game.coverUrl}
+                            alt={`${game.name} cover`}
+                            width={48}
+                            height={64}
+                            className="h-full w-full object-cover grayscale transition-all duration-300 group-hover:grayscale-0"
+                          />
+                        ) : (
+                          <Gamepad2 className="h-6 w-6 text-zinc-500" />
+                        )}
+                      </div>
+                    </Link>
                   </TableCell>
                   <TableCell className="px-6 py-6 font-semibold">
-                    <div className="text-base text-white group-hover:text-zinc-100 sm:text-lg">
-                      {game.name}
-                    </div>
+                    <Link href={`/detail/${game.slug}`} className="block">
+                      <div className="text-base text-white transition-all duration-300 group-hover:scale-105 group-hover:text-zinc-100 sm:text-lg">
+                        {game.name}
+                      </div>
+                    </Link>
                   </TableCell>
                   <TableCell className="text-muted-foreground hidden px-6 py-6 sm:table-cell">
-                    {game.deadDate}
+                    <Link href={`/detail/${game.slug}`} className="block">
+                      {game.deadDate}
+                    </Link>
                   </TableCell>
                   <TableCell className="px-6 py-6">
-                    <span
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${
-                        game.status === 'Shutdown'
-                          ? 'border border-red-700/50 bg-red-900/40 text-red-300'
-                          : 'border border-orange-700/50 bg-orange-900/40 text-orange-300'
-                      }`}
+                    <Link
+                      href={`/detail/${game.slug}`}
+                      className="inline-block"
                     >
-                      {game.status}
-                    </span>
+                      <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold transition-all duration-300 group-hover:scale-105 ${
+                          game.status === 'Shutdown'
+                            ? 'border border-red-700/50 bg-red-900/40 text-red-300 group-hover:border-red-700/70 group-hover:bg-red-900/60'
+                            : 'border border-orange-700/50 bg-orange-900/40 text-orange-300 group-hover:border-orange-700/70 group-hover:bg-orange-900/60'
+                        }`}
+                      >
+                        {game.status}
+                      </span>
+                    </Link>
                   </TableCell>
                   <TableCell className="text-muted-foreground hidden px-6 py-6 lg:table-cell">
-                    {game.developer}
+                    <Link href={`/detail/${game.slug}`} className="block">
+                      {game.developer}
+                    </Link>
                   </TableCell>
                   <TableCell className="text-muted-foreground hidden px-6 py-6 xl:table-cell">
-                    {game.publisher}
+                    <Link href={`/detail/${game.slug}`} className="block">
+                      {game.publisher}
+                    </Link>
                   </TableCell>
                   <TableCell className="px-6 py-6 text-center">
                     <Button
@@ -430,9 +481,13 @@ const DeadGames = () => {
                           ? 'scale-95 bg-zinc-600'
                           : ''
                       }`}
-                      onClick={(e) => handleReaction(game.id, e)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleReaction(game.id, e);
+                      }}
                     >
-                      <Ghost className="mr-2 h-4 w-4 text-zinc-400 transition-colors group-hover:text-white" />
+                      <Skull className="mr-2 h-4 w-4 text-zinc-400 transition-colors group-hover:text-white" />
                       <span className="font-medium text-zinc-300 group-hover:text-white">
                         {reactionCounts[game.id]?.toLocaleString() || 0}
                       </span>

@@ -164,6 +164,7 @@ export interface DeadGameFromAPI {
 export interface DeadGame {
   id: string;
   name: string;
+  slug: string;
   deadDate: string;
   status: 'Shutdown' | 'Abandoned';
   developer: string;

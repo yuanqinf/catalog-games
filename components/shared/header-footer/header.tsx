@@ -42,20 +42,7 @@ const Header = () => {
     >
       <Link href="/">
         <div className="header-logo">
-          <Image
-            src="/images/logo.png"
-            alt="Logo"
-            width={56}
-            height={56}
-            className="block md:hidden"
-          />
-          <Image
-            src="/images/logo_with_title.png"
-            alt="Catalog.Games Logo"
-            width={64}
-            height={64}
-            className="hidden md:block"
-          />
+          <Image src="/images/logo.png" alt="Logo" width={56} height={56} />
         </div>
       </Link>
       <div className="flex w-1/2 items-center justify-center gap-8">
