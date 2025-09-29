@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { GameDbData, IgdbGame, HybridSearchResult } from '@/types';
 import { RecentSearches, RecentSearchItem } from '@/utils/recent-searches';
-import { sortSupabaseGamesByDate } from '@/utils/sorting';
 import { createGameHandlers } from './game-handlers';
 
 export const useSearchBar = () => {
@@ -91,7 +90,7 @@ export const useSearchBar = () => {
 
       if (response.ok) {
         const data: HybridSearchResult = await response.json();
-        setSupabaseGames([...data.supabaseGames].sort(sortSupabaseGamesByDate));
+        setSupabaseGames(data.supabaseGames); // Keep original search relevance order
         setIgdbGames([...data.igdbGames]);
         // Show results panel after search completes
         setShowSuggestions(true);

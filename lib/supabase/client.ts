@@ -328,23 +328,7 @@ export class GameService {
     const searchQuery = query.trim().replace(/'/g, "''");
 
     try {
-      // First try: FTS on name field with ranking
-      const { data: nameResults, error: nameError } = await this.supabase
-        .from('games')
-        .select(
-          'id, name, slug, cover_url, developers, first_release_date, dislike_count',
-        )
-        .textSearch('name', `'${searchQuery}'`, {
-          type: 'websearch',
-          config: 'english',
-        })
-        .limit(limit);
-
-      if (!nameError && nameResults && nameResults.length > 0) {
-        return nameResults;
-      }
-
-      // Second try: FTS on multiple fields (if available)
+      // Use RPC function for comprehensive search across multiple fields
       const { data: multiFieldResults, error: multiFieldError } =
         await this.supabase.rpc('search_games_fts', {
           search_query: searchQuery,
@@ -367,14 +351,34 @@ export class GameService {
             .select(
               'id, name, slug, cover_url, developers, first_release_date, dislike_count',
             )
-            .in('id', gameIds)
-            .order('name');
+            .in('id', gameIds);
 
           if (enrichedResults) {
-            return enrichedResults;
+            // Maintain the original order from RPC results
+            const enrichedMap = new Map(enrichedResults.map(game => [game.id, game]));
+            const orderedResults = multiFieldResults.map(originalGame => 
+              enrichedMap.get(originalGame.id) || originalGame
+            );
+            return orderedResults;
           }
         }
         return multiFieldResults;
+      }
+
+      // Fallback: FTS on name field if RPC fails
+      const { data: nameResults, error: nameError } = await this.supabase
+        .from('games')
+        .select(
+          'id, name, slug, cover_url, developers, first_release_date, dislike_count',
+        )
+        .textSearch('name', `'${searchQuery}'`, {
+          type: 'websearch',
+          config: 'english',
+        })
+        .limit(limit);
+
+      if (!nameError && nameResults && nameResults.length > 0) {
+        return nameResults;
       }
 
       // Fallback: ILIKE search on name and developers
@@ -503,6 +507,25 @@ export class GameService {
     }
 
     return data;
+  }
+
+  /**
+   * Get games by their names for deduplication
+   */
+  async getGamesByNames(gameNames: string[]) {
+    if (gameNames.length === 0) return [];
+
+    const { data, error } = await this.supabase
+      .from('games')
+      .select('id, name, slug, dislike_count')
+      .in('name', gameNames);
+
+    if (error) {
+      console.error('Failed to fetch games by names:', error);
+      return [];
+    }
+
+    return data || [];
   }
 
   /**
