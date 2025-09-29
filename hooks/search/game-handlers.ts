@@ -1,5 +1,4 @@
 import { GameDbData, IgdbGame } from '@/types';
-import { RecentSearches, RecentSearchItem } from '@/utils/recent-searches';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 export const createGameHandlers = (
@@ -10,24 +9,13 @@ export const createGameHandlers = (
   setSelectedIgdbGame: (game: IgdbGame | null) => void,
   setShowDislikeModal: (show: boolean) => void,
 ) => {
-  const handleSelectSuggestion = (game: GameDbData | RecentSearchItem) => {
+  const handleSelectSuggestion = (game: GameDbData) => {
     // Clear input and hide suggestions
     setInputValue('');
     setShowSuggestions(false);
     setIsInputActive(false);
 
-    // Save to recent searches with proper dislike_count
-    const recentSearchItem: RecentSearchItem = {
-      id: String(game.id),
-      name: game.name,
-      slug: game.slug || '',
-      cover_url: game.cover_url || undefined,
-      developers: game.developers || undefined,
-      dislike_count:
-        'dislike_count' in game ? game.dislike_count || undefined : undefined,
-      searchedAt: new Date().toISOString(), // This will be overwritten by addRecentSearch
-    };
-    RecentSearches.addRecentSearch(recentSearchItem);
+    // Navigate to game detail page
     router.push(`/detail/${game.slug}`);
   };
 

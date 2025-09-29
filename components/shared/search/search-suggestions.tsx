@@ -5,80 +5,33 @@ import {
   CommandList,
   CommandEmpty,
   CommandGroup,
-  CommandSeparator,
 } from '@/components/ui/command';
 import { GameDbData, IgdbGame } from '@/types';
-import { RecentSearchItem } from '@/utils/recent-searches';
 import { SuggestionItem } from './suggestion-item';
 
 interface SearchSuggestionsProps {
-  inputValue: string;
   onSelectGame: (game: any) => void;
   onSelectIgdbGame: (game: any) => void;
   supabaseGames: GameDbData[];
   igdbGames: IgdbGame[];
-  recentSearches: RecentSearchItem[];
-  onClearRecentSearches: () => void;
   isLoading: boolean;
 }
 
 export const SearchSuggestions = ({
-  inputValue,
   onSelectGame,
   onSelectIgdbGame,
   supabaseGames,
   igdbGames,
-  recentSearches,
-  onClearRecentSearches,
   isLoading,
 }: SearchSuggestionsProps) => {
-  const showDefaultSuggestions = !inputValue.trim();
-
   return (
     <div className="search-dropdown">
       <CommandList>
-        {/* Only show CommandEmpty for search results (not for default suggestions) */}
-        {!showDefaultSuggestions && (
-          <CommandEmpty>
-            {isLoading ? 'Searching...' : 'No results found.'}
-          </CommandEmpty>
-        )}
+        <CommandEmpty>
+          {isLoading ? 'Searching...' : 'No results found.'}
+        </CommandEmpty>
 
-        {showDefaultSuggestions ? (
-          <>
-            {recentSearches.length > 0 && (
-              <>
-                <CommandGroup>
-                  <div className="flex items-center justify-between px-2 py-1">
-                    <span className="text-xs text-zinc-500">
-                      Recent Searches
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onClearRecentSearches();
-                      }}
-                      className="cursor-pointer text-xs text-zinc-400 transition-colors hover:text-zinc-200"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                  {recentSearches.map((game) => (
-                    <SuggestionItem
-                      key={game.slug}
-                      item={game}
-                      onSelect={onSelectGame}
-                      isGame={true}
-                    />
-                  ))}
-                </CommandGroup>
-                <CommandSeparator />
-              </>
-            )}
-          </>
-        ) : (
-          !isLoading &&
+        {!isLoading &&
           (supabaseGames.length > 0 || igdbGames.length > 0) && (
             <CommandGroup heading="Search Results">
               {/* Supabase Games first (priority) */}
@@ -101,8 +54,7 @@ export const SearchSuggestions = ({
                 />
               ))}
             </CommandGroup>
-          )
-        )}
+          )}
       </CommandList>
     </div>
   );

@@ -8,7 +8,6 @@ import {
   IgdbGame,
   SuggestionItem as SuggestionItemType,
 } from '@/types';
-import { RecentSearchItem } from '@/utils/recent-searches';
 import Image from 'next/image';
 
 interface SuggestionItemProps {
@@ -18,7 +17,7 @@ interface SuggestionItemProps {
 }
 
 const extractDeveloper = (
-  game: GameDbData | RecentSearchItem | IgdbGame,
+  game: GameDbData | IgdbGame,
 ): string => {
   if ('developers' in game) {
     return game.developers?.[0] || '';
@@ -35,14 +34,14 @@ const extractDeveloper = (
 };
 
 const extractDislikeCount = (
-  game: GameDbData | RecentSearchItem | IgdbGame,
+  game: GameDbData | IgdbGame,
 ): number | null => {
   return 'dislike_count' in game && game.dislike_count && game.dislike_count > 0
     ? game.dislike_count
     : null;
 };
 
-const getGameDetails = (game: GameDbData | RecentSearchItem | IgdbGame) => {
+const getGameDetails = (game: GameDbData | IgdbGame) => {
   const isIgdbGame = !('cover_url' in game);
   const developer = extractDeveloper(game);
   const dislikeCount = extractDislikeCount(game);
@@ -56,10 +55,9 @@ export const SuggestionItem = ({
   isGame = false,
 }: SuggestionItemProps) => {
   if (isGame) {
-    const game = item as GameDbData | RecentSearchItem | IgdbGame;
+    const game = item as GameDbData | IgdbGame;
     const { developer, dislikeCount } = getGameDetails(game);
 
-    console.log(game);
     return (
       <CommandItem
         className="cursor-pointer transition-colors duration-200 hover:bg-zinc-700"

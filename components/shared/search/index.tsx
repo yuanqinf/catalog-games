@@ -175,13 +175,10 @@ const SearchBar = () => {
 
           {props.showSuggestions && (
             <SearchSuggestions
-              inputValue={props.inputValue}
               onSelectGame={props.handleSelectSuggestion}
               onSelectIgdbGame={props.handleSelectIgdbGame}
               supabaseGames={props.supabaseGames}
               igdbGames={props.igdbGames}
-              recentSearches={props.recentSearches}
-              onClearRecentSearches={props.handleClearRecentSearches}
               isLoading={props.isLoading}
             />
           )}

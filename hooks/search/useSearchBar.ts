@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { GameDbData, IgdbGame, HybridSearchResult } from '@/types';
-import { RecentSearches, RecentSearchItem } from '@/utils/recent-searches';
 import { createGameHandlers } from './game-handlers';
 
 export const useSearchBar = () => {
@@ -11,7 +10,6 @@ export const useSearchBar = () => {
   const [inputValue, setInputValue] = useState('');
   const [supabaseGames, setSupabaseGames] = useState<GameDbData[]>([]);
   const [igdbGames, setIgdbGames] = useState<IgdbGame[]>([]);
-  const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isInputActive, setIsInputActive] = useState(false);
@@ -59,17 +57,6 @@ export const useSearchBar = () => {
     }
   }, [isInputActive]);
 
-  // Load recent searches
-  useEffect(() => {
-    setRecentSearches(RecentSearches.getRecentSearches());
-  }, []);
-
-  // Reload recent searches when suggestions are shown
-  useEffect(() => {
-    if (showSuggestions) {
-      setRecentSearches(RecentSearches.getRecentSearches());
-    }
-  }, [showSuggestions]);
 
   // Manual search function for suggestions
   const performSuggestionSearch = async (query: string) => {
@@ -112,10 +99,6 @@ export const useSearchBar = () => {
   };
 
   // Input handlers
-  const handleClearRecentSearches = () => {
-    RecentSearches.clearRecentSearches();
-    setRecentSearches([]);
-  };
 
   const handleClearInput = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -144,16 +127,8 @@ export const useSearchBar = () => {
 
   const handleActivate = () => setIsInputActive(true);
   const handleFocus = () => {
-    // If there's input but no current results, clear and show recent searches
-    // If there's input and current results, keep showing results
-    if (!inputValue.trim()) {
-      // No input - show recent searches
-      setSupabaseGames([]);
-      setIgdbGames([]);
-      setIsLoading(false);
-      setShowSuggestions(true);
-    } else {
-      // Has input - show suggestions panel with current results
+    // Only show suggestions if there's input and results
+    if (inputValue.trim() && (supabaseGames.length > 0 || igdbGames.length > 0)) {
       setShowSuggestions(true);
     }
   };
@@ -174,7 +149,6 @@ export const useSearchBar = () => {
     setInputValue: handleInputChange,
     supabaseGames,
     igdbGames,
-    recentSearches,
     isLoading,
     showSuggestions,
     isInputActive,
@@ -193,7 +167,6 @@ export const useSearchBar = () => {
     handleInputKeyDown,
     handleActivate,
     handleFocus,
-    handleClearRecentSearches,
     handleSearchClick,
   };
 };
