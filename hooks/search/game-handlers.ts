@@ -1,13 +1,14 @@
 import { GameDbData, IgdbGame } from '@/types';
 import { RecentSearches, RecentSearchItem } from '@/utils/recent-searches';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { toast } from 'sonner';
 
 export const createGameHandlers = (
   router: AppRouterInstance,
   setInputValue: (value: string) => void,
   setShowSuggestions: (show: boolean) => void,
   setIsInputActive: (active: boolean) => void,
+  setSelectedIgdbGame: (game: IgdbGame | null) => void,
+  setShowDislikeModal: (show: boolean) => void,
 ) => {
   const handleSelectSuggestion = (game: GameDbData | RecentSearchItem) => {
     // Clear input and hide suggestions
@@ -36,12 +37,9 @@ export const createGameHandlers = (
     setShowSuggestions(false);
     setIsInputActive(false);
 
-    // Show toast message instead of adding to database
-    toast.info(`"${igdbGame.name}" is not available in our database yet.`, {
-      description:
-        'This game is from IGDB but has not been added to our catalog.',
-      duration: 4000,
-    });
+    // Show dislike modal
+    setSelectedIgdbGame(igdbGame);
+    setShowDislikeModal(true);
   };
   return {
     handleSelectSuggestion,

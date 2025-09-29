@@ -1,17 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Search, Loader2 } from 'lucide-react';
+import { useUser } from '@clerk/nextjs';
 import { Command } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 import { useSearchBar } from '@/hooks/search/useSearchBar';
 import { SearchInput } from './search-input';
 import { SearchSuggestions } from './search-suggestions';
+import { CreateDislikeGameModal } from '../create-dislike-game-modal';
 import SortingDropdown, {
   SortOption,
   SortOrder,
 } from '../header-footer/sorting-dropdown';
+import { toast } from 'sonner';
 
 const SearchBar = () => {
   const searchProps = useSearchBar();
@@ -20,6 +23,65 @@ const SearchBar = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isExplorePage = pathname === '/explore';
+  const { user, isSignedIn } = useUser();
+  const [isSubmittingDislike, setIsSubmittingDislike] = useState(false);
+
+  const handleModalClose = () => {
+    props.setShowDislikeModal(false);
+  };
+
+  const handleDislikeConfirm = async (dislikeCount = 1) => {
+    if (!isSignedIn || !user) {
+      toast.error('Please sign in to dislike games');
+      return;
+    }
+
+    if (!props.selectedIgdbGame) {
+      toast.error('No game selected');
+      return;
+    }
+
+    setIsSubmittingDislike(true);
+
+    try {
+      const response = await fetch('/api/games/pending-dislike', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          igdbGameId: props.selectedIgdbGame.id,
+          initialDislikeCount: dislikeCount,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        // Handle specific case where user already submitted dislike
+        if (result.error === 'ALREADY_SUBMITTED') {
+          props.setShowDislikeModal(false);
+          toast.error('You have already submitted a dislike for this game');
+          return;
+        }
+        throw new Error(result.error || 'Failed to submit dislike');
+      }
+
+      if (result.success) {
+        props.setShowDislikeModal(false);
+        toast.success('Dislike submitted successfully!');
+      } else {
+        throw new Error(result.error || 'Unknown error occurred');
+      }
+    } catch (error) {
+      console.error('Failed to submit dislike:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to submit dislike',
+      );
+    } finally {
+      setIsSubmittingDislike(false);
+    }
+  };
 
   const handleSortChange = (option: SortOption, order: SortOrder) => {
     const sortBy = option.toLowerCase();
@@ -80,6 +142,15 @@ const SearchBar = () => {
             </Button>
           )}
         </div>
+
+        {/* Dislike Modal */}
+        <CreateDislikeGameModal
+          isOpen={props.showDislikeModal}
+          onClose={handleModalClose}
+          onConfirm={handleDislikeConfirm}
+          game={props.selectedIgdbGame}
+          isSubmitting={isSubmittingDislike}
+        />
       </div>
     );
   }
@@ -121,6 +192,15 @@ const SearchBar = () => {
           <p>Search</p>
         </Button>
       </div>
+
+      {/* Dislike Modal */}
+      <CreateDislikeGameModal
+        isOpen={props.showDislikeModal}
+        onClose={handleModalClose}
+        onConfirm={handleDislikeConfirm}
+        game={props.selectedIgdbGame}
+        isSubmitting={isSubmittingDislike}
+      />
     </div>
   );
 };

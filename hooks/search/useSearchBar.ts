@@ -16,6 +16,10 @@ export const useSearchBar = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isInputActive, setIsInputActive] = useState(false);
+  const [showDislikeModal, setShowDislikeModal] = useState(false);
+  const [selectedIgdbGame, setSelectedIgdbGame] = useState<IgdbGame | null>(
+    null,
+  );
 
   // Refs
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -30,6 +34,8 @@ export const useSearchBar = () => {
     setInputValue,
     setShowSuggestions,
     setIsInputActive,
+    setSelectedIgdbGame,
+    setShowDislikeModal,
   );
 
   // Click outside handler
@@ -173,6 +179,9 @@ export const useSearchBar = () => {
     isLoading,
     showSuggestions,
     isInputActive,
+    showDislikeModal,
+    selectedIgdbGame,
+    setShowDislikeModal,
 
     // Refs
     wrapperRef,
