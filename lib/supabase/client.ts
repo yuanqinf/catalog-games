@@ -356,6 +356,24 @@ export class GameService {
         multiFieldResults &&
         multiFieldResults.length > 0
       ) {
+        // If multiFieldResults doesn't include dislike_count, query again to get it
+        if (
+          multiFieldResults.length > 0 &&
+          !('dislike_count' in multiFieldResults[0])
+        ) {
+          const gameIds = multiFieldResults.map((game) => game.id);
+          const { data: enrichedResults } = await this.supabase
+            .from('games')
+            .select(
+              'id, name, slug, cover_url, developers, first_release_date, dislike_count',
+            )
+            .in('id', gameIds)
+            .order('name');
+
+          if (enrichedResults) {
+            return enrichedResults;
+          }
+        }
         return multiFieldResults;
       }
 

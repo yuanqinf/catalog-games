@@ -13,7 +13,6 @@ import { SuggestionItem } from './suggestion-item';
 
 interface SearchSuggestionsProps {
   inputValue: string;
-  onSelectSuggestion: (value: any) => void;
   onSelectGame: (game: any) => void;
   onSelectIgdbGame: (game: any) => void;
   supabaseGames: GameDbData[];
@@ -21,12 +20,10 @@ interface SearchSuggestionsProps {
   recentSearches: RecentSearchItem[];
   onClearRecentSearches: () => void;
   isLoading: boolean;
-  isAddingGame: boolean;
 }
 
 export const SearchSuggestions = ({
   inputValue,
-  onSelectSuggestion,
   onSelectGame,
   onSelectIgdbGame,
   supabaseGames,
@@ -34,7 +31,6 @@ export const SearchSuggestions = ({
   recentSearches,
   onClearRecentSearches,
   isLoading,
-  isAddingGame,
 }: SearchSuggestionsProps) => {
   const showDefaultSuggestions = !inputValue.trim();
 
@@ -102,7 +98,6 @@ export const SearchSuggestions = ({
                   item={game}
                   onSelect={onSelectIgdbGame}
                   isGame={true}
-                  isAddingGame={isAddingGame}
                 />
               ))}
             </CommandGroup>

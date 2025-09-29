@@ -56,7 +56,6 @@ const SearchBar = () => {
               onKeyDown={props.handleInputKeyDown}
               onClear={props.handleClearInput}
               isActive={false}
-              isAddingGame={props.isAddingGame}
               isLoading={props.isLoading}
             />
           </Command>
@@ -100,17 +99,12 @@ const SearchBar = () => {
             onKeyDown={props.handleInputKeyDown}
             onClear={props.handleClearInput}
             isActive={true}
-            isAddingGame={props.isAddingGame}
             isLoading={props.isLoading}
           />
 
-          {props.showSuggestions && !props.isAddingGame && (
+          {props.showSuggestions && (
             <SearchSuggestions
               inputValue={props.inputValue}
-              onSelectSuggestion={(text: string) => {
-                props.setInputValue(text);
-                props.handleFocus();
-              }}
               onSelectGame={props.handleSelectSuggestion}
               onSelectIgdbGame={props.handleSelectIgdbGame}
               supabaseGames={props.supabaseGames}
@@ -118,7 +112,6 @@ const SearchBar = () => {
               recentSearches={props.recentSearches}
               onClearRecentSearches={props.handleClearRecentSearches}
               isLoading={props.isLoading}
-              isAddingGame={props.isAddingGame}
             />
           )}
         </Command>

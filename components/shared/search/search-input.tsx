@@ -12,7 +12,6 @@ interface SearchInputProps {
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onClear: (e: React.MouseEvent) => void;
   isActive: boolean;
-  isAddingGame: boolean;
   isLoading?: boolean;
 }
 
@@ -24,33 +23,25 @@ export const SearchInput = ({
   onKeyDown,
   onClear,
   isActive,
-  isAddingGame,
   isLoading = false,
 }: SearchInputProps) => (
   <div className="search-input-wrapper">
-    {isAddingGame || isLoading ? (
+    {isLoading ? (
       <Loader2 className="search-icon animate-spin text-zinc-400" />
     ) : (
       <SearchIconLucide className="search-icon" />
     )}
     <CommandInput
       ref={inputRef}
-      value={isAddingGame ? 'Loading game...' : value}
-      onValueChange={isAddingGame ? () => {} : onChange}
-      onFocus={isAddingGame ? () => {} : onFocus}
-      onKeyDown={isAddingGame ? () => {} : onKeyDown}
-      placeholder={isAddingGame ? 'Loading game data...' : 'Search'}
+      value={value}
+      onValueChange={onChange}
+      onFocus={onFocus}
+      onKeyDown={onKeyDown}
+      placeholder="Search"
       hideDefaultIcon
-      disabled={isAddingGame}
       wrapperClassName={`${isActive ? 'w-full' : ''} border-0 p-0 h-full`}
-      className={`${isActive && !isAddingGame ? '' : 'cursor-pointer'} h-full rounded-md border-0 bg-transparent pr-9 pl-9 text-sm ${
-        isAddingGame ? 'text-zinc-300' : 'text-zinc-100'
-      } shadow-none placeholder:text-zinc-400 focus-visible:ring-0 focus-visible:ring-offset-0 ${
-        isAddingGame ? 'cursor-not-allowed' : ''
-      }`}
+      className={`${isActive ? '' : 'cursor-pointer'} h-full rounded-md border-0 bg-transparent pr-9 pl-9 text-sm text-zinc-100 shadow-none placeholder:text-zinc-400 focus-visible:ring-0 focus-visible:ring-offset-0`}
     />
-    {value && !isAddingGame && (
-      <XIcon className="search-clear-icon" onClick={onClear} />
-    )}
+    {value && <XIcon className="search-clear-icon" onClick={onClear} />}
   </div>
 );

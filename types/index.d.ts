@@ -108,7 +108,6 @@ export interface SearchState {
   igdbGames: IgdbGame[];
   recentSearches: RecentSearchItem[];
   isLoading: boolean;
-  isAddingGame: boolean;
   showSuggestions: boolean;
   isInputActive: boolean;
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Gamepad2, Loader2, ThumbsDown } from 'lucide-react';
+import { Gamepad2, ThumbsDown } from 'lucide-react';
 import { CommandItem } from '@/components/ui/command';
 import {
   GameDbData,
@@ -15,33 +15,37 @@ interface SuggestionItemProps {
   item: SuggestionItemType;
   onSelect: (value: any) => void;
   isGame?: boolean;
-  isAddingGame?: boolean;
 }
 
-const getGameDetails = (game: GameDbData | RecentSearchItem | IgdbGame) => {
-  // Check if this is an IGDB game (no cover_url property)
-  const isIgdbGame = !('cover_url' in game);
+const extractDeveloper = (
+  game: GameDbData | RecentSearchItem | IgdbGame,
+): string => {
+  if ('developers' in game) {
+    return game.developers?.[0] || '';
+  }
 
-  // Handle developers for both formats
-  let developer = '';
-  if ('developers' in game && game.developers?.[0]) {
-    // Supabase format
-    developer = game.developers[0];
-  } else if ('involved_companies' in game && game.involved_companies) {
-    // IGDB format - find the first developer company
-    const developerCompany = game.involved_companies.find(
+  if ('involved_companies' in game) {
+    const developerCompany = game.involved_companies?.find(
       (company) => company.developer || !company.publisher,
     );
-    if (developerCompany) {
-      developer = developerCompany.company.name;
-    }
+    return developerCompany?.company.name || '';
   }
 
-  // Handle dislike count (for both Supabase games and recent searches)
-  let dislikeCount = null;
-  if ('dislike_count' in game && game.dislike_count && game.dislike_count > 0) {
-    dislikeCount = game.dislike_count;
-  }
+  return '';
+};
+
+const extractDislikeCount = (
+  game: GameDbData | RecentSearchItem | IgdbGame,
+): number | null => {
+  return 'dislike_count' in game && game.dislike_count && game.dislike_count > 0
+    ? game.dislike_count
+    : null;
+};
+
+const getGameDetails = (game: GameDbData | RecentSearchItem | IgdbGame) => {
+  const isIgdbGame = !('cover_url' in game);
+  const developer = extractDeveloper(game);
+  const dislikeCount = extractDislikeCount(game);
 
   return { isIgdbGame, developer, dislikeCount };
 };
@@ -50,25 +54,16 @@ export const SuggestionItem = ({
   item,
   onSelect,
   isGame = false,
-  isAddingGame = false,
 }: SuggestionItemProps) => {
   if (isGame) {
     const game = item as GameDbData | RecentSearchItem | IgdbGame;
-    const { isIgdbGame, developer, dislikeCount } = getGameDetails(game);
+    const { developer, dislikeCount } = getGameDetails(game);
 
     console.log(game);
     return (
       <CommandItem
-        className={`transition-colors duration-200 ${
-          isIgdbGame && isAddingGame
-            ? 'cursor-not-allowed opacity-75'
-            : 'cursor-pointer hover:bg-zinc-700'
-        }`}
-        onSelect={() => {
-          if (!(isIgdbGame && isAddingGame)) {
-            onSelect(game);
-          }
-        }}
+        className="cursor-pointer transition-colors duration-200 hover:bg-zinc-700"
+        onSelect={() => onSelect(game)}
       >
         <div className="flex w-full items-center gap-3">
           {/* Supabase games show cover, IGDB games show gamepad icon or loading spinner */}
@@ -82,11 +77,7 @@ export const SuggestionItem = ({
             />
           ) : (
             <div className="flex h-10 w-8 items-center justify-center rounded bg-zinc-800">
-              {isIgdbGame && isAddingGame ? (
-                <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
-              ) : (
-                <Gamepad2 className="h-4 w-4 text-zinc-400" />
-              )}
+              <Gamepad2 className="h-4 w-4 text-zinc-400" />
             </div>
           )}
           <div className="flex min-w-0 flex-1 flex-col">

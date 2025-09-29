@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { GameDbData, IgdbGame, HybridSearchResult } from '@/types';
 import { RecentSearches, RecentSearchItem } from '@/utils/recent-searches';
-import { sortSupabaseGamesByDate, sortIgdbGamesByDate } from '@/utils/sorting';
+import { sortSupabaseGamesByDate } from '@/utils/sorting';
 import { createGameHandlers } from './game-handlers';
 
 export const useSearchBar = () => {
@@ -14,7 +14,6 @@ export const useSearchBar = () => {
   const [igdbGames, setIgdbGames] = useState<IgdbGame[]>([]);
   const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAddingGame, setIsAddingGame] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isInputActive, setIsInputActive] = useState(false);
 
@@ -26,16 +25,11 @@ export const useSearchBar = () => {
   const router = useRouter();
 
   // Game handlers
-  const {
-    handleSelectSuggestion,
-    handleSelectIgdbGame,
-    handleImmediateSearch,
-  } = createGameHandlers(
+  const { handleSelectSuggestion, handleSelectIgdbGame } = createGameHandlers(
     router,
     setInputValue,
     setShowSuggestions,
     setIsInputActive,
-    setIsAddingGame,
   );
 
   // Click outside handler
@@ -177,7 +171,6 @@ export const useSearchBar = () => {
     igdbGames,
     recentSearches,
     isLoading,
-    isAddingGame,
     showSuggestions,
     isInputActive,
 

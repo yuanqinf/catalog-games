@@ -13,6 +13,7 @@ interface SearchGameResult {
   cover_url: string;
   developers: string[];
   first_release_date: string;
+  dislike_count?: number | null;
 }
 
 interface HybridSearchResult {
