@@ -153,15 +153,25 @@ export class GameService {
    * Get games for explore page with pagination, sorted by dislike count
    * @param offset - Number of games to skip
    * @param limit - Number of games to fetch (default: 15)
+   * @param numberOfGames - Total number of top games to consider (default: 100)
    */
-  async getGamesForExplorePage(offset: number = 0, limit: number = 15) {
+  async getGamesForExplorePage(
+    offset: number = 0,
+    limit: number = 15,
+    numberOfGames: number = 100,
+  ) {
     let query = this.supabase.from('games').select('*').order('dislike_count', {
       ascending: false,
       nullsFirst: false,
     });
 
-    // Apply pagination
-    query = query.range(offset, offset + limit - 1);
+    // First limit to top numberOfGames, then apply pagination
+    const maxOffset = Math.min(offset + limit - 1, numberOfGames - 1);
+    if (offset >= numberOfGames) {
+      return []; // Return empty if requesting beyond the top numberOfGames
+    }
+
+    query = query.range(offset, maxOffset);
 
     const { data, error } = await query;
 

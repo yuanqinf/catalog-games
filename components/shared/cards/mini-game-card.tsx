@@ -4,7 +4,7 @@ import {
   Gamepad2,
   Bookmark,
   Calendar,
-  Star,
+  ThumbsDown,
   MoreHorizontal,
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -26,7 +26,6 @@ import {
 } from '@/components/ui/tooltip';
 import type { GameDbData } from '@/types';
 import { unifyPlatforms, type UnifiedPlatform } from '@/utils/platform-utils';
-import { useGameRating } from '@/hooks/useGameRating';
 
 type PlatformIconData =
   | {
@@ -58,9 +57,13 @@ const getPlatformIcon = (
   return iconMap[platform] || { type: 'fontawesome', icon: faGamepad };
 };
 
-const MiniGameCard = ({ game }: { game: GameDbData }) => {
-  const { overallAverage } = useGameRating(game.id);
-
+const MiniGameCard = ({
+  game,
+  ranking,
+}: {
+  game: GameDbData;
+  ranking?: number;
+}) => {
   // Get unified platforms and their icons
   const unifiedPlatforms = unifyPlatforms(game.platforms);
   const displayedPlatforms = unifiedPlatforms.slice(0, 3); // Show only 3 platforms if more than 4
@@ -73,6 +76,23 @@ const MiniGameCard = ({ game }: { game: GameDbData }) => {
     <div className="p-1">
       <Link href={`/detail/${game.slug}`}>
         <div className="group relative flex cursor-pointer flex-col rounded-lg border border-transparent bg-zinc-800 p-4 transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:border-zinc-500/50 hover:bg-gradient-to-br hover:from-zinc-700/80 hover:via-slate-700/60 hover:to-zinc-600/80 hover:shadow-2xl hover:shadow-zinc-900/60">
+          {/* Dislike Ranking Banner */}
+          {ranking && (
+            <Badge
+              className={`absolute top-2 left-2 z-20 flex items-center gap-1 text-xs font-bold text-white shadow-lg ${
+                ranking <= 5
+                  ? 'bg-red-600/90 hover:bg-red-600'
+                  : ranking <= 15
+                    ? 'bg-orange-600/90 hover:bg-orange-600'
+                    : 'bg-yellow-600/90 hover:bg-yellow-600'
+              }`}
+            >
+              {ranking <= 5 && (
+                <ThumbsDown size={12} className="text-yellow-300" />
+              )}
+              #{ranking}
+            </Badge>
+          )}
           <Bookmark
             size={20}
             className="absolute top-6 right-6 z-10 cursor-pointer text-white/80 transition-all duration-200 group-hover:text-white hover:scale-125 hover:text-yellow-400 hover:drop-shadow-lg"
@@ -168,12 +188,12 @@ const MiniGameCard = ({ game }: { game: GameDbData }) => {
                   </span>
                 )}
               </div>
-              <p className="flex items-center text-sm text-zinc-400 transition-colors duration-300 group-hover:text-zinc-300">
-                <Star
+              <p className="flex items-center text-sm font-bold text-red-400 transition-colors duration-300 group-hover:text-red-300">
+                <ThumbsDown
                   size={14}
-                  className="mr-1 flex-shrink-0 text-yellow-400 transition-all duration-300 group-hover:scale-110 group-hover:text-yellow-300"
+                  className="mr-1 flex-shrink-0 text-red-400 transition-all duration-300 group-hover:scale-110 group-hover:text-red-300"
                 />
-                {overallAverage ? overallAverage : 'N/A'}
+                {game.dislike_count ? game.dislike_count.toLocaleString() : '0'}
               </p>
             </div>
           </div>

@@ -16,6 +16,7 @@ import { GameService } from '@/lib/supabase/client';
 import type { GameDbData } from '@/types';
 
 const GAMES_PER_PAGE = 15;
+const TOP_GAMES_LIMIT = 100;
 
 // Animation variants for staggered card appearance
 const containerVariants = {
@@ -69,6 +70,7 @@ const GameExplorePage = () => {
         const pageGames = await gameService.getGamesForExplorePage(
           offset,
           GAMES_PER_PAGE,
+          TOP_GAMES_LIMIT,
         );
 
         console.log(`📊 Loaded ${pageGames.length} games for page ${page}`);
@@ -83,22 +85,14 @@ const GameExplorePage = () => {
     [gameService],
   );
 
-  // Initialize total pages count
+  // Initialize total pages count based on TOP_GAMES_LIMIT
   useEffect(() => {
-    async function initializeTotalPages() {
-      try {
-        const totalCount = await gameService.getTotalGamesCount();
-        const calculatedTotalPages = Math.ceil(totalCount / GAMES_PER_PAGE);
-        setTotalPages(calculatedTotalPages);
-        console.log(`📄 Total pages: ${calculatedTotalPages}`);
-      } catch (error) {
-        console.error('❌ Failed to get total pages:', error);
-        setTotalPages(0);
-      }
-    }
-
-    initializeTotalPages();
-  }, [gameService]);
+    const calculatedTotalPages = Math.ceil(TOP_GAMES_LIMIT / GAMES_PER_PAGE);
+    setTotalPages(calculatedTotalPages);
+    console.log(
+      `📄 Total pages for top ${TOP_GAMES_LIMIT} games: ${calculatedTotalPages}`,
+    );
+  }, []);
 
   // Fetch games when page or sorting changes
   useEffect(() => {
@@ -169,6 +163,15 @@ const GameExplorePage = () => {
 
   return (
     <div className="container-3xl container mx-auto p-4">
+      {/* Header */}
+      <div className="mb-4 text-center">
+        <h1 className="bg-clip-text text-4xl font-bold text-red-400">
+          Top 100 Disliked Games
+        </h1>
+        <p className="mt-2 text-lg text-zinc-400">
+          The most controversial games ranked by community feedback
+        </p>
+      </div>
       {/* Games grid */}
       <AnimatePresence mode="wait">
         {isLoading ? (
@@ -188,11 +191,15 @@ const GameExplorePage = () => {
             initial="hidden"
             animate="visible"
           >
-            {games.map((game) => (
-              <motion.div key={game.igdb_id} variants={cardVariants} layout>
-                <MiniGameCard game={game} />
-              </motion.div>
-            ))}
+            {games.map((game, index) => {
+              // Calculate ranking based on current page and index
+              const ranking = (currentPage - 1) * GAMES_PER_PAGE + index + 1;
+              return (
+                <motion.div key={game.igdb_id} variants={cardVariants} layout>
+                  <MiniGameCard game={game} ranking={ranking} />
+                </motion.div>
+              );
+            })}
           </motion.div>
         )}
       </AnimatePresence>
