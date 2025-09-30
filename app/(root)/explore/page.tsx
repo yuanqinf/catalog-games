@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import MiniGameCard from '@/components/shared/cards/mini-game-card';
 import {
@@ -50,38 +49,26 @@ const cardVariants = {
 };
 
 const GameExplorePage = () => {
-  const searchParams = useSearchParams();
   const [games, setGames] = useState<GameDbData[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Get sorting from URL params
-  const urlSort = searchParams.get('sort') || 'trend';
-  const urlOrder = searchParams.get('order') || 'desc';
-
-  // Convert URL params to our internal types
-  const sortBy: 'latest' | 'rating' | 'trend' =
-    urlSort === 'latest' ? 'latest' : urlSort === 'rating' ? 'rating' : 'trend';
-  const sortOrder: 'asc' | 'desc' = urlOrder === 'asc' ? 'asc' : 'desc';
-
   const gameService = useMemo(() => new GameService(), []);
 
-  // Fetch games for current page with current sort settings
+  // Fetch games for current page sorted by dislike count
   const fetchGamesForPage = useCallback(
     async (page: number) => {
       setIsLoading(true);
       try {
         console.log(
-          `🎮 Fetching games for page ${page} (sort: ${sortBy} ${sortOrder})...`,
+          `🎮 Fetching games for page ${page} (sorted by dislike count)...`,
         );
 
         const offset = (page - 1) * GAMES_PER_PAGE;
         const pageGames = await gameService.getGamesForExplorePage(
           offset,
           GAMES_PER_PAGE,
-          sortBy,
-          sortOrder,
         );
 
         console.log(`📊 Loaded ${pageGames.length} games for page ${page}`);
@@ -93,7 +80,7 @@ const GameExplorePage = () => {
         setIsLoading(false);
       }
     },
-    [gameService, sortBy, sortOrder],
+    [gameService],
   );
 
   // Initialize total pages count
@@ -119,11 +106,6 @@ const GameExplorePage = () => {
       fetchGamesForPage(currentPage);
     }
   }, [currentPage, totalPages, fetchGamesForPage]);
-
-  // Reset to page 1 when sorting changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [sortBy, sortOrder]);
 
   // Handle page change
   const handlePageChange = useCallback(

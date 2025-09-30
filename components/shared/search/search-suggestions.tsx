@@ -31,30 +31,29 @@ export const SearchSuggestions = ({
           {isLoading ? 'Searching...' : 'No results found.'}
         </CommandEmpty>
 
-        {!isLoading &&
-          (supabaseGames.length > 0 || igdbGames.length > 0) && (
-            <CommandGroup heading="Search Results">
-              {/* Supabase Games first (priority) */}
-              {supabaseGames.map((game) => (
-                <SuggestionItem
-                  key={`supabase-${game.id}`}
-                  item={game}
-                  onSelect={onSelectGame}
-                  isGame={true}
-                />
-              ))}
+        {!isLoading && (supabaseGames.length > 0 || igdbGames.length > 0) && (
+          <CommandGroup heading="Search Results">
+            {/* Supabase Games first (priority) */}
+            {supabaseGames.map((game) => (
+              <SuggestionItem
+                key={`supabase-${game.id}`}
+                item={game}
+                onSelect={onSelectGame}
+                isGame={true}
+              />
+            ))}
 
-              {/* IGDB Games after Supabase games */}
-              {igdbGames.map((game) => (
-                <SuggestionItem
-                  key={`igdb-${game.id}`}
-                  item={game}
-                  onSelect={onSelectIgdbGame}
-                  isGame={true}
-                />
-              ))}
-            </CommandGroup>
-          )}
+            {/* IGDB Games after Supabase games */}
+            {igdbGames.map((game) => (
+              <SuggestionItem
+                key={`igdb-${game.id}`}
+                item={game}
+                onSelect={onSelectIgdbGame}
+                isGame={true}
+              />
+            ))}
+          </CommandGroup>
+        )}
       </CommandList>
     </div>
   );

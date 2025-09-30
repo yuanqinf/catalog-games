@@ -64,17 +64,22 @@ export async function GET(request: NextRequest) {
         console.log(`🎮 IGDB results: ${igdbResults.length}`);
 
         // For each IGDB game, check if it exists in our database
-        const igdbGameNames = igdbResults.map(game => game.name);
+        const igdbGameNames = igdbResults.map((game) => game.name);
         console.log('🔍 Checking IGDB games for duplicates:', igdbGameNames);
         const existingGames = await gameService.getGamesByNames(igdbGameNames);
-        console.log('📋 Found existing games in DB:', existingGames.map(g => g.name));
-        const existingGameNames = new Set(existingGames.map(game => game.name.toLowerCase()));
+        console.log(
+          '📋 Found existing games in DB:',
+          existingGames.map((g) => g.name),
+        );
+        const existingGameNames = new Set(
+          existingGames.map((game) => game.name.toLowerCase()),
+        );
 
         // Remove duplicates (both from current search and from database)
         igdbGames = igdbResults.filter(
-          (igdbGame) => 
+          (igdbGame) =>
             !isDuplicateGame(igdbGame, supabaseGames) &&
-            !existingGameNames.has(igdbGame.name.toLowerCase())
+            !existingGameNames.has(igdbGame.name.toLowerCase()),
         );
 
         // Limit IGDB results to fill remaining slots

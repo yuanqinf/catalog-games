@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Search, Loader2 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { Command } from '@/components/ui/command';
@@ -10,18 +10,12 @@ import { useSearchBar } from '@/hooks/search/useSearchBar';
 import { SearchInput } from './search-input';
 import { SearchSuggestions } from './search-suggestions';
 import { CreateDislikeGameModal } from '../create-dislike-game-modal';
-import SortingDropdown, {
-  SortOption,
-  SortOrder,
-} from '../header-footer/sorting-dropdown';
 import { toast } from 'sonner';
 
 const SearchBar = () => {
   const searchProps = useSearchBar();
   const { isInputActive, ...props } = searchProps;
   const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const isExplorePage = pathname === '/explore';
   const { user, isSignedIn } = useUser();
   const [isSubmittingDislike, setIsSubmittingDislike] = useState(false);
@@ -83,85 +77,17 @@ const SearchBar = () => {
     }
   };
 
-  const handleSortChange = (option: SortOption, order: SortOrder) => {
-    const sortBy = option.toLowerCase();
-    router.push(`/explore?sort=${sortBy}&order=${order}`, { scroll: false });
-  };
-
-  // Get current sort state from URL for SortingDropdown
-  const currentSort = searchParams.get('sort') || 'trend';
-  const currentOrder = searchParams.get('order') || 'desc';
-  const currentSortOption: SortOption =
-    currentSort === 'latest'
-      ? 'Latest'
-      : currentSort === 'rating'
-        ? 'Rating'
-        : 'Trend';
-
-  if (!isInputActive) {
-    return (
-      <div
-        ref={searchProps.wrapperRef}
-        className="relative mx-auto w-full max-w-xl"
-      >
-        <div className="flex items-center gap-2">
-          <Command
-            shouldFilter={false}
-            className="cursor-pointer overflow-visible"
-            onClick={props.handleActivate}
-          >
-            <SearchInput
-              inputRef={props.inputRef}
-              value={props.inputValue}
-              onChange={props.setInputValue}
-              onFocus={props.handleFocus}
-              onKeyDown={props.handleInputKeyDown}
-              onClear={props.handleClearInput}
-              isActive={false}
-              isLoading={props.isLoading}
-            />
-          </Command>
-
-          {isExplorePage ? (
-            <SortingDropdown
-              onSortChange={handleSortChange}
-              currentOption={currentSortOption}
-              currentOrder={currentOrder as SortOrder}
-            />
-          ) : (
-            <Button
-              onClick={props.handleSearchClick}
-              disabled={props.isLoading}
-            >
-              {props.isLoading ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <Search />
-              )}
-              <p>Search</p>
-            </Button>
-          )}
-        </div>
-
-        {/* Dislike Modal */}
-        <CreateDislikeGameModal
-          isOpen={props.showDislikeModal}
-          onClose={handleModalClose}
-          onConfirm={handleDislikeConfirm}
-          game={props.selectedIgdbGame}
-          isSubmitting={isSubmittingDislike}
-        />
-      </div>
-    );
-  }
-
   return (
     <div
       ref={searchProps.wrapperRef}
       className="relative mx-auto w-full max-w-xl"
     >
       <div className="flex items-center gap-2">
-        <Command shouldFilter={false} className="flex-1 overflow-visible">
+        <Command
+          shouldFilter={false}
+          className={`${isInputActive ? 'flex-1' : 'cursor-pointer'} overflow-visible`}
+          onClick={!isInputActive ? props.handleActivate : undefined}
+        >
           <SearchInput
             inputRef={props.inputRef}
             value={props.inputValue}
@@ -169,11 +95,11 @@ const SearchBar = () => {
             onFocus={props.handleFocus}
             onKeyDown={props.handleInputKeyDown}
             onClear={props.handleClearInput}
-            isActive={true}
+            isActive={isInputActive}
             isLoading={props.isLoading}
           />
 
-          {props.showSuggestions && (
+          {isInputActive && props.showSuggestions && (
             <SearchSuggestions
               onSelectGame={props.handleSelectSuggestion}
               onSelectIgdbGame={props.handleSelectIgdbGame}

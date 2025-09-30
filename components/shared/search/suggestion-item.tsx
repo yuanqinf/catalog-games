@@ -16,9 +16,7 @@ interface SuggestionItemProps {
   isGame?: boolean;
 }
 
-const extractDeveloper = (
-  game: GameDbData | IgdbGame,
-): string => {
+const extractDeveloper = (game: GameDbData | IgdbGame): string => {
   if ('developers' in game) {
     return game.developers?.[0] || '';
   }
@@ -33,9 +31,7 @@ const extractDeveloper = (
   return '';
 };
 
-const extractDislikeCount = (
-  game: GameDbData | IgdbGame,
-): number | null => {
+const extractDislikeCount = (game: GameDbData | IgdbGame): number | null => {
   return 'dislike_count' in game && game.dislike_count && game.dislike_count > 0
     ? game.dislike_count
     : null;

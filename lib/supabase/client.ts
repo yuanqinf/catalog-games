@@ -150,45 +150,15 @@ export class GameService {
   }
 
   /**
-   * Get games for explore page with pagination and sorting
+   * Get games for explore page with pagination, sorted by dislike count
    * @param offset - Number of games to skip
    * @param limit - Number of games to fetch (default: 15)
-   * @param sortBy - Sort field: 'latest' | 'rating' | 'trend' (default: 'trend')
-   * @param sortOrder - Sort order: 'asc' | 'desc' (default: 'desc')
    */
-  async getGamesForExplorePage(
-    offset: number = 0,
-    limit: number = 15,
-    sortBy: 'latest' | 'rating' | 'trend' = 'trend',
-    sortOrder: 'asc' | 'desc' = 'desc',
-  ) {
-    let query = this.supabase.from('games').select('*');
-
-    // Apply sorting based on sortBy option
-    switch (sortBy) {
-      case 'latest':
-        // Sort by release date, handling nulls (put them at end)
-        query = query.order('first_release_date', {
-          ascending: sortOrder === 'asc',
-          nullsFirst: false,
-        });
-        break;
-      case 'rating':
-        // TODO: Implement rating-based sorting
-        // This could be total_rating, user ratings average, or steam ratings
-        query = query.order('total_rating', {
-          ascending: sortOrder === 'asc',
-          nullsFirst: false,
-        });
-        break;
-      case 'trend':
-      default:
-        // TODO: Implement trend-based sorting
-        // This could be based on recent activity, views, searches, etc.
-        // For now, fallback to updated_at
-        query = query.order('updated_at', { ascending: sortOrder === 'asc' });
-        break;
-    }
+  async getGamesForExplorePage(offset: number = 0, limit: number = 15) {
+    let query = this.supabase.from('games').select('*').order('dislike_count', {
+      ascending: false,
+      nullsFirst: false,
+    });
 
     // Apply pagination
     query = query.range(offset, offset + limit - 1);
@@ -345,7 +315,9 @@ export class GameService {
           multiFieldResults.length > 0 &&
           !('dislike_count' in multiFieldResults[0])
         ) {
-          const gameIds = multiFieldResults.map((game) => game.id);
+          const gameIds = multiFieldResults.map(
+            (game: { id: number }) => game.id,
+          );
           const { data: enrichedResults } = await this.supabase
             .from('games')
             .select(
@@ -355,9 +327,12 @@ export class GameService {
 
           if (enrichedResults) {
             // Maintain the original order from RPC results
-            const enrichedMap = new Map(enrichedResults.map(game => [game.id, game]));
-            const orderedResults = multiFieldResults.map(originalGame => 
-              enrichedMap.get(originalGame.id) || originalGame
+            const enrichedMap = new Map(
+              enrichedResults.map((game) => [game.id, game]),
+            );
+            const orderedResults = multiFieldResults.map(
+              (originalGame: { id: number }) =>
+                enrichedMap.get(originalGame.id) || originalGame,
             );
             return orderedResults;
           }

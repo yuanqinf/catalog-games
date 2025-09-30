@@ -57,7 +57,6 @@ export const useSearchBar = () => {
     }
   }, [isInputActive]);
 
-
   // Manual search function for suggestions
   const performSuggestionSearch = async (query: string) => {
     if (!query.trim()) {
@@ -128,7 +127,10 @@ export const useSearchBar = () => {
   const handleActivate = () => setIsInputActive(true);
   const handleFocus = () => {
     // Only show suggestions if there's input and results
-    if (inputValue.trim() && (supabaseGames.length > 0 || igdbGames.length > 0)) {
+    if (
+      inputValue.trim() &&
+      (supabaseGames.length > 0 || igdbGames.length > 0)
+    ) {
       setShowSuggestions(true);
     }
   };
