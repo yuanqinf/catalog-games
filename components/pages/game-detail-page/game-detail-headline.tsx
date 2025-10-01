@@ -1,7 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ThumbsDown, Loader2, Bookmark, Share2, Gamepad2 } from 'lucide-react';
+import {
+  ThumbsDown,
+  Loader2,
+  Bookmark,
+  BookmarkCheck,
+  Share2,
+  Gamepad2,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -37,10 +44,19 @@ const GameDetailHeadline = ({
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+  const getRankingColor = (rank: number | null) => {
+    if (!rank) return 'yellow';
+    if (rank <= 5) return 'red';
+    if (rank <= 15) return 'orange';
+    return 'yellow';
+  };
 
   // Placeholder handlers for buttons
   const handleFollow = () => {
-    console.log('Follow button clicked for game:', gameName);
+    setIsBookmarked(!isBookmarked);
+    console.log(`${isBookmarked ? 'Unfollowed' : 'Followed'} game:`, gameName);
     // TODO: Implement follow functionality
   };
 
@@ -108,7 +124,9 @@ const GameDetailHeadline = ({
           {/* Left: Game Info + Ranking Info */}
           <div className="flex items-center gap-6">
             {/* Game Avatar */}
-            <div className="flex-shrink-0 rounded-full border-2 border-red-500 p-1">
+            <div
+              className={`flex-shrink-0 rounded-full border-2 border-${getRankingColor(rankingData?.currentGame.rank)}-600 p-1`}
+            >
               {gameCoverUrl ? (
                 <div className="relative h-16 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
                   <Image
@@ -135,13 +153,7 @@ const GameDetailHeadline = ({
                 {rankingData.currentGame.rank ? (
                   <div className="flex items-center gap-2">
                     <Badge
-                      className={`text-sm font-bold text-white ${
-                        rankingData.currentGame.rank <= 5
-                          ? 'bg-red-600 hover:bg-red-600'
-                          : rankingData.currentGame.rank <= 15
-                            ? 'bg-orange-600 hover:bg-orange-600'
-                            : 'bg-yellow-600 hover:bg-yellow-600'
-                      }`}
+                      className={`text-sm font-bold text-white bg-${getRankingColor(rankingData.currentGame.rank)}-600 hover:bg-${getRankingColor(rankingData.currentGame.rank)}-600`}
                     >
                       #{rankingData.currentGame.rank}
                     </Badge>
@@ -188,19 +200,15 @@ const GameDetailHeadline = ({
 
           {/* Right: Action Buttons */}
           <div className="flex items-center gap-3">
-            <Button
-              onClick={handleFollow}
-              variant="outline"
-              className="border-red-700/50 text-gray-300 hover:border-red-600 hover:bg-red-900/20 hover:text-white"
-            >
-              <Bookmark className="mr-2 h-4 w-4" />
-              Follow
+            <Button onClick={handleFollow} variant="outline">
+              {isBookmarked ? (
+                <BookmarkCheck className="mr-2 h-4 w-4" />
+              ) : (
+                <Bookmark className="mr-2 h-4 w-4" />
+              )}
+              {isBookmarked ? 'Following' : 'Follow'}
             </Button>
-            <Button
-              onClick={handleShare}
-              variant="outline"
-              className="border-red-700/50 text-gray-300 hover:border-red-600 hover:bg-red-900/20 hover:text-white"
-            >
+            <Button onClick={handleShare} variant="outline">
               <Share2 className="mr-2 h-4 w-4" />
               Share
             </Button>
