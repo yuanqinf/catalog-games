@@ -218,7 +218,11 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
         </div>
 
         {/* Headline Section */}
-        <GameDetailHeadline gameId={game.id || 0} gameName={game.name} />
+        <GameDetailHeadline
+          gameId={game.id || 0}
+          gameName={game.name}
+          gameCoverUrl={game.cover_url || undefined}
+        />
 
         {/* Game Detail Main Section */}
         <section className="grid grid-cols-1 gap-16 lg:grid-cols-3">

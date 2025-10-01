@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ThumbsDown, Loader2 } from 'lucide-react';
+import { ThumbsDown, Loader2, Bookmark, Share2, Gamepad2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 import {
   Tooltip,
   TooltipContent,
@@ -25,12 +26,28 @@ interface RankingData {
 interface GameDetailHeadlineProps {
   gameId: number;
   gameName: string;
+  gameCoverUrl?: string;
 }
 
-const GameDetailHeadline = ({ gameId, gameName }: GameDetailHeadlineProps) => {
+const GameDetailHeadline = ({
+  gameId,
+  gameName,
+  gameCoverUrl,
+}: GameDetailHeadlineProps) => {
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Placeholder handlers for buttons
+  const handleFollow = () => {
+    console.log('Follow button clicked for game:', gameName);
+    // TODO: Implement follow functionality
+  };
+
+  const handleShare = () => {
+    console.log('Share button clicked for game:', gameName);
+    // TODO: Implement share functionality
+  };
 
   useEffect(() => {
     async function fetchRankingData() {
@@ -62,16 +79,12 @@ const GameDetailHeadline = ({ gameId, gameName }: GameDetailHeadlineProps) => {
   if (isLoading) {
     return (
       <section className="mb-8">
-        <Card className="border-red-800/50 bg-gradient-to-r from-red-900/20 to-red-800/10">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-red-400" />
-              <span className="ml-2 text-gray-300">
-                Loading ranking data...
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="p-6">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-red-400" />
+            <span className="ml-2 text-gray-300">Loading ranking data...</span>
+          </div>
+        </div>
       </section>
     );
   }
@@ -79,28 +92,48 @@ const GameDetailHeadline = ({ gameId, gameName }: GameDetailHeadlineProps) => {
   if (error || !rankingData) {
     return (
       <section className="mb-8">
-        <Card className="border-red-800/50 bg-gradient-to-r from-red-900/20 to-red-800/10">
-          <CardContent className="p-6">
-            <div className="text-center text-gray-400">
-              {error || 'Failed to load ranking data'}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="p-6">
+          <div className="text-center text-gray-400">
+            {error || 'Failed to load ranking data'}
+          </div>
+        </div>
       </section>
     );
   }
 
   return (
     <section className="mb-8">
-      <Card className="border-red-800/50 bg-gradient-to-r from-red-900/20 to-red-800/10">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            {/* Ranking Info */}
-            <div className="flex items-center gap-6">
-              {/* Ranking Display */}
-              <div className="flex items-center gap-3">
+      <div className="p-6">
+        <div className="flex items-center justify-between">
+          {/* Left: Game Info + Ranking Info */}
+          <div className="flex items-center gap-6">
+            {/* Game Avatar */}
+            <div className="flex-shrink-0 rounded-full border-2 border-red-500 p-1">
+              {gameCoverUrl ? (
+                <div className="relative h-16 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+                  <Image
+                    src={gameCoverUrl}
+                    alt={`${gameName} avatar`}
+                    fill
+                    sizes="64px"
+                    className="rounded-full object-cover"
+                    priority
+                  />
+                </div>
+              ) : (
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800">
+                  <Gamepad2 className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+                </div>
+              )}
+            </div>
+
+            {/* Game Title */}
+            <div>
+              <h1 className="mb-1 text-2xl font-bold text-white">{gameName}</h1>
+              <div className="flex items-center gap-4">
+                {/* Ranking Display */}
                 {rankingData.currentGame.rank ? (
-                  <>
+                  <div className="flex items-center gap-2">
                     <Badge
                       className={`text-sm font-bold text-white ${
                         rankingData.currentGame.rank <= 5
@@ -112,31 +145,21 @@ const GameDetailHeadline = ({ gameId, gameName }: GameDetailHeadlineProps) => {
                     >
                       #{rankingData.currentGame.rank}
                     </Badge>
-                    <div>
-                      <h2 className="text-xl font-bold text-white">
-                        Rank #{rankingData.currentGame.rank}
-                      </h2>
-                      <p className="text-sm text-gray-400">
-                        of top 100 most disliked
-                      </p>
-                    </div>
-                  </>
+                    <span className="text-sm text-gray-400">
+                      {'of top 100 most disliked'}
+                    </span>
+                  </div>
                 ) : (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex cursor-help items-center gap-3">
+                        <div className="flex cursor-help items-center gap-2">
                           <Badge className="bg-green-600 text-sm font-bold text-white hover:bg-green-600">
                             Outside Top 100
                           </Badge>
-                          <div>
-                            <h2 className="text-xl font-bold text-green-400">
-                              Not in Top 100
-                            </h2>
-                            <p className="text-sm text-gray-400">
-                              This game is not that bad
-                            </p>
-                          </div>
+                          <span className="text-sm text-gray-400">
+                            This game is not that bad
+                          </span>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -147,25 +170,43 @@ const GameDetailHeadline = ({ gameId, gameName }: GameDetailHeadlineProps) => {
                     </Tooltip>
                   </TooltipProvider>
                 )}
-              </div>
 
-              <div className="h-12 w-px bg-red-700/50" />
+                <div className="h-4 w-px bg-red-700/50" />
 
-              {/* Dislike Count */}
-              <div className="flex items-center gap-3">
-                <ThumbsDown className="h-8 w-8 text-red-400" />
-                <div>
-                  <h3 className="text-xl font-bold text-red-400">
+                {/* Dislike Count */}
+                <div className="flex items-center gap-2">
+                  <ThumbsDown className="h-4 w-4 text-red-400" />
+                  <span className="text-lg font-bold text-red-400">
                     {rankingData.currentGame.dislike_count?.toLocaleString() ||
                       '0'}
-                  </h3>
-                  <p className="text-sm text-gray-400">total dislikes</p>
+                  </span>
+                  <span className="text-sm text-gray-400">dislikes</span>
                 </div>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Right: Action Buttons */}
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={handleFollow}
+              variant="outline"
+              className="border-red-700/50 text-gray-300 hover:border-red-600 hover:bg-red-900/20 hover:text-white"
+            >
+              <Bookmark className="mr-2 h-4 w-4" />
+              Follow
+            </Button>
+            <Button
+              onClick={handleShare}
+              variant="outline"
+              className="border-red-700/50 text-gray-300 hover:border-red-600 hover:bg-red-900/20 hover:text-white"
+            >
+              <Share2 className="mr-2 h-4 w-4" />
+              Share
+            </Button>
+          </div>
+        </div>
+      </div>
     </section>
   );
 };
