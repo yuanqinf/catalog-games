@@ -185,6 +185,62 @@ export class GameService {
   }
 
   /**
+   * Get game ranking for game detail page
+   * @param gameId - The game ID to get ranking for
+   * @returns Ranking data with current game (if within top 100)
+   */
+  async getGameRanking(gameId: number) {
+    try {
+      // First, get the current game's data
+      const { data: currentGameData, error: gameError } = await this.supabase
+        .from('games')
+        .select('id, name, slug, dislike_count')
+        .eq('id', gameId)
+        .single();
+
+      if (gameError || !currentGameData) {
+        throw new Error(gameError?.message || 'Game not found');
+      }
+
+      // Get all games sorted by dislike count to calculate ranking
+      const { data: allGames, error: rankingError } = await this.supabase
+        .from('games')
+        .select('id, name, slug, dislike_count')
+        .order('dislike_count', { ascending: false, nullsFirst: false })
+        .limit(100); // Only get top 100 for ranking
+
+      if (rankingError) {
+        throw new Error(rankingError.message || 'Failed to fetch ranking data');
+      }
+
+      // Find current game's position in the ranking
+      const currentGameIndex = allGames.findIndex((game) => game.id === gameId);
+
+      if (currentGameIndex === -1) {
+        // Game is not in top 100
+        return {
+          currentGame: {
+            ...currentGameData,
+            rank: null, // Outside top 100
+          },
+        };
+      }
+
+      const currentRank = currentGameIndex + 1;
+
+      return {
+        currentGame: {
+          ...currentGameData,
+          rank: currentRank,
+        },
+      };
+    } catch (error) {
+      console.error('Failed to get game ranking:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get total count of games for pagination calculation
    */
   async getTotalGamesCount(): Promise<number> {

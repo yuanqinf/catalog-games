@@ -1,24 +1,24 @@
 'use client';
 
-import { useState } from 'react';
-import { ThumbsDown, ChevronLeft, ChevronRight, Crown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { ThumbsDown, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
-// Ranking data interface
+// API response interface
 interface RankingData {
-  currentRank: number;
-  dislikeCount: number;
-  totalGames: number;
-  previousGame?: {
+  currentGame: {
+    id: number;
     name: string;
-    rank: number;
     slug: string;
-  };
-  nextGame?: {
-    name: string;
-    rank: number;
-    slug: string;
+    dislike_count: number;
+    rank: number | null;
   };
 }
 
@@ -28,107 +28,140 @@ interface GameDetailHeadlineProps {
 }
 
 const GameDetailHeadline = ({ gameId, gameName }: GameDetailHeadlineProps) => {
-  // Mock ranking data - replace with real API call
-  const [rankingData] = useState<RankingData>({
-    currentRank: Math.floor(Math.random() * 100) + 1,
-    dislikeCount: Math.floor(Math.random() * 50000) + 10000,
-    totalGames: 150,
-    previousGame: {
-      name: 'Cyberpunk 2077',
-      rank: Math.floor(Math.random() * 100),
-      slug: 'cyberpunk-2077',
-    },
-    nextGame: {
-      name: 'FIFA 24',
-      rank: Math.floor(Math.random() * 100) + 2,
-      slug: 'fifa-24',
-    },
-  });
+  const [rankingData, setRankingData] = useState<RankingData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleNavigation = (slug: string) => {
-    window.location.href = `/detail/${slug}`;
-  };
+  useEffect(() => {
+    async function fetchRankingData() {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const response = await fetch(`/api/games/${gameId}/ranking`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch ranking data');
+        }
+
+        const data = await response.json();
+        setRankingData(data);
+      } catch (err) {
+        console.error('Error fetching ranking data:', err);
+        setError(
+          err instanceof Error ? err.message : 'Failed to load ranking data',
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchRankingData();
+  }, [gameId]);
+
+  if (isLoading) {
+    return (
+      <section className="mb-8">
+        <Card className="border-red-800/50 bg-gradient-to-r from-red-900/20 to-red-800/10">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-red-400" />
+              <span className="ml-2 text-gray-300">
+                Loading ranking data...
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+    );
+  }
+
+  if (error || !rankingData) {
+    return (
+      <section className="mb-8">
+        <Card className="border-red-800/50 bg-gradient-to-r from-red-900/20 to-red-800/10">
+          <CardContent className="p-6">
+            <div className="text-center text-gray-400">
+              {error || 'Failed to load ranking data'}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+    );
+  }
 
   return (
     <section className="mb-8">
       <Card className="border-red-800/50 bg-gradient-to-r from-red-900/20 to-red-800/10">
         <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            {/* Left: Ranking Info */}
+          <div className="flex items-center justify-center">
+            {/* Ranking Info */}
             <div className="flex items-center gap-6">
+              {/* Ranking Display */}
               <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Crown className="h-8 w-8 text-yellow-500" />
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
-                    #{rankingData.currentRank}
-                  </span>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white">
-                    Rank #{rankingData.currentRank}
-                  </h2>
-                  <p className="text-sm text-gray-400">
-                    of {rankingData.totalGames} games
-                  </p>
-                </div>
+                {rankingData.currentGame.rank ? (
+                  <>
+                    <Badge
+                      className={`text-sm font-bold text-white ${
+                        rankingData.currentGame.rank <= 5
+                          ? 'bg-red-600 hover:bg-red-600'
+                          : rankingData.currentGame.rank <= 15
+                            ? 'bg-orange-600 hover:bg-orange-600'
+                            : 'bg-yellow-600 hover:bg-yellow-600'
+                      }`}
+                    >
+                      #{rankingData.currentGame.rank}
+                    </Badge>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">
+                        Rank #{rankingData.currentGame.rank}
+                      </h2>
+                      <p className="text-sm text-gray-400">
+                        of top 100 most disliked
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex cursor-help items-center gap-3">
+                          <Badge className="bg-green-600 text-sm font-bold text-white hover:bg-green-600">
+                            Outside Top 100
+                          </Badge>
+                          <div>
+                            <h2 className="text-xl font-bold text-green-400">
+                              Not in Top 100
+                            </h2>
+                            <p className="text-sm text-gray-400">
+                              This game is not that bad
+                            </p>
+                          </div>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          This game is not among the 100 most disliked games
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
               </div>
 
               <div className="h-12 w-px bg-red-700/50" />
 
+              {/* Dislike Count */}
               <div className="flex items-center gap-3">
                 <ThumbsDown className="h-8 w-8 text-red-400" />
                 <div>
-                  <h3 className="text-2xl font-bold text-red-400">
-                    {rankingData.dislikeCount.toLocaleString()}
+                  <h3 className="text-xl font-bold text-red-400">
+                    {rankingData.currentGame.dislike_count?.toLocaleString() ||
+                      '0'}
                   </h3>
                   <p className="text-sm text-gray-400">total dislikes</p>
                 </div>
               </div>
-            </div>
-
-            {/* Right: Navigation */}
-            <div className="flex items-center gap-4">
-              {/* Previous Game */}
-              {rankingData.previousGame && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-red-700/50 text-gray-300 hover:border-red-600 hover:bg-red-900/20 hover:text-white"
-                  onClick={() =>
-                    handleNavigation(rankingData.previousGame!.slug)
-                  }
-                >
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  <div className="text-left">
-                    <div className="text-xs text-gray-400">
-                      #{rankingData.previousGame.rank}
-                    </div>
-                    <div className="max-w-24 truncate text-sm font-medium">
-                      {rankingData.previousGame.name}
-                    </div>
-                  </div>
-                </Button>
-              )}
-
-              {/* Next Game */}
-              {rankingData.nextGame && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-red-700/50 text-gray-300 hover:border-red-600 hover:bg-red-900/20 hover:text-white"
-                  onClick={() => handleNavigation(rankingData.nextGame!.slug)}
-                >
-                  <div className="text-right">
-                    <div className="text-xs text-gray-400">
-                      #{rankingData.nextGame.rank}
-                    </div>
-                    <div className="max-w-24 truncate text-sm font-medium">
-                      {rankingData.nextGame.name}
-                    </div>
-                  </div>
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              )}
             </div>
           </div>
         </CardContent>
