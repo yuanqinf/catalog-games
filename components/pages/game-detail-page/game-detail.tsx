@@ -2,19 +2,19 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2,
   Ghost,
   BriefcaseBusiness,
   Tag,
   Monitor,
-  Calendar,
   ChartColumnIncreasing,
   UsersRound,
   Trophy,
   ArrowLeft,
+  ThumbsDown,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,6 @@ import GameDetailHighlight from './game-detail-highlight';
 import GameDetailHeadline from './game-detail-headline';
 
 import { GameDbData } from '@/types';
-import { getAvatarBorderColor } from '@/utils/steam-utils';
 import {
   fetchSalesData,
   formatSalesValue,
@@ -42,19 +41,50 @@ import {
 } from '@/lib/playernet/get-playernet-data';
 import { useSteamReviews } from '@/hooks/useSteamReviews';
 
-const GameDetail = ({ game }: { game: GameDbData }) => {
-  const router = useRouter();
-  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+// Interface for floating thumbs animation
+interface FloatingThumb {
+  id: string;
+  timestamp: number;
+  startX: number;
+  startY: number;
+  isPowerMode?: boolean;
+}
 
-  const handleBackClick = () => {
-    // Try to go back in browser history first
-    if (window.history.length > 1) {
-      router.back();
-    } else {
-      // Fallback to explore page if no history
-      router.push('/explore');
-    }
+// Interface for user vote state
+interface UserVoteState {
+  continuousClicks: number;
+  lastClickTime: number;
+  isPowerMode: boolean;
+}
+
+// Interface for dislike response
+interface DislikeResponse {
+  success: boolean;
+  data?: {
+    gameId: number;
+    igdbId: number;
+    newDislikeCount: number;
+    incrementBy: number;
   };
+  error?: string;
+}
+
+const GameDetail = ({ game }: { game: GameDbData }) => {
+  // Dislike functionality states
+  const [dislikeCount, setDislikeCount] = useState(game.dislike_count || 0);
+  const [isDislikeLoading, setIsDislikeLoading] = useState(false);
+  const [clickingButton, setClickingButton] = useState(false);
+  const userDislikeCount = 347; // Mock data for now
+
+  // Floating thumbs animation state
+  const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
+
+  // User voting state for power mode
+  const [userVoteState, setUserVoteState] = useState<UserVoteState>({
+    continuousClicks: 0,
+    lastClickTime: 0,
+    isPowerMode: false,
+  });
   const [salesData, setSalesData] = useState<SalesData>({
     value: null,
     source: null,
@@ -145,9 +175,92 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
   const { steamReviews } = useSteamReviews(game.name);
 
-  const avatarBorderColorClass = getAvatarBorderColor(
-    steamReviews?.steam_all_review ?? undefined,
-  );
+  // Handle dislike vote with floating animation
+  const handleDislikeVote = async () => {
+    if (isDislikeLoading) return;
+
+    const currentTime = Date.now();
+    setIsDislikeLoading(true);
+
+    // Add button click animation
+    setClickingButton(true);
+    setTimeout(() => setClickingButton(false), 200);
+
+    // Update continuous click tracking and power mode
+    setUserVoteState((prev) => {
+      const timeSinceLastClick = currentTime - prev.lastClickTime;
+      const isConsecutive = timeSinceLastClick < 5000; // Within 5 seconds
+
+      const newContinuousClicks = isConsecutive ? prev.continuousClicks + 1 : 1;
+      const newIsPowerMode = newContinuousClicks >= 10;
+
+      return {
+        continuousClicks: newContinuousClicks,
+        lastClickTime: currentTime,
+        isPowerMode: newIsPowerMode,
+      };
+    });
+
+    // Create floating animation in the banner/cover area
+    const isPowerMode = userVoteState.continuousClicks >= 9;
+    const increment = isPowerMode ? 3 : 1;
+
+    const newThumb: FloatingThumb = {
+      id: `thumb-${Date.now()}-${Math.random()}`,
+      timestamp: Date.now(),
+      startX: Math.random() * 70 + 15, // Random position between 15% and 85%
+      startY: Math.random() * 30 + 60, // Random Y position in the banner area
+      isPowerMode,
+    };
+
+    setFloatingThumbs((prev) => [...prev, newThumb]);
+
+    // Optimistically update the UI
+    setDislikeCount((prev) => prev + increment);
+
+    // Call backend API to update the database
+    try {
+      const response = await fetch('/api/games/dislike', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          igdbId: game.igdb_id,
+          incrementBy: increment,
+        }),
+      });
+
+      const result: DislikeResponse = await response.json();
+
+      if (!result.success) {
+        console.error('Failed to update dislike count:', result.error);
+        // Revert optimistic update on error
+        setDislikeCount((prev) => prev - increment);
+      }
+    } catch (error) {
+      console.error('Error calling dislike API:', error);
+      // Revert optimistic update on error
+      setDislikeCount((prev) => prev - increment);
+    } finally {
+      setIsDislikeLoading(false);
+    }
+  };
+
+  // Reset power mode after 3 seconds of inactivity
+  useEffect(() => {
+    if (userVoteState.isPowerMode) {
+      const timer = setTimeout(() => {
+        setUserVoteState((prev) => ({
+          ...prev,
+          isPowerMode: false,
+          continuousClicks: 0,
+        }));
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [userVoteState.lastClickTime, userVoteState.isPowerMode]);
 
   // Filter sections with data
   const detailsSections = [
@@ -256,7 +369,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
         <section className="grid grid-cols-1 gap-16 lg:grid-cols-3">
           {/* Left Column */}
           <div className="flex flex-col gap-10 lg:col-span-2">
-            {/* Game Banner Section */}
+            {/* Game Banner Section with Floating Animations */}
             {game.banner_url && (
               <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black">
                 <Image
@@ -267,6 +380,72 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                   className="object-cover"
                   priority
                 />
+
+                {/* Floating Thumbs Down Animations */}
+                <AnimatePresence>
+                  {floatingThumbs.map((thumb) => (
+                    <motion.div
+                      key={thumb.id}
+                      className="pointer-events-none absolute z-50"
+                      style={{
+                        left: `${thumb.startX}%`,
+                        top: `${thumb.startY}%`,
+                      }}
+                      initial={{
+                        opacity: 0,
+                        scale: 0.2,
+                        y: 0,
+                      }}
+                      animate={{
+                        opacity: [0, 1, 1, 0],
+                        scale: thumb.isPowerMode
+                          ? [0.2, 2.2, 2.0, 1.3]
+                          : [0.2, 1.5, 1.3, 0.9],
+                        y: thumb.isPowerMode
+                          ? [0, -60, -180, -350]
+                          : [0, -40, -120, -250],
+                      }}
+                      exit={{
+                        opacity: 0,
+                        scale: thumb.isPowerMode ? 1.0 : 0.6,
+                        y: thumb.isPowerMode ? -400 : -300,
+                      }}
+                      transition={{
+                        duration: thumb.isPowerMode ? 3.5 : 2.5,
+                        ease: [0.25, 0.46, 0.45, 0.94],
+                        times: [0, 0.15, 0.6, 1],
+                      }}
+                      onAnimationComplete={() => {
+                        setFloatingThumbs((prev) =>
+                          prev.filter((t) => t.id !== thumb.id),
+                        );
+                      }}
+                    >
+                      <ThumbsDown
+                        className={`drop-shadow-2xl ${
+                          thumb.isPowerMode
+                            ? 'h-12 w-12 text-red-400'
+                            : 'h-8 w-8 text-red-500'
+                        }`}
+                        fill="currentColor"
+                      />
+                      {thumb.isPowerMode && (
+                        <motion.div
+                          className="absolute -inset-2 rounded-full bg-red-500/30"
+                          animate={{
+                            scale: [0.8, 1.2, 0.8],
+                            opacity: [0.8, 0.3, 0.8],
+                          }}
+                          transition={{
+                            duration: 0.5,
+                            repeat: Infinity,
+                            ease: 'easeInOut',
+                          }}
+                        />
+                      )}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             )}
             {/* Game Information Section */}
@@ -329,7 +508,15 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
           </div>
 
           {/* Right Column */}
-          <GameDetailHighlight game={game} />
+          <GameDetailHighlight
+            game={game}
+            dislikeCount={dislikeCount}
+            userDislikeCount={userDislikeCount}
+            isDislikeLoading={isDislikeLoading}
+            clickingButton={clickingButton}
+            userVoteState={userVoteState}
+            onDislikeVote={handleDislikeVote}
+          />
         </section>
       </main>
     </div>
