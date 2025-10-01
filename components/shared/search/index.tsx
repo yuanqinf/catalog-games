@@ -98,18 +98,27 @@ const SearchBar = () => {
       return;
     }
 
+    if (!props.selectedIgdbGame.name) {
+      console.error('Selected IGDB game:', props.selectedIgdbGame);
+      toast.error('Game name is missing');
+      return;
+    }
+
     setIsSubmittingDislike(true);
 
     try {
+      const requestBody = {
+        igdbGameId: props.selectedIgdbGame.id,
+        gameName: props.selectedIgdbGame.name,
+        initialDislikeCount: dislikeCount,
+      };
+
       const response = await fetch('/api/games/pending-dislike', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          igdbGameId: props.selectedIgdbGame.id,
-          initialDislikeCount: dislikeCount,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const result = await response.json();

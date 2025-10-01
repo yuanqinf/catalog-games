@@ -17,13 +17,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { igdbGameId, initialDislikeCount = 1 } = body;
+    const { igdbGameId, initialDislikeCount = 1, gameName } = body;
 
     if (!igdbGameId) {
       return NextResponse.json(
         {
           success: false,
           error: 'IGDB Game ID is required',
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!gameName) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Game name is required',
         },
         { status: 400 },
       );
@@ -63,6 +73,7 @@ export async function POST(request: NextRequest) {
         .insert({
           user_id: userId,
           igdb_game_id: igdbGameId,
+          game_name: gameName,
           initial_dislike_count: initialDislikeCount,
         })
         .select()
