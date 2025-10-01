@@ -26,8 +26,6 @@ export async function transformIgdbData(
       : null,
     game_modes: data.game_modes ? data.game_modes.map((m) => m.name) : null,
     cover_url: data.cover?.url || null,
-    screenshots: data.screenshots ? data.screenshots.map((s) => s.url) : null,
-    artworks: data.artworks ? data.artworks.map((a) => a.url) : null,
     updated_at: new Date().toISOString(),
     publishers: data.involved_companies
       ? data.involved_companies

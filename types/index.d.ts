@@ -12,8 +12,6 @@ export interface GameDbData {
   game_engines?: string[] | null;
   game_modes?: string[] | null;
   cover_url?: string | null;
-  screenshots?: string[] | null;
-  artworks?: string[] | null;
   updated_at?: string;
   publishers?: string[] | null;
   developers?: string[] | null;
@@ -40,8 +38,6 @@ export interface IgdbGameData {
   game_engines?: Array<{ name: string }>;
   game_modes?: Array<{ name: string }>;
   cover?: { url: string };
-  screenshots?: Array<{ url: string }>;
-  artworks?: Array<{ url: string }>;
   involved_companies?: Array<{
     publisher?: boolean;
     developer?: boolean;
@@ -69,8 +65,6 @@ export interface IgdbGame {
         url: string;
       };
   cover_url?: string; // Processed cover URL for easy access
-  screenshots?: { url: string }[];
-  artworks?: { url: string }[];
   rating?: number;
   first_release_date?: number; // Unix timestamp
   involved_companies?: Array<{

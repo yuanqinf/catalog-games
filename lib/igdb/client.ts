@@ -75,7 +75,7 @@ class IgdbClient {
       },
       body: `
         search "${query}";
-        fields id, name, aggregated_rating_count, slug, game_type, cover.url, screenshots.url, artworks.url, summary, first_release_date, involved_companies.company.name;
+        fields id, name, aggregated_rating_count, slug, game_type, cover.url, summary, first_release_date, involved_companies.company.name;
         where game_type = (0,1) & aggregated_rating_count > 0;
         limit 10;
       `,
@@ -126,18 +126,6 @@ class IgdbClient {
         );
         (game as any).cover_url = game.cover.url;
       }
-      if (game.screenshots) {
-        game.screenshots = game.screenshots.map((screenshot) => ({
-          ...screenshot,
-          url: `https:${screenshot.url}`.replace('/t_thumb/', '/t_1080p/'),
-        }));
-      }
-      if (game.artworks) {
-        game.artworks = game.artworks.map((artwork) => ({
-          ...artwork,
-          url: `https:${artwork.url}`.replace('/t_thumb/', '/t_1080p/'),
-        }));
-      }
 
       return game;
     });
@@ -156,7 +144,7 @@ class IgdbClient {
       body: `
         fields id, name, summary, slug, first_release_date, updated_at, total_rating,
         genres.name, platforms.name, involved_companies.developer, involved_companies.publisher, involved_companies.company.name, game_engines.name, game_modes.name,
-        cover.url, screenshots.url, artworks.url, rating;
+        cover.url, rating;
         where id = ${id};
         limit 1;
       `,
@@ -178,18 +166,6 @@ class IgdbClient {
           '/t_thumb/',
           '/t_1080p/',
         );
-      }
-      if (game.screenshots) {
-        game.screenshots = game.screenshots.map((screenshot) => ({
-          ...screenshot,
-          url: `https:${screenshot.url}`.replace('/t_thumb/', '/t_1080p/'),
-        }));
-      }
-      if (game.artworks) {
-        game.artworks = game.artworks.map((artwork) => ({
-          ...artwork,
-          url: `https:${artwork.url}`.replace('/t_thumb/', '/t_1080p/'),
-        }));
       }
     }
 
