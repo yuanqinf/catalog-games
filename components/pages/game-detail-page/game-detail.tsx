@@ -18,11 +18,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import GameDetailSection from '@/components/pages/game-detail-page/game-detail-section';
-import GameDetailCard, {
-  getDisplayValue,
-} from '@/components/pages/game-detail-page/game-detail-card';
 
 import GameDetailHighlight from './game-detail-highlight';
 import GameDetailHeadline from './game-detail-headline';
@@ -165,6 +161,72 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     { title: 'Platforms', items: game.platforms, icon: Monitor },
   ].filter((section) => section.items?.length);
 
+  // Filter statistics sections with data - only show sections that have actual data
+  const statisticsSections = [
+    // Sales Data - only show if we have data
+    ...(salesData.value
+      ? [
+          {
+            title: getSalesLabel(salesData.source),
+            items: [formatSalesValue(salesData.value, salesData.source)],
+            icon: UsersRound,
+            showTooltip: true,
+            tooltipContent: (
+              <div className="text-sm">
+                <p>Source: {getSourceName(salesData.source)}</p>
+                {salesData.asOfDate && <p>Data as of: {salesData.asOfDate}</p>}
+              </div>
+            ),
+          },
+        ]
+      : []),
+
+    // Live Viewers - only show if we have data
+    ...(twitchLiveViewers
+      ? [
+          {
+            title: 'Live viewers',
+            items: [`~ ${twitchLiveViewers.toLocaleString()}`],
+            icon: ChartColumnIncreasing,
+            showTooltip: true,
+            tooltipContent: <p>Source: Twitch</p>,
+          },
+        ]
+      : []),
+
+    // Average Playtime - only show if we have data
+    ...(steamSpyData?.averagePlaytime || playtrackerData?.averagePlaytime
+      ? [
+          {
+            title: 'Average Playtime',
+            items: [
+              steamSpyData?.averagePlaytime
+                ? `~ ${steamSpyData.averagePlaytime} hours`
+                : (playtrackerData?.averagePlaytime as string),
+            ],
+            icon: Trophy,
+            showTooltip: true,
+            tooltipContent: (
+              <div className="text-sm">
+                <p>
+                  Source:{' '}
+                  {steamSpyData?.averagePlaytime
+                    ? 'Steam Spy'
+                    : 'Playtracker.net'}
+                </p>
+              </div>
+            ),
+          },
+        ]
+      : []),
+  ];
+
+  // Show loading placeholder for statistics while any are still loading
+  const showStatisticsLoading =
+    isLoadingSales ||
+    isLoadingTwitch ||
+    (isLoadingSteamSpy && isLoadingPlaytracker);
+
   return (
     <div className="bg-background text-foreground min-h-screen w-full p-4">
       <main className="container-3xl container mx-auto px-8">
@@ -183,6 +245,11 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
           gameId={game.id || 0}
           gameName={game.name}
           gameCoverUrl={game.cover_url || undefined}
+          gameReleaseDate={
+            game.first_release_date
+              ? new Date(game.first_release_date).getTime()
+              : undefined
+          }
         />
 
         {/* Game Detail Main Section */}
@@ -204,75 +271,6 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
             )}
             {/* Game Information Section */}
             <div className="mb-8 space-y-6">
-              {/* Title and Release Date */}
-              <div className="flex items-start gap-4">
-                {/* Game Avatar */}
-                <div
-                  className={`flex-shrink-0 rounded-full border-2 p-1 ${avatarBorderColorClass}`}
-                >
-                  {game.cover_url ? (
-                    <div className="relative h-16 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
-                      <Image
-                        src={game.cover_url}
-                        alt={`${game.name} avatar`}
-                        fill
-                        sizes="64px"
-                        className="rounded-full object-cover"
-                        priority
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800">
-                      <Gamepad2 className="h-6 w-6 text-gray-500 dark:text-gray-400" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Title and Date */}
-                <div className="flex-grow">
-                  <h1 className="mb-2 text-4xl font-bold">{game.name}</h1>
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="h-4 w-4" />
-                    <p className="text-muted-foreground">
-                      {game.first_release_date
-                        ? (() => {
-                            const releaseDate = new Date(
-                              game.first_release_date,
-                            );
-                            const now = new Date();
-                            const isFuture = releaseDate > now;
-                            return isFuture
-                              ? `Expected to release on ${releaseDate.toLocaleDateString()}`
-                              : `Released on ${releaseDate.toLocaleDateString()}`;
-                          })()
-                        : 'N/A'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Summary */}
-              {game.summary && (
-                <div>
-                  <h4
-                    className={`leading-relaxed ${
-                      isSummaryExpanded ? '' : 'line-clamp-3'
-                    }`}
-                  >
-                    {game.summary}
-                  </h4>
-                  {game.summary.length > 200 && (
-                    <Button
-                      onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
-                      variant="link"
-                      className="text-muted-foreground mt-2 h-auto p-0 text-sm"
-                    >
-                      {isSummaryExpanded ? 'Show less' : 'Show all'}
-                    </Button>
-                  )}
-                </div>
-              )}
-
               {/* Game Details */}
               {detailsSections.length > 0 && (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -301,70 +299,32 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                   ))}
                 </div>
               )}
-            </div>
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 md:col-span-2">
-              <GameDetailCard
-                icon={UsersRound}
-                value={getDisplayValue(
-                  isLoadingSales,
-                  salesData.value,
-                  (value) => formatSalesValue(value, salesData.source),
-                )}
-                label={getSalesLabel(salesData.source)}
-                valueColor="text-yellow-500"
-                isLoading={isLoadingSales}
-                showTooltip={!!salesData.value}
-                tooltipContent={
-                  <div className="text-sm">
-                    <p>Source: {getSourceName(salesData.source)}</p>
-                    {salesData.asOfDate && (
-                      <p>Data as of: {salesData.asOfDate}</p>
-                    )}
+
+              {/* Statistics Sections */}
+              {showStatisticsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="flex items-center gap-3 text-gray-400">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-600 border-t-gray-400"></div>
+                    <span className="text-sm">Loading game statistics...</span>
                   </div>
-                }
-              />
-              <GameDetailCard
-                icon={ChartColumnIncreasing}
-                value={getDisplayValue(
-                  isLoadingTwitch,
-                  twitchLiveViewers,
-                  (viewers) => '~ ' + viewers.toLocaleString(),
-                )}
-                label="Live viewers"
-                valueColor="text-purple-500"
-                isLoading={isLoadingTwitch}
-                showTooltip={!!twitchLiveViewers}
-                tooltipContent={<p>Source: Twitch</p>}
-              />
-              <GameDetailCard
-                icon={Trophy}
-                value={getDisplayValue(
-                  isLoadingSteamSpy && isLoadingPlaytracker,
-                  steamSpyData?.averagePlaytime ||
-                    playtrackerData?.averagePlaytime,
-                  (value) =>
-                    steamSpyData?.averagePlaytime ? `~ ${value} hours` : value,
-                )}
-                label="Average Playtime"
-                valueColor="text-blue-500"
-                isLoading={isLoadingSteamSpy && isLoadingPlaytracker}
-                showTooltip={
-                  !!(
-                    steamSpyData?.averagePlaytime ||
-                    playtrackerData?.averagePlaytime
-                  )
-                }
-                tooltipContent={
-                  <div className="text-sm">
-                    <p>
-                      Source:{' '}
-                      {steamSpyData?.averagePlaytime
-                        ? 'Steam Spy'
-                        : 'Playtracker.net'}
-                    </p>
+                </div>
+              ) : (
+                statisticsSections.length > 0 && (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    {statisticsSections.map((section) => (
+                      <GameDetailSection
+                        key={section.title}
+                        title={section.title}
+                        items={section.items}
+                        icon={section.icon}
+                        className="mb-3"
+                        showTooltip={section.showTooltip}
+                        tooltipContent={section.tooltipContent}
+                      />
+                    ))}
                   </div>
-                }
-              />
+                )
+              )}
             </div>
           </div>
 

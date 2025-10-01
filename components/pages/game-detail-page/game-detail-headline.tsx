@@ -8,6 +8,7 @@ import {
   BookmarkCheck,
   Share2,
   Gamepad2,
+  Calendar,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,12 +35,14 @@ interface GameDetailHeadlineProps {
   gameId: number;
   gameName: string;
   gameCoverUrl?: string;
+  gameReleaseDate?: number;
 }
 
 const GameDetailHeadline = ({
   gameId,
   gameName,
   gameCoverUrl,
+  gameReleaseDate,
 }: GameDetailHeadlineProps) => {
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,7 +125,7 @@ const GameDetailHeadline = ({
       <div className="p-6">
         <div className="flex items-center justify-between">
           {/* Left: Game Info + Ranking Info */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             {/* Game Avatar */}
             <div
               className={`flex-shrink-0 rounded-full border-2 border-${getRankingColor(rankingData?.currentGame.rank)}-600 p-1`}
@@ -146,7 +149,7 @@ const GameDetailHeadline = ({
             </div>
 
             {/* Game Title */}
-            <div>
+            <div className="flex flex-col gap-1">
               <h1 className="mb-1 text-2xl font-bold text-white">{gameName}</h1>
               <div className="flex items-center gap-4">
                 {/* Ranking Display */}
@@ -194,6 +197,26 @@ const GameDetailHeadline = ({
                   </span>
                   <span className="text-sm text-gray-400">dislikes</span>
                 </div>
+
+                {/* Release Date */}
+                {gameReleaseDate && (
+                  <>
+                    <div className="h-4 w-px bg-red-700/50" />
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-blue-400" />
+                      <span className="text-sm text-gray-400">
+                        {(() => {
+                          const releaseDate = new Date(gameReleaseDate);
+                          const now = new Date();
+                          const isFuture = releaseDate > now;
+                          return isFuture
+                            ? `Expected ${releaseDate.toLocaleDateString()}`
+                            : `Released ${releaseDate.toLocaleDateString()}`;
+                        })()}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
