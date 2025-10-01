@@ -1,7 +1,9 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Play,
   Gamepad2,
@@ -13,6 +15,7 @@ import {
   ChartColumnIncreasing,
   UsersRound,
   Trophy,
+  ArrowLeft,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -52,8 +55,19 @@ import {
 import { useSteamReviews } from '@/hooks/useSteamReviews';
 
 const GameDetail = ({ game }: { game: GameDbData }) => {
+  const router = useRouter();
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+
+  const handleBackClick = () => {
+    // Try to go back in browser history first
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      // Fallback to explore page if no history
+      router.push('/explore');
+    }
+  };
   const [salesData, setSalesData] = useState<SalesData>({
     value: null,
     source: null,
@@ -193,6 +207,16 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
   return (
     <div className="bg-background text-foreground min-h-screen w-full p-4">
       <main className="container-3xl container mx-auto px-8">
+        {/* Back Button - Top Left */}
+        <div className="mb-6">
+          <Link href="/explore">
+            <Button variant="ghost" className="text-gray-300 hover:text-white">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Top 100
+            </Button>
+          </Link>
+        </div>
+
         {/* Headline Section */}
         <GameDetailHeadline gameId={game.id || 0} gameName={game.name} />
 

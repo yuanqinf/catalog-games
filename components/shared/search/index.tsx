@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { usePathname } from 'next/navigation';
-import { Search, Loader2 } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Search, Loader2, Gamepad2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '@clerk/nextjs';
 import { Command } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
@@ -12,16 +13,78 @@ import { SearchSuggestions } from './search-suggestions';
 import { CreateDislikeGameModal } from '../create-dislike-game-modal';
 import { toast } from 'sonner';
 
+// Animation variants for smooth transitions
+const iconVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.8,
+    rotate: -90,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    rotate: 0,
+    transition: {
+      duration: 0.3,
+      ease: 'easeInOut',
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.8,
+    rotate: 90,
+    transition: {
+      duration: 0.2,
+      ease: 'easeInOut',
+    },
+  },
+};
+
+const textVariants = {
+  hidden: {
+    opacity: 0,
+    y: 10,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      ease: 'easeInOut',
+      delay: 0.1,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    transition: {
+      duration: 0.2,
+      ease: 'easeInOut',
+    },
+  },
+};
+
 const SearchBar = () => {
   const searchProps = useSearchBar();
   const { isInputActive, ...props } = searchProps;
   const pathname = usePathname();
+  const router = useRouter();
   const isExplorePage = pathname === '/explore';
   const { user, isSignedIn } = useUser();
   const [isSubmittingDislike, setIsSubmittingDislike] = useState(false);
 
   const handleModalClose = () => {
     props.setShowDislikeModal(false);
+  };
+
+  const handleButtonClick = () => {
+    if (isInputActive || isExplorePage) {
+      // If input is active OR on explore page, perform search
+      props.handleSearchClick();
+    } else {
+      // If input is not active and not on explore page, navigate to explore page
+      router.push('/explore');
+    }
   };
 
   const handleDislikeConfirm = async (dislikeCount = 1) => {
@@ -110,9 +173,51 @@ const SearchBar = () => {
           )}
         </Command>
 
-        <Button onClick={props.handleSearchClick} disabled={props.isLoading}>
-          {props.isLoading ? <Loader2 className="animate-spin" /> : <Search />}
-          <p>Search</p>
+        <Button
+          onClick={handleButtonClick}
+          disabled={props.isLoading}
+          className="flex items-center gap-2"
+        >
+          {props.isLoading ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            <AnimatePresence mode="wait">
+              {isInputActive || isExplorePage ? (
+                <motion.div
+                  key="search"
+                  variants={iconVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                >
+                  <Search />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="explore"
+                  variants={iconVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                >
+                  <Gamepad2 />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={
+                isInputActive || isExplorePage ? 'search-text' : 'explore-text'
+              }
+              variants={textVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              {isInputActive || isExplorePage ? 'Search' : 'Explore'}
+            </motion.p>
+          </AnimatePresence>
         </Button>
       </div>
 
