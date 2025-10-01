@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Play,
   Gamepad2,
   Ghost,
   BriefcaseBusiness,
@@ -20,13 +19,6 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
 import GameDetailSection from '@/components/pages/game-detail-page/game-detail-section';
 import GameDetailCard, {
   getDisplayValue,
@@ -56,7 +48,6 @@ import { useSteamReviews } from '@/hooks/useSteamReviews';
 
 const GameDetail = ({ game }: { game: GameDbData }) => {
   const router = useRouter();
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
 
   const handleBackClick = () => {
@@ -85,8 +76,6 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     null,
   );
   const [isLoadingPlaytracker, setIsLoadingPlaytracker] = useState(true);
-
-  const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
   // Fetch sales data with fallback logic
   useEffect(() => {
@@ -164,34 +153,6 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     steamReviews?.steam_all_review ?? undefined,
   );
 
-  const getYouTubeEmbedUrl = (id: string) => {
-    if (!id) return '';
-    return `https://www.youtube.com/embed/${id}`;
-  };
-
-  const mediaItems = [
-    ...(game.videos?.map((v, index) => ({
-      title: `${game.name} Video ${index + 1}`,
-      url: getYouTubeEmbedUrl(v),
-    })) || []),
-  ];
-
-  const handleVideoChange = (index: number) => {
-    // Pause current video if it's playing
-    if (iframeRefs.current[currentVideoIndex]) {
-      const currentIframe = iframeRefs.current[currentVideoIndex];
-      if (currentIframe && currentIframe.src) {
-        // Remove autoplay and other parameters to pause
-        const baseUrl = currentIframe.src.split('?')[0];
-        currentIframe.src = baseUrl;
-      }
-    }
-
-    setCurrentVideoIndex(index);
-  };
-
-  const currentMedia = mediaItems[currentVideoIndex];
-
   // Filter sections with data
   const detailsSections = [
     { title: 'Game Engine', items: game.game_engines, icon: Gamepad2 },
@@ -228,65 +189,19 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
         <section className="grid grid-cols-1 gap-16 lg:grid-cols-3">
           {/* Left Column */}
           <div className="flex flex-col gap-10 lg:col-span-2">
-            {/* Video Player Section */}
-            <Card className="rounded-t-none pt-0 pb-4">
-              <CardContent className="space-y-6 p-0">
-                {/* Main Video Player */}
-                <div className="relative aspect-video w-full overflow-hidden bg-black">
-                  <iframe
-                    ref={(el) => {
-                      iframeRefs.current[currentVideoIndex] = el;
-                    }}
-                    src={currentMedia.url ?? ''}
-                    title={currentMedia.title}
-                    allowFullScreen
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  />
-                </div>
-
-                {/* Thumbnail Navigation */}
-                <div className="relative mx-4">
-                  <Carousel className="mx-auto w-[90%]">
-                    <CarouselContent>
-                      {mediaItems.map((media, index) => (
-                        <CarouselItem
-                          key={index}
-                          className="basis-1/3 px-3 md:basis-1/4 lg:basis-1/5"
-                        >
-                          <Button
-                            onClick={() => handleVideoChange(index)}
-                            variant="ghost"
-                            className={`relative mx-2 mt-2 aspect-video h-auto w-full overflow-hidden rounded-md p-0 transition-all duration-200 ${
-                              index === currentVideoIndex
-                                ? 'ring-primary ring-2 ring-offset-1'
-                                : 'hover:opacity-80'
-                            }`}
-                          >
-                            <div className="bg-muted relative h-full w-full">
-                              <Image
-                                src={`https://img.youtube.com/vi/${media.url?.split('/').pop()}/mqdefault.jpg`}
-                                alt={`${media.title} thumbnail`}
-                                fill
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                className="object-cover"
-                              />
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="rounded-full bg-black/60 p-2">
-                                  <Play className="h-6 w-6 text-white" />
-                                </div>
-                              </div>
-                            </div>
-                          </Button>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="left-[-32px] md:left-[-40px] lg:left-[-48px]" />
-                    <CarouselNext className="right-[-32px] md:right-[-40px] lg:right-[-48px]" />
-                  </Carousel>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Game Banner Section */}
+            {game.banner_url && (
+              <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black">
+                <Image
+                  src={game.banner_url}
+                  alt={`${game.name} banner`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 67vw, 50vw"
+                  className="object-cover"
+                  priority
+                />
+              </div>
+            )}
             {/* Game Information Section */}
             <div className="mb-8 space-y-6">
               {/* Title and Release Date */}

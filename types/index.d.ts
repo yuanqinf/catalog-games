@@ -14,7 +14,6 @@ export interface GameDbData {
   cover_url?: string | null;
   screenshots?: string[] | null;
   artworks?: string[] | null;
-  videos?: string[] | null;
   updated_at?: string;
   publishers?: string[] | null;
   developers?: string[] | null;
@@ -43,7 +42,6 @@ export interface IgdbGameData {
   cover?: { url: string };
   screenshots?: Array<{ url: string }>;
   artworks?: Array<{ url: string }>;
-  videos?: Array<{ video_id: string }>;
   involved_companies?: Array<{
     publisher?: boolean;
     developer?: boolean;
