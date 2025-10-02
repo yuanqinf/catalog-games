@@ -36,19 +36,19 @@ const Header = () => {
 
   return (
     <nav
-      className={`header sticky top-0 z-50 transition-transform duration-300 ${
+      className={`header sticky top-0 z-50 grid grid-cols-4 items-center gap-4 transition-transform duration-300 ${
         isVisible ? 'translate-y-0' : '-translate-y-full'
       }`}
     >
-      <Link href="/">
+      <Link href="/" className="justify-self-start">
         <div className="header-logo">
           <Image src="/images/logo.png" alt="Logo" width={56} height={56} />
         </div>
       </Link>
-      <div className="flex w-1/2 items-center justify-center gap-8">
+      <div className="col-span-2 w-full justify-self-center">
         <SearchBar />
       </div>
-      <div className="flex items-center justify-end gap-4">
+      <div className="justify-self-end">
         <ClerkAuth />
       </div>
     </nav>
