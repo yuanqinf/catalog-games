@@ -19,6 +19,10 @@
 
   /* Border radius */
   --radius: 0.625rem;
+
+  body[data-scroll-locked] {
+    margin-right: 0 !important;
+  }
 }
 
 /* Dark theme */
