@@ -26,7 +26,6 @@ const iconVariants = {
     rotate: 0,
     transition: {
       duration: 0.3,
-      ease: 'easeInOut',
     },
   },
   exit: {
@@ -35,7 +34,6 @@ const iconVariants = {
     rotate: 90,
     transition: {
       duration: 0.2,
-      ease: 'easeInOut',
     },
   },
 };
@@ -50,7 +48,6 @@ const textVariants = {
     y: 0,
     transition: {
       duration: 0.3,
-      ease: 'easeInOut',
       delay: 0.1,
     },
   },
@@ -59,7 +56,6 @@ const textVariants = {
     y: -10,
     transition: {
       duration: 0.2,
-      ease: 'easeInOut',
     },
   },
 };
