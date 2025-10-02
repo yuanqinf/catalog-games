@@ -45,7 +45,7 @@ const Header = () => {
           <Image src="/images/logo.png" alt="Logo" width={56} height={56} />
         </div>
       </Link>
-      <div className="col-span-2 w-full justify-self-center">
+      <div className="col-span-2 justify-self-center w-full">
         <SearchBar />
       </div>
       <div className="justify-self-end">
