@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import type { GameDbData } from '@/types';
-import { Star, Ghost, Gamepad2, Loader2 } from 'lucide-react';
+import { Star, Ghost, Gamepad2, Loader2, ThumbsDown } from 'lucide-react';
 import { getAvatarBorderColor } from '@/utils/steam-utils';
 import SteamReviewBadge from '@/components/shared/steam-review-badge';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
@@ -11,7 +11,15 @@ import { useSteamReviews } from '@/hooks/useSteamReviews';
 
 import DynamicTrendChart from './dynamic-trend-chart';
 
-export default function HighlightGameCard({ game }: { game: GameDbData }) {
+interface HighlightGameCardProps {
+  game: GameDbData;
+  userDislikeCount?: number;
+}
+
+export default function HighlightGameCard({
+  game,
+  userDislikeCount,
+}: HighlightGameCardProps) {
   const {
     rating,
     overallAverage,
@@ -47,18 +55,25 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
             {game.name}
           </h2>
         </div>
-        <div className="ml-2 flex flex-shrink-0 items-center text-yellow-400">
-          <Star size={18} className="mr-1 fill-current" />
-          <span className="text-md font-bold">
-            {isLoadingRating ? (
-              <Loader2 size={18} className="animate-spin" />
-            ) : (overallAverage || 0) > 0 ? (
-              overallAverage || 0
-            ) : (
-              'N/A'
-            )}
-          </span>
-        </div>
+        {userDislikeCount !== undefined ? (
+          <div className="ml-2 flex flex-shrink-0 items-center text-red-500">
+            <ThumbsDown size={18} className="mr-1 fill-current" />
+            <span className="text-md font-bold">{userDislikeCount}</span>
+          </div>
+        ) : (
+          <div className="ml-2 flex flex-shrink-0 items-center text-yellow-400">
+            <Star size={18} className="mr-1 fill-current" />
+            <span className="text-md font-bold">
+              {isLoadingRating ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (overallAverage || 0) > 0 ? (
+                overallAverage || 0
+              ) : (
+                'N/A'
+              )}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Subtext Row */}
@@ -133,15 +148,29 @@ export default function HighlightGameCard({ game }: { game: GameDbData }) {
           />
         </div>
 
-        {/* IGDB Score */}
-        <div title={`IGDB User Rating: ${game.igdb_user_rating}`}>
-          <span className="mr-1 hidden sm:inline-block">
-            IGDB User Rating:{' '}
-          </span>
-          <span className="font-semibold text-neutral-200">
-            {game.igdb_user_rating ? game.igdb_user_rating : 'N/A'}
-          </span>
-        </div>
+        {/* Show total dislike count if this is a disliked game view, otherwise show IGDB score */}
+        {userDislikeCount !== undefined ? (
+          <div
+            title={`Total Dislikes: ${game.dislike_count || 0}`}
+            className="flex items-center"
+          >
+            <span className="mr-1 hidden sm:inline-block">
+              Total Dislikes:{' '}
+            </span>
+            <span className="font-semibold text-neutral-200">
+              {game.dislike_count || 0}
+            </span>
+          </div>
+        ) : (
+          <div title={`IGDB User Rating: ${game.igdb_user_rating}`}>
+            <span className="mr-1 hidden sm:inline-block">
+              IGDB User Rating:{' '}
+            </span>
+            <span className="font-semibold text-neutral-200">
+              {game.igdb_user_rating ? game.igdb_user_rating : 'N/A'}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

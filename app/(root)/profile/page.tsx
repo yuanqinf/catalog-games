@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -9,17 +9,66 @@ import {
   CardDescription,
   CardTitle,
 } from '@/components/ui/card';
-import { BookmarkCheck, MessageSquareDiff } from 'lucide-react';
+import { ThumbsDown, Loader2 } from 'lucide-react';
+import HighlightGameCard from '@/components/shared/cards/highlight-game-card';
+import type { GameDbData } from '@/types';
+
+interface DislikedGame extends GameDbData {
+  user_dislike_count: number;
+}
 
 const UserProfilePage = () => {
   const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
+  const [totalDislikes, setTotalDislikes] = useState<number>(0);
+  const [isLoadingDislikes, setIsLoadingDislikes] = useState(true);
+  const [dislikedGames, setDislikedGames] = useState<DislikedGame[]>([]);
+  const [isLoadingGames, setIsLoadingGames] = useState(true);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
       router.push('/');
     }
   }, [isLoaded, isSignedIn, router]);
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      fetchUserDislikeCount();
+      fetchDislikedGames();
+    }
+  }, [isLoaded, isSignedIn]);
+
+  const fetchUserDislikeCount = async () => {
+    try {
+      setIsLoadingDislikes(true);
+      const response = await fetch('/api/users/dislike-count');
+      const result = await response.json();
+
+      if (result.success) {
+        setTotalDislikes(result.data.totalDislikes);
+      }
+    } catch (error) {
+      console.error('Failed to fetch dislike count:', error);
+    } finally {
+      setIsLoadingDislikes(false);
+    }
+  };
+
+  const fetchDislikedGames = async () => {
+    try {
+      setIsLoadingGames(true);
+      const response = await fetch('/api/users/disliked-games');
+      const result = await response.json();
+
+      if (result.success) {
+        setDislikedGames(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch disliked games:', error);
+    } finally {
+      setIsLoadingGames(false);
+    }
+  };
 
   if (!isLoaded || !isSignedIn) return null;
 
@@ -55,17 +104,16 @@ const UserProfilePage = () => {
           </blockquote>
           <div className="flex items-center space-x-8">
             <div className="flex items-center space-x-3">
-              <BookmarkCheck className="text-primary hidden h-6 w-6 sm:block" />
+              <ThumbsDown className="text-primary hidden h-6 w-6 sm:block" />
               <div className="flex items-baseline space-x-2">
-                <p className="text-lg font-bold">6</p>
-                <p className="text-muted-foreground text-sm">Saved</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <MessageSquareDiff className="text-primary hidden h-6 w-6 sm:block" />
-              <div className="flex items-baseline space-x-2">
-                <p className="text-lg font-bold">6</p>
-                <p className="text-muted-foreground text-sm">Rated</p>
+                <p className="text-lg font-bold">
+                  {isLoadingDislikes ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    totalDislikes
+                  )}
+                </p>
+                <p className="text-muted-foreground text-sm">total dislikes</p>
               </div>
             </div>
           </div>
@@ -74,12 +122,26 @@ const UserProfilePage = () => {
       <hr className="my-8 border-zinc-700" />
 
       <section>
-        <h2 className="mb-6 text-2xl font-bold">My Collection</h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {/* {mockMonthlyBestGamesData.map((game: GameData) => (
-            <HighlightGameCard key={game.id} game={game} />
-          ))} */}
-        </div>
+        <h2 className="mb-6 text-2xl font-bold">My Disliked Games</h2>
+        {isLoadingGames ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        ) : dislikedGames.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+            {dislikedGames.map((game) => (
+              <HighlightGameCard
+                key={game.id}
+                game={game}
+                userDislikeCount={game.user_dislike_count}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground py-12 text-center">
+            You haven&apos;t disliked any games yet.
+          </p>
+        )}
       </section>
     </div>
   );
