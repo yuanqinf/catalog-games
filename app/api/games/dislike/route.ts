@@ -17,16 +17,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (incrementBy < 1 || incrementBy > 10) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Increment amount must be between 1 and 10',
-        },
-        { status: 400 },
-      );
-    }
-
     const gameService = new GameService();
 
     // Get the game by IGDB ID to get the internal ID

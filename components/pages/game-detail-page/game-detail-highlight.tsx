@@ -16,7 +16,6 @@ interface GameDetailHighlightProps {
   game: GameDbData;
   dislikeCount: number;
   userDislikeCount: number;
-  isDislikeLoading: boolean;
   clickingButton: boolean;
   userVoteState: {
     continuousClicks: number;
@@ -30,7 +29,6 @@ export default function GameDetailHighlight({
   game,
   dislikeCount,
   userDislikeCount,
-  isDislikeLoading,
   clickingButton,
   userVoteState,
   onDislikeVote,
@@ -70,7 +68,6 @@ export default function GameDetailHighlight({
           >
             <Button
               onClick={onDislikeVote}
-              disabled={isDislikeLoading}
               className={`h-12 w-12 bg-red-600 p-0 text-white hover:bg-red-700 ${
                 userVoteState.isPowerMode ? 'shadow-lg shadow-red-500/50' : ''
               }`}

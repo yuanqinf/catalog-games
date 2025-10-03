@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2,
@@ -72,7 +72,6 @@ interface DislikeResponse {
 const GameDetail = ({ game }: { game: GameDbData }) => {
   // Dislike functionality states
   const [dislikeCount, setDislikeCount] = useState(game.dislike_count || 0);
-  const [isDislikeLoading, setIsDislikeLoading] = useState(false);
   const [clickingButton, setClickingButton] = useState(false);
   const userDislikeCount = 347; // Mock data for now
 
@@ -85,6 +84,10 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     lastClickTime: 0,
     isPowerMode: false,
   });
+
+  // Track pending votes to batch API calls
+  const pendingVotesRef = useRef<number>(0);
+  const voteTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [salesData, setSalesData] = useState<SalesData>({
     value: null,
     source: null,
@@ -177,10 +180,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
   // Handle dislike vote with floating animation
   const handleDislikeVote = async () => {
-    if (isDislikeLoading) return;
-
     const currentTime = Date.now();
-    setIsDislikeLoading(true);
 
     // Add button click animation
     setClickingButton(true);
@@ -215,36 +215,49 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
     setFloatingThumbs((prev) => [...prev, newThumb]);
 
-    // Optimistically update the UI
+    // Optimistically update the UI immediately
     setDislikeCount((prev) => prev + increment);
 
-    // Call backend API to update the database
-    try {
-      const response = await fetch('/api/games/dislike', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          igdbId: game.igdb_id,
-          incrementBy: increment,
-        }),
-      });
+    // Batch API calls - accumulate votes and send after a short delay
+    pendingVotesRef.current += increment;
 
-      const result: DislikeResponse = await response.json();
-
-      if (!result.success) {
-        console.error('Failed to update dislike count:', result.error);
-        // Revert optimistic update on error
-        setDislikeCount((prev) => prev - increment);
-      }
-    } catch (error) {
-      console.error('Error calling dislike API:', error);
-      // Revert optimistic update on error
-      setDislikeCount((prev) => prev - increment);
-    } finally {
-      setIsDislikeLoading(false);
+    // Clear existing timer if any
+    if (voteTimerRef.current) {
+      clearTimeout(voteTimerRef.current);
     }
+
+    // Set new timer to batch votes (300ms delay)
+    voteTimerRef.current = setTimeout(async () => {
+      const totalIncrement = pendingVotesRef.current;
+      pendingVotesRef.current = 0;
+      voteTimerRef.current = null;
+
+      // Call backend API to update the database with batched votes
+      try {
+        const response = await fetch('/api/games/dislike', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            igdbId: game.igdb_id,
+            incrementBy: totalIncrement,
+          }),
+        });
+
+        const result: DislikeResponse = await response.json();
+
+        if (!result.success) {
+          console.error('Failed to update dislike count:', result.error);
+          // Revert optimistic update on error
+          setDislikeCount((prev) => prev - totalIncrement);
+        }
+      } catch (error) {
+        console.error('Error calling dislike API:', error);
+        // Revert optimistic update on error
+        setDislikeCount((prev) => prev - totalIncrement);
+      }
+    }, 300);
   };
 
   // Reset power mode after 3 seconds of inactivity
@@ -512,7 +525,6 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
             game={game}
             dislikeCount={dislikeCount}
             userDislikeCount={userDislikeCount}
-            isDislikeLoading={isDislikeLoading}
             clickingButton={clickingButton}
             userVoteState={userVoteState}
             onDislikeVote={handleDislikeVote}
