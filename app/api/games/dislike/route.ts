@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GameService } from '@/lib/supabase/client';
+import { GameService, createClerkSupabaseClient } from '@/lib/supabase/client';
+import { currentUser } from '@clerk/nextjs/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,6 +47,44 @@ export async function POST(request: NextRequest) {
       game.id,
       incrementBy,
     );
+
+    // Record the user's dislike in the dislikes table
+    const clerkUser = await currentUser();
+    if (clerkUser) {
+      const supabase = createClerkSupabaseClient(null);
+
+      // Get the user's internal ID from the users table
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('clerk_id', clerkUser.id)
+        .single();
+
+      if (userData) {
+        // Upsert the dislike record (insert or update if exists)
+        const { data: existingDislike } = await supabase
+          .from('dislikes')
+          .select('id, count')
+          .eq('user_id', userData.id)
+          .eq('game_id', game.id)
+          .maybeSingle();
+
+        if (existingDislike) {
+          // Update existing dislike record
+          await supabase
+            .from('dislikes')
+            .update({ count: existingDislike.count + incrementBy })
+            .eq('id', existingDislike.id);
+        } else {
+          // Insert new dislike record
+          await supabase.from('dislikes').insert({
+            user_id: userData.id,
+            game_id: game.id,
+            count: incrementBy,
+          });
+        }
+      }
+    }
 
     return NextResponse.json({
       success: true,
