@@ -31,13 +31,13 @@ const UserProfilePage = () => {
             <Image
               className="rounded-full"
               src={user.imageUrl}
-              alt={user.fullName ?? 'User profile picture'}
+              alt={'User profile picture'}
               width={100}
               height={100}
             />
             <div>
               <CardTitle className="text-3xl font-bold">
-                {user.fullName}
+                {user.username}
               </CardTitle>
               <CardDescription className="text-muted-foreground">
                 {user.primaryEmailAddress?.emailAddress}

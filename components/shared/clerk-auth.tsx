@@ -1,15 +1,17 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUserSync } from '@/hooks/useUserSync';
 
 const ClerkAuth = () => {
   const [isMounted, setIsMounted] = useState(false);
-  const pathname = usePathname();
+
+  // Auto-sync user data when signed in
+  const { isSyncing } = useUserSync();
 
   useEffect(() => {
     setIsMounted(true);
@@ -27,6 +29,9 @@ const ClerkAuth = () => {
           transition={{ duration: 0.3, ease: 'easeInOut' }}
         >
           <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+          {isSyncing && (
+            <span className="text-xs text-gray-400">Syncing...</span>
+          )}
         </motion.div>
       ) : (
         <motion.div
@@ -58,7 +63,6 @@ const ClerkAuth = () => {
                   },
                 },
               }}
-              afterSignOutUrl={pathname === '/profile' ? '/' : pathname}
             />
           </SignedIn>
         </motion.div>
