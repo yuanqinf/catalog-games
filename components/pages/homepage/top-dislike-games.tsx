@@ -4,6 +4,7 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThumbsDown, Gamepad2, Loader2, ExternalLink } from 'lucide-react';
+import NumberFlow from '@number-flow/react';
 import {
   Carousel,
   CarouselContent,
@@ -477,7 +478,7 @@ const TopDislikeGames = () => {
                         <div className="flex items-center gap-2">
                           <ThumbsDown className="h-4 w-4 text-red-400" />
                           <span className="font-bold text-white">
-                            {game.dislikeCount.toLocaleString()}
+                            <NumberFlow value={game.dislikeCount} />
                           </span>
                         </div>
                       </div>
@@ -582,7 +583,7 @@ const TopDislikeGames = () => {
                       <div className="mt-1 flex items-center gap-1 text-red-400">
                         <ThumbsDown size={12} />
                         <span className="text-xs font-bold">
-                          {game.dislikeCount.toLocaleString()}
+                          <NumberFlow value={game.dislikeCount} />
                         </span>
                       </div>
                     </div>
