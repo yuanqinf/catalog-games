@@ -9,6 +9,7 @@ import {
   Share2,
   Gamepad2,
   Calendar,
+  Users,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -50,6 +51,8 @@ const GameDetailHeadline = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [dislikedUsersCount, setDislikedUsersCount] = useState<number>(0);
+  const [isLoadingUsersCount, setIsLoadingUsersCount] = useState(true);
 
   const getRankingColor = (rank: number | null) => {
     if (!rank) return 'yellow';
@@ -95,6 +98,28 @@ const GameDetailHeadline = ({
     }
 
     fetchRankingData();
+  }, [gameId]);
+
+  useEffect(() => {
+    async function fetchDislikedUsersCount() {
+      try {
+        setIsLoadingUsersCount(true);
+        const response = await fetch(
+          `/api/games/disliked-users-count?gameId=${gameId}`,
+        );
+        const result = await response.json();
+
+        if (result.success) {
+          setDislikedUsersCount(result.data.dislikedUsersCount);
+        }
+      } catch (err) {
+        console.error('Failed to fetch disliked users count:', err);
+      } finally {
+        setIsLoadingUsersCount(false);
+      }
+    }
+
+    fetchDislikedUsersCount();
   }, [gameId]);
 
   if (isLoading) {
@@ -197,6 +222,18 @@ const GameDetailHeadline = ({
                     {dislikeCount?.toLocaleString() || '0'}
                   </span>
                   <span className="text-sm text-gray-400">dislikes</span>
+                </div>
+
+                {/* Disliked User Count */}
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-orange-400" />
+                  <span className="text-sm text-gray-400">
+                    {isLoadingUsersCount ? (
+                      <Loader2 className="inline h-3 w-3 animate-spin" />
+                    ) : (
+                      `${dislikedUsersCount.toLocaleString()} ${dislikedUsersCount === 1 ? 'user' : 'users'}`
+                    )}
+                  </span>
                 </div>
 
                 {/* Release Date */}
