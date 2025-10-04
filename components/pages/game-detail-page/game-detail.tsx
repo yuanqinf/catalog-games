@@ -73,7 +73,8 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
   // Dislike functionality states
   const [dislikeCount, setDislikeCount] = useState(game.dislike_count || 0);
   const [clickingButton, setClickingButton] = useState(false);
-  const userDislikeCount = 347; // Mock data for now
+  const [userDislikeCount, setUserDislikeCount] = useState<number>(0);
+  const [isLoadingUserDislike, setIsLoadingUserDislike] = useState(true);
 
   // Floating thumbs animation state
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
@@ -105,6 +106,31 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     null,
   );
   const [isLoadingPlaytracker, setIsLoadingPlaytracker] = useState(true);
+
+  // Fetch user's dislike count for this game
+  useEffect(() => {
+    const fetchUserDislikeCount = async () => {
+      if (!game.id) return;
+
+      setIsLoadingUserDislike(true);
+      try {
+        const response = await fetch(
+          `/api/users/game-dislike-count?gameId=${game.id}`,
+        );
+        const result = await response.json();
+
+        if (result.success) {
+          setUserDislikeCount(result.data.userDislikeCount);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user dislike count:', error);
+      } finally {
+        setIsLoadingUserDislike(false);
+      }
+    };
+
+    fetchUserDislikeCount();
+  }, [game.id]);
 
   // Fetch sales data with fallback logic
   useEffect(() => {
@@ -217,6 +243,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
     // Optimistically update the UI immediately
     setDislikeCount((prev) => prev + increment);
+    setUserDislikeCount((prev) => prev + increment);
 
     // Batch API calls - accumulate votes and send after a short delay
     pendingVotesRef.current += increment;
@@ -251,11 +278,13 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
           console.error('Failed to update dislike count:', result.error);
           // Revert optimistic update on error
           setDislikeCount((prev) => prev - totalIncrement);
+          setUserDislikeCount((prev) => prev - totalIncrement);
         }
       } catch (error) {
         console.error('Error calling dislike API:', error);
         // Revert optimistic update on error
         setDislikeCount((prev) => prev - totalIncrement);
+        setUserDislikeCount((prev) => prev - totalIncrement);
       }
     }, 300);
   };
@@ -376,6 +405,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
               ? new Date(game.first_release_date).getTime()
               : undefined
           }
+          dislikeCount={dislikeCount}
         />
 
         {/* Game Detail Main Section */}
@@ -525,6 +555,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
             game={game}
             dislikeCount={dislikeCount}
             userDislikeCount={userDislikeCount}
+            isLoadingUserDislike={isLoadingUserDislike}
             clickingButton={clickingButton}
             userVoteState={userVoteState}
             onDislikeVote={handleDislikeVote}

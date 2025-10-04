@@ -36,6 +36,7 @@ interface GameDetailHeadlineProps {
   gameName: string;
   gameCoverUrl?: string;
   gameReleaseDate?: number;
+  dislikeCount: number;
 }
 
 const GameDetailHeadline = ({
@@ -43,6 +44,7 @@ const GameDetailHeadline = ({
   gameName,
   gameCoverUrl,
   gameReleaseDate,
+  dislikeCount,
 }: GameDetailHeadlineProps) => {
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -192,8 +194,7 @@ const GameDetailHeadline = ({
                 <div className="flex items-center gap-2">
                   <ThumbsDown className="h-4 w-4 text-red-400" />
                   <span className="text-lg font-bold text-red-400">
-                    {rankingData.currentGame.dislike_count?.toLocaleString() ||
-                      '0'}
+                    {dislikeCount?.toLocaleString() || '0'}
                   </span>
                   <span className="text-sm text-gray-400">dislikes</span>
                 </div>

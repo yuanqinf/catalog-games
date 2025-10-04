@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ThumbsDown, Users } from 'lucide-react';
+import { ThumbsDown, Angry, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DynamicTrendChart from '@/components/shared/cards/dynamic-trend-chart';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
@@ -16,6 +16,7 @@ interface GameDetailHighlightProps {
   game: GameDbData;
   dislikeCount: number;
   userDislikeCount: number;
+  isLoadingUserDislike: boolean;
   clickingButton: boolean;
   userVoteState: {
     continuousClicks: number;
@@ -29,6 +30,7 @@ export default function GameDetailHighlight({
   game,
   dislikeCount,
   userDislikeCount,
+  isLoadingUserDislike,
   clickingButton,
   userVoteState,
   onDislikeVote,
@@ -47,17 +49,30 @@ export default function GameDetailHighlight({
       {/* Reaction Panel */}
       <div className="rounded-lg border border-zinc-700 bg-zinc-900/50 p-4">
         <div className="flex items-center justify-between">
-          {/* Left side: Dislike count and user number */}
-          <div className="flex flex-col">
-            <div className="mb-1 flex items-center gap-2">
+          {/* Left side: Dislike counts in one line */}
+          <div className="flex items-center gap-3">
+            {/* Total Dislike Count */}
+            <div className="flex items-center gap-2">
               <ThumbsDown className="h-5 w-5 text-red-400" />
               <span className="text-2xl font-bold text-white">
                 {dislikeCount.toLocaleString()}
               </span>
             </div>
-            <div className="flex items-center gap-1 text-sm text-zinc-400">
-              <Users className="h-3 w-3" />
-              <span>{userDislikeCount.toLocaleString()} users</span>
+
+            {/* Divider */}
+            <div className="h-8 w-px bg-zinc-700" />
+
+            {/* User's Dislike Count */}
+            <div className="flex items-center gap-2">
+              <Angry className="h-4 w-4 text-orange-400" />
+              {isLoadingUserDislike ? (
+                <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
+              ) : (
+                <span className="text-lg font-semibold text-orange-400">
+                  {userDislikeCount.toLocaleString()}
+                </span>
+              )}
+              <span className="text-xs text-zinc-500">yours</span>
             </div>
           </div>
 
