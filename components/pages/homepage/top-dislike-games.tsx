@@ -38,6 +38,7 @@ interface GameOverEntry {
   developer: string;
   dislikeCount: number;
   rank: number;
+  slug: string;
 }
 
 interface UserVoteState {
@@ -109,6 +110,7 @@ const TopDislikeGames = () => {
           developer: game.developers?.[0] || 'Unknown Developer',
           dislikeCount: game.dislike_count,
           rank: index + 1,
+          slug: game.slug,
         }),
       );
       setGameOverData(transformedData);
@@ -468,38 +470,40 @@ const TopDislikeGames = () => {
             <CarouselContent>
               {gameOverData.map((game) => (
                 <CarouselItem key={game.id}>
-                  <div className="game-card relative aspect-[16/9] overflow-hidden rounded-lg">
-                    {/* Dislike Count Overlay */}
-                    <div className="absolute top-4 left-4 z-20 rounded-lg bg-black/70 px-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <ThumbsDown className="h-4 w-4 text-red-400" />
-                        <span className="font-bold text-white">
-                          {game.dislikeCount.toLocaleString()}
-                        </span>
+                  <Link href={`/detail/${game.slug}`}>
+                    <div className="game-card relative aspect-[16/9] cursor-pointer overflow-hidden rounded-lg transition-transform hover:scale-[1.02]">
+                      {/* Dislike Count Overlay */}
+                      <div className="absolute top-4 left-4 z-20 rounded-lg bg-black/70 px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <ThumbsDown className="h-4 w-4 text-red-400" />
+                          <span className="font-bold text-white">
+                            {game.dislikeCount.toLocaleString()}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Rank Badge */}
-                    <div className="absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 font-bold text-white">
-                      #{game.rank}
-                    </div>
-
-                    {/* Banner Image */}
-                    {game.bannerUrl ? (
-                      <Image
-                        src={game.bannerUrl}
-                        alt={`Banner image for ${game.title}`}
-                        width={1920}
-                        height={1080}
-                        className="h-full w-full object-cover"
-                        priority={activeIndex === gameOverData.indexOf(game)}
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-zinc-800">
-                        <Gamepad2 size={60} className="text-zinc-500" />
+                      {/* Rank Badge */}
+                      <div className="absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 font-bold text-white">
+                        #{game.rank}
                       </div>
-                    )}
-                  </div>
+
+                      {/* Banner Image */}
+                      {game.bannerUrl ? (
+                        <Image
+                          src={game.bannerUrl}
+                          alt={`Banner image for ${game.title}`}
+                          width={1920}
+                          height={1080}
+                          className="h-full w-full object-cover"
+                          priority={activeIndex === gameOverData.indexOf(game)}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-zinc-800">
+                          <Gamepad2 size={60} className="text-zinc-500" />
+                        </div>
+                      )}
+                    </div>
+                  </Link>
                 </CarouselItem>
               ))}
             </CarouselContent>
