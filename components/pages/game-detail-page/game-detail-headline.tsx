@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { toast } from 'sonner';
 
 // API response interface
 interface RankingData {
@@ -58,9 +59,14 @@ const GameDetailHeadline = ({
     return 'yellow';
   };
 
-  const handleShare = () => {
-    console.log('Share button clicked for game:', gameName);
-    // TODO: Implement share functionality
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success('Link copied!');
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      toast.error('Failed to copy link');
+    }
   };
 
   useEffect(() => {
@@ -252,7 +258,7 @@ const GameDetailHeadline = ({
           {/* Right: Action Buttons */}
           <div className="flex items-center gap-3">
             <Button onClick={handleShare} variant="outline">
-              <Share2 className="mr-2 h-4 w-4" />
+              <Share2 className="mr-1 h-4 w-4" />
               Share
             </Button>
           </div>
