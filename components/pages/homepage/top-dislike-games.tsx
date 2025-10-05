@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
 import PaginationDots from '@/components/shared/pagination-dots';
+import MiniGameCard from '@/components/shared/cards/mini-game-card';
 
 // Types for Top Disliked Games data
 interface TopDislikedGame {
@@ -85,7 +86,7 @@ const TopDislikeGames = () => {
     isLoading,
     mutate,
   } = useSWR<TopDislikedGamesResponse>(
-    '/api/games/top-disliked',
+    '/api/games/top-disliked?limit=10',
     (url) =>
       fetch(url).then((res) => {
         if (!res.ok) throw new Error('Failed to fetch top disliked games');
@@ -306,7 +307,7 @@ const TopDislikeGames = () => {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <ThumbsDown className="h-6 w-6 text-yellow-500" />
+            <ThumbsDown className="h-6 w-6 text-red-500" />
             <h2 className="text-2xl font-bold">Hall of Shame</h2>
           </div>
           <Link href="/explore">
@@ -368,19 +369,9 @@ const TopDislikeGames = () => {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <ThumbsDown className="h-6 w-6 text-yellow-500" />
+          <ThumbsDown className="h-6 w-6 text-red-500" />
           <h2 className="text-2xl font-bold">Hall of Shame</h2>
         </div>
-        <Link href="/explore">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2 border-zinc-600 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white"
-          >
-            <ExternalLink className="h-4 w-4" />
-            <span className="text-sm">Explore More</span>
-          </Button>
-        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
@@ -474,7 +465,7 @@ const TopDislikeGames = () => {
             }}
           >
             <CarouselContent>
-              {gameOverData.map((game) => (
+              {gameOverData.slice(0, 5).map((game) => (
                 <CarouselItem key={game.id}>
                   <Link href={`/detail/${game.slug}`}>
                     <div className="game-card relative aspect-[16/9] cursor-pointer overflow-hidden rounded-lg transition-transform hover:scale-[1.02]">
@@ -517,7 +508,7 @@ const TopDislikeGames = () => {
 
           {/* Mobile pagination dots */}
           <PaginationDots
-            totalItems={gameOverData.length}
+            totalItems={Math.min(gameOverData.length, 5)}
             activeIndex={activeIndex}
             carouselApi={carouselApi}
             className="lg:hidden"
@@ -536,7 +527,7 @@ const TopDislikeGames = () => {
           </div>
 
           <div className="space-y-4">
-            {gameOverData.map((game, index) => {
+            {gameOverData.slice(0, 5).map((game, index) => {
               // Find the corresponding top disliked game data to get cover_url
               const topDislikedGame = topDislikedGamesResponse?.data?.find(
                 (tdg) => tdg.igdb_id.toString() === game.id,
@@ -641,6 +632,47 @@ const TopDislikeGames = () => {
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* Top 6 - 10 Disliked Games */}
+      <div className="mt-8">
+        <div className="mb-6 flex items-center justify-end">
+          <Link href="/explore">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 border-zinc-600 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span className="text-sm">Explore More</span>
+            </Button>
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+          {gameOverData.slice(5, 10).map((game, index) => {
+            // Convert GameOverEntry to GameDbData format for MiniGameCard
+            const gameData = {
+              id: parseInt(game.id),
+              igdb_id: parseInt(game.id),
+              name: game.title,
+              slug: game.slug,
+              cover_url: game.bannerUrl,
+              banner_url: game.bannerUrl,
+              developers: game.developer ? [game.developer] : null,
+              platforms: [], // We don't have platform data in GameOverEntry
+              first_release_date: null, // We don't have release date in GameOverEntry
+              dislike_count: game.dislikeCount,
+            };
+
+            return (
+              <MiniGameCard
+                key={game.id}
+                game={gameData}
+                ranking={index + 6} // 6-10 becomes 7-11 for display
+              />
+            );
+          })}
         </div>
       </div>
     </section>
