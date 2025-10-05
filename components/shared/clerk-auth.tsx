@@ -17,6 +17,31 @@ const ClerkAuth = () => {
     setIsMounted(true);
   }, []);
 
+  // Monitor Clerk dialog state
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.removedNodes.forEach((node) => {
+          if (
+            node instanceof HTMLElement &&
+            (node.classList.contains('cl-modalBackdrop') ||
+              node.classList.contains('cl-userButtonPopoverCard'))
+          ) {
+            // Sync user data
+            useUserSync();
+          }
+        });
+      });
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <AnimatePresence mode="wait">
       {!isMounted ? (
