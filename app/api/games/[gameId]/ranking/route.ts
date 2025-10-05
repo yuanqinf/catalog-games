@@ -3,10 +3,11 @@ import { GameService } from '@/lib/supabase/client';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { gameId: string } },
+  { params }: { params: Promise<{ gameId: string }> },
 ) {
   try {
-    const gameId = parseInt(params.gameId);
+    const { gameId: gameIdParam } = await params;
+    const gameId = parseInt(gameIdParam);
 
     if (isNaN(gameId)) {
       return NextResponse.json({ error: 'Invalid game ID' }, { status: 400 });

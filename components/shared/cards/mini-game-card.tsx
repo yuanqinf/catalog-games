@@ -1,12 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  Gamepad2,
-  Bookmark,
-  Calendar,
-  ThumbsDown,
-  MoreHorizontal,
-} from 'lucide-react';
+import { Gamepad2, Calendar, ThumbsDown, MoreHorizontal } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGamepad } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -93,15 +87,6 @@ const MiniGameCard = ({
               #{ranking}
             </Badge>
           )}
-          <Bookmark
-            size={20}
-            className="absolute top-6 right-6 z-10 cursor-pointer text-white/80 transition-all duration-200 group-hover:text-white hover:scale-125 hover:text-yellow-400 hover:drop-shadow-lg"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              // TODO: Add onClick handler for bookmark functionality
-            }}
-          />
           <div
             className="relative mb-2 overflow-hidden rounded bg-zinc-700 transition-shadow duration-200 group-hover:shadow-md"
             style={{ aspectRatio: '672/895' }}

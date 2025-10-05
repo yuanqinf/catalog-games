@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import {
   ThumbsDown,
   Loader2,
-  Bookmark,
-  BookmarkCheck,
   Share2,
   Gamepad2,
   Calendar,
@@ -50,7 +48,6 @@ const GameDetailHeadline = ({
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [dislikedUsersCount, setDislikedUsersCount] = useState<number>(0);
   const [isLoadingUsersCount, setIsLoadingUsersCount] = useState(true);
 
@@ -59,13 +56,6 @@ const GameDetailHeadline = ({
     if (rank <= 5) return 'red';
     if (rank <= 15) return 'orange';
     return 'yellow';
-  };
-
-  // Placeholder handlers for buttons
-  const handleFollow = () => {
-    setIsBookmarked(!isBookmarked);
-    console.log(`${isBookmarked ? 'Unfollowed' : 'Followed'} game:`, gameName);
-    // TODO: Implement follow functionality
   };
 
   const handleShare = () => {
@@ -261,14 +251,6 @@ const GameDetailHeadline = ({
 
           {/* Right: Action Buttons */}
           <div className="flex items-center gap-3">
-            <Button onClick={handleFollow} variant="outline">
-              {isBookmarked ? (
-                <BookmarkCheck className="mr-2 h-4 w-4" />
-              ) : (
-                <Bookmark className="mr-2 h-4 w-4" />
-              )}
-              {isBookmarked ? 'Following' : 'Follow'}
-            </Button>
             <Button onClick={handleShare} variant="outline">
               <Share2 className="mr-2 h-4 w-4" />
               Share
