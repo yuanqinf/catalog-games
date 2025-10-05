@@ -1,14 +1,44 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@clerk/nextjs';
 import { AdminProvider, SingleGameAdd, DeadGameAdd } from '@/components/admin';
-
-// TODO: Only allow admin users to access this page
+import { Loader2 } from 'lucide-react';
 
 export default function AdminPage() {
   const router = useRouter();
   const { isLoaded, isSignedIn } = useSession();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!isLoaded || !isSignedIn) {
+        setIsCheckingAdmin(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/users/check-admin');
+        const data = await response.json();
+
+        setIsAdmin(data.isAdmin);
+
+        if (!data.isAdmin) {
+          router.replace('/');
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+        router.replace('/');
+      } finally {
+        setIsCheckingAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [isLoaded, isSignedIn, router]);
 
   // Redirect if not signed in
   useEffect(() => {
@@ -17,7 +47,19 @@ export default function AdminPage() {
     }
   }, [isLoaded, isSignedIn, router]);
 
-  if (isLoaded && !isSignedIn) {
+  // Show loading state
+  if (!isLoaded || isCheckingAdmin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-red-400" />
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not signed in or not admin
+  if (!isSignedIn || !isAdmin) {
     return null;
   }
 
