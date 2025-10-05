@@ -52,6 +52,11 @@ export const CreateDislikeGameModal = ({
 
   // Handle dislike button click with floating animation (doesn't confirm modal)
   const handleDislikeClick = useCallback(() => {
+    // Play pop sound effect
+    const audio = new Audio('/sound/pop_sound.wav');
+    audio.volume = 0.3;
+    audio.play().catch((error) => console.error('Error playing sound:', error));
+
     const newThumb: FloatingThumb = {
       id: `thumb-${Date.now()}-${Math.random()}`,
       startX: Math.random() * 60 + 20, // Random position between 20% and 80%

@@ -137,6 +137,11 @@ const TopDislikeGames = () => {
   const handleDislikeVote = async (gameId: string) => {
     const currentTime = Date.now();
 
+    // Play pop sound effect
+    const audio = new Audio('/sound/pop_sound.wav');
+    audio.volume = 0.3;
+    audio.play().catch((error) => console.error('Error playing sound:', error));
+
     // Add button click animation
     setClickingButtons((prev) => new Set([...prev, gameId]));
     setTimeout(() => {
@@ -522,7 +527,9 @@ const TopDislikeGames = () => {
         {/* Right Sidebar - Vote/Attack Panel */}
         <div className="relative hidden overflow-hidden rounded-lg bg-zinc-800 p-4 lg:block">
           <div className="mb-4">
-            <h3 className="mb-2 font-bold text-red-400">Attack Panel</h3>
+            <h3 className="mb-2 font-bold text-red-400">
+              Top 5 Disliked Games
+            </h3>
             <p className="text-xs text-zinc-400">
               Cast your vote to increase the shame!
             </p>

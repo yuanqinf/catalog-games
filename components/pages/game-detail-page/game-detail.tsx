@@ -208,6 +208,11 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
   const handleDislikeVote = async () => {
     const currentTime = Date.now();
 
+    // Play pop sound effect
+    const audio = new Audio('/sound/pop_sound.wav');
+    audio.volume = 0.3;
+    audio.play().catch((error) => console.error('Error playing sound:', error));
+
     // Add button click animation
     setClickingButton(true);
     setTimeout(() => setClickingButton(false), 200);
