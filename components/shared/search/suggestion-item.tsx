@@ -9,6 +9,7 @@ import {
   SuggestionItem as SuggestionItemType,
 } from '@/types';
 import Image from 'next/image';
+import NumberFlow from '@number-flow/react';
 
 interface SuggestionItemProps {
   item: SuggestionItemType;
@@ -89,7 +90,7 @@ export const SuggestionItem = ({
                 className="drop-shadow-2xl' h-3 w-3 text-red-500"
                 fill="currentColor"
               />
-              <span>{dislikeCount.toLocaleString()}</span>
+              <NumberFlow value={dislikeCount} />
             </div>
           ) : (
             <div className="flex items-center gap-1 text-xs text-zinc-400">

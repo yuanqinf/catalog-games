@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Gamepad2, Calendar, ThumbsDown, MoreHorizontal } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGamepad } from '@fortawesome/free-solid-svg-icons';
+import NumberFlow from '@number-flow/react';
 import {
   faWindows,
   faPlaystation,
@@ -178,7 +179,7 @@ const MiniGameCard = ({
                   size={14}
                   className="mr-1 flex-shrink-0 text-red-400 transition-all duration-300 group-hover:scale-110 group-hover:text-red-300"
                 />
-                {game.dislike_count ? game.dislike_count.toLocaleString() : '0'}
+                <NumberFlow value={game.dislike_count || 0} />
               </p>
             </div>
           </div>

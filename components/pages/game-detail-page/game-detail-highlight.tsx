@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import DynamicTrendChart from '@/components/shared/cards/dynamic-trend-chart';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 import SteamReviewBadge from '@/components/shared/steam-review-badge';
+import NumberFlow from '@number-flow/react';
 
 import { useGameRating } from '@/hooks/useGameRating';
 import { useSteamReviews } from '@/hooks/useSteamReviews';
@@ -55,7 +56,7 @@ export default function GameDetailHighlight({
             <div className="flex items-center gap-2">
               <ThumbsDown className="h-5 w-5 text-red-400" />
               <span className="text-2xl font-bold text-white">
-                {dislikeCount.toLocaleString()}
+                <NumberFlow value={dislikeCount} />
               </span>
             </div>
 
@@ -69,7 +70,7 @@ export default function GameDetailHighlight({
                 <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
               ) : (
                 <span className="text-lg font-semibold text-orange-400">
-                  {userDislikeCount.toLocaleString()}
+                  <NumberFlow value={userDislikeCount} />
                 </span>
               )}
               <span className="text-xs text-zinc-500">yours</span>

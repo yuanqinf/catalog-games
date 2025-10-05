@@ -51,27 +51,39 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (userData) {
-        // Upsert the dislike record (insert or update if exists)
-        const { data: existingDislike } = await supabase
-          .from('dislikes')
-          .select('id, count')
-          .eq('user_id', userData.id)
-          .eq('game_id', game.id)
-          .maybeSingle();
+        // Use PostgreSQL's INSERT ... ON CONFLICT for atomic upsert
+        const { error: upsertError } = await supabase.rpc(
+          'upsert_user_dislike',
+          {
+            p_user_id: userData.id,
+            p_game_id: game.id,
+            p_increment: incrementBy,
+          },
+        );
 
-        if (existingDislike) {
-          // Update existing dislike record
-          await supabase
+        if (upsertError) {
+          console.error('Failed to upsert user dislike:', upsertError);
+          // Fallback to manual upsert if RPC function doesn't exist
+          const { data: existingDislike } = await supabase
             .from('dislikes')
-            .update({ count: existingDislike.count + incrementBy })
-            .eq('id', existingDislike.id);
-        } else {
-          // Insert new dislike record
-          await supabase.from('dislikes').insert({
-            user_id: userData.id,
-            game_id: game.id,
-            count: incrementBy,
-          });
+            .select('count')
+            .eq('user_id', userData.id)
+            .eq('game_id', game.id)
+            .maybeSingle();
+
+          if (existingDislike) {
+            await supabase
+              .from('dislikes')
+              .update({ count: existingDislike.count + incrementBy })
+              .eq('user_id', userData.id)
+              .eq('game_id', game.id);
+          } else {
+            await supabase.from('dislikes').insert({
+              user_id: userData.id,
+              game_id: game.id,
+              count: incrementBy,
+            });
+          }
         }
       }
     }

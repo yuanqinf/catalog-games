@@ -19,6 +19,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
+import NumberFlow from '@number-flow/react';
 
 // API response interface
 interface RankingData {
@@ -215,7 +216,7 @@ const GameDetailHeadline = ({
                 <div className="flex items-center gap-2">
                   <ThumbsDown className="h-4 w-4 text-red-400" />
                   <span className="text-lg font-bold text-red-400">
-                    {dislikeCount?.toLocaleString() || '0'}
+                    <NumberFlow value={dislikeCount || 0} />
                   </span>
                   <span className="text-sm text-gray-400">dislikes</span>
                 </div>
@@ -227,7 +228,10 @@ const GameDetailHeadline = ({
                     {isLoadingUsersCount ? (
                       <Loader2 className="inline h-3 w-3 animate-spin" />
                     ) : (
-                      `${dislikedUsersCount.toLocaleString()} ${dislikedUsersCount === 1 ? 'user' : 'users'}`
+                      <>
+                        <NumberFlow value={dislikedUsersCount} />{' '}
+                        {dislikedUsersCount === 1 ? 'user' : 'users'}
+                      </>
                     )}
                   </span>
                 </div>

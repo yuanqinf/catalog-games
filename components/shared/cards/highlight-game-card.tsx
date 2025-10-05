@@ -8,6 +8,7 @@ import SteamReviewBadge from '@/components/shared/steam-review-badge';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 import { useGameRating } from '@/hooks/useGameRating';
 import { useSteamReviews } from '@/hooks/useSteamReviews';
+import NumberFlow from '@number-flow/react';
 
 import DynamicTrendChart from './dynamic-trend-chart';
 
@@ -58,7 +59,9 @@ export default function HighlightGameCard({
         {userDislikeCount !== undefined ? (
           <div className="ml-2 flex flex-shrink-0 items-center text-red-500">
             <ThumbsDown size={18} className="mr-1 fill-current" />
-            <span className="text-md font-bold">{userDislikeCount}</span>
+            <span className="text-md font-bold">
+              <NumberFlow value={userDislikeCount} />
+            </span>
           </div>
         ) : (
           <div className="ml-2 flex flex-shrink-0 items-center text-yellow-400">
@@ -158,7 +161,7 @@ export default function HighlightGameCard({
               Total Dislikes:{' '}
             </span>
             <span className="font-semibold text-neutral-200">
-              {game.dislike_count || 0}
+              <NumberFlow value={game.dislike_count || 0} />
             </span>
           </div>
         ) : (
