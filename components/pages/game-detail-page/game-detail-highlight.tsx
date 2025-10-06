@@ -151,16 +151,6 @@ export default function GameDetailHighlight({
           </span>
         </div>
 
-        {/* IGDB Score */}
-        <div title={`IGDB User Rating: ${game.igdb_user_rating}`}>
-          <span className="mr-1 hidden sm:inline-block">
-            IGDB User Rating:{' '}
-          </span>
-          <span className="font-semibold text-neutral-200">
-            {game.igdb_user_rating ? game.igdb_user_rating : 'N/A'}
-          </span>
-        </div>
-
         {/* Steam Review - client-side real-time data only with slide-in animation */}
         <div
           className={`transition-all duration-500 ease-out ${

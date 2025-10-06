@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ThumbsDown, Loader2 } from 'lucide-react';
-import HighlightGameCard from '@/components/shared/cards/highlight-game-card';
+import ProfileGameCard from '@/components/shared/cards/profile-game-card';
 import type { GameDbData } from '@/types';
 
 interface DislikedGame extends GameDbData {
@@ -130,7 +130,7 @@ const UserProfilePage = () => {
         ) : dislikedGames.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
             {dislikedGames.map((game) => (
-              <HighlightGameCard
+              <ProfileGameCard
                 key={game.id}
                 game={game}
                 userDislikeCount={game.user_dislike_count}
