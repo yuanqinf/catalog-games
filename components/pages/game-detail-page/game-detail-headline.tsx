@@ -123,9 +123,22 @@ const GameDetailHeadline = ({
     return (
       <section className="mb-8">
         <div className="p-6">
-          <div className="flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-red-400" />
-            <span className="ml-2 text-gray-300">Loading ranking data...</span>
+          <div className="flex items-center gap-4">
+            {/* Skeleton Avatar */}
+            <div className="h-18 w-18 flex-shrink-0 animate-pulse rounded-full bg-gray-700" />
+
+            {/* Skeleton Content */}
+            <div className="flex flex-1 flex-col gap-6">
+              <div className="h-8 w-64 animate-pulse rounded bg-gray-700" />
+              <div className="flex items-center gap-4">
+                <div className="h-5 w-24 animate-pulse rounded bg-gray-700" />
+                <div className="h-5 w-32 animate-pulse rounded bg-gray-700" />
+                <div className="h-5 w-28 animate-pulse rounded bg-gray-700" />
+              </div>
+            </div>
+
+            {/* Skeleton Button */}
+            <div className="h-10 w-24 animate-pulse rounded bg-gray-700" />
           </div>
         </div>
       </section>
