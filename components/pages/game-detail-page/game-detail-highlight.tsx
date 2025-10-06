@@ -2,7 +2,14 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ThumbsDown, Angry, Loader2 } from 'lucide-react';
+import {
+  ThumbsDown,
+  Angry,
+  Loader2,
+  LucideIcon,
+  Info,
+  Joystick,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DynamicTrendChart from '@/components/shared/cards/dynamic-trend-chart';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
@@ -12,6 +19,19 @@ import NumberFlow from '@number-flow/react';
 import { useGameRating } from '@/hooks/useGameRating';
 import { useSteamReviews } from '@/hooks/useSteamReviews';
 import { GameDbData } from '@/types';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
+export interface StatisticItem {
+  title: string;
+  value: string;
+  icon: LucideIcon;
+  tooltipContent?: React.ReactNode;
+}
 
 interface GameDetailHighlightProps {
   game: GameDbData;
@@ -25,6 +45,8 @@ interface GameDetailHighlightProps {
     isPowerMode: boolean;
   };
   onDislikeVote: () => void;
+  statistics?: StatisticItem[];
+  isLoadingStatistics?: boolean;
 }
 
 export default function GameDetailHighlight({
@@ -35,6 +57,8 @@ export default function GameDetailHighlight({
   clickingButton,
   userVoteState,
   onDislikeVote,
+  statistics = [],
+  isLoadingStatistics = false,
 }: GameDetailHighlightProps) {
   const {
     rating,
@@ -118,6 +142,68 @@ export default function GameDetailHighlight({
       <div>
         <DynamicTrendChart keyword={game.name} hideYAxis hideXAxis />
       </div>
+
+      {/* Statistics Section */}
+      {(statistics.length > 0 || isLoadingStatistics) && (
+        <div>
+          {isLoadingStatistics ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
+            </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="space-y-3"
+            >
+              {statistics.map((stat, index) => {
+                const Icon = stat.icon;
+
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.3,
+                      ease: 'easeOut',
+                      delay: index * 0.05,
+                    }}
+                    className="flex items-center justify-between rounded-md border border-zinc-700/50 bg-zinc-800/50 p-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-md bg-zinc-700/50 p-2">
+                        <Icon className="h-4 w-4 text-zinc-300" />
+                      </div>
+                      <span className="text-sm text-zinc-400">
+                        {stat.title}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-semibold text-white">
+                        {stat.value}
+                      </span>
+                      {stat.tooltipContent && (
+                        <TooltipProvider delayDuration={0}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-4 w-4 cursor-pointer text-zinc-500 hover:text-zinc-300" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {stat.tooltipContent}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
+        </div>
+      )}
 
       <div className="highlight-card-section">
         <CatalogRating

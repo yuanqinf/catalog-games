@@ -2,9 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import type { GameDbData } from '@/types';
 import { Star, Ghost, Gamepad2, Loader2, ThumbsDown } from 'lucide-react';
-import { getAvatarBorderColor } from '@/utils/steam-utils';
 import SteamReviewBadge from '@/components/shared/steam-review-badge';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 import { useGameRating } from '@/hooks/useGameRating';
@@ -16,6 +16,16 @@ import DynamicTrendChart from './dynamic-trend-chart';
 interface ProfileGameCardProps {
   game: GameDbData;
   userDislikeCount: number;
+}
+
+interface RankingData {
+  currentGame: {
+    id: number;
+    name: string;
+    slug: string;
+    dislike_count: number;
+    rank: number | null;
+  };
 }
 
 export default function ProfileGameCard({
@@ -31,9 +41,35 @@ export default function ProfileGameCard({
   // Fetch real-time Steam reviews (client-side only)
   const { steamReviews } = useSteamReviews(game.name);
 
-  const avatarBorderColorClass = getAvatarBorderColor(
-    steamReviews?.steam_all_review ?? undefined,
-  );
+  // Fetch ranking data for avatar border color
+  const [rankingData, setRankingData] = useState<RankingData | null>(null);
+
+  useEffect(() => {
+    async function fetchRankingData() {
+      try {
+        const response = await fetch(`/api/games/${game.id}/ranking`);
+        if (response.ok) {
+          const data = await response.json();
+          setRankingData(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch ranking data:', error);
+      }
+    }
+
+    if (game.id) {
+      fetchRankingData();
+    }
+  }, [game.id]);
+
+  const getRankingColor = (rank: number | null) => {
+    if (!rank) return 'yellow';
+    if (rank <= 5) return 'red';
+    if (rank <= 15) return 'orange';
+    return 'yellow';
+  };
+
+  const avatarBorderColorClass = `border-${getRankingColor(rankingData?.currentGame.rank ?? null)}-600`;
 
   return (
     <Link href={`/detail/${game.slug}`}>
@@ -141,17 +177,19 @@ export default function ProfileGameCard({
         {/* Footer Row */}
         <div className="highlight-card-footer">
           {/* Steam Review - client-side real-time data only with slide-in animation */}
-          <div
-            className={`transition-all duration-500 ease-out ${
-              steamReviews?.steam_all_review
-                ? 'translate-x-0 opacity-100'
-                : 'translate-x-4 opacity-0'
-            }`}
-          >
-            <SteamReviewBadge
-              review={steamReviews?.steam_all_review ?? undefined}
-            />
-          </div>
+          {steamReviews?.steam_all_review && (
+            <div
+              className={`transition-all duration-500 ease-out ${
+                steamReviews?.steam_all_review
+                  ? 'translate-x-0 opacity-100'
+                  : 'translate-x-4 opacity-0'
+              }`}
+            >
+              <SteamReviewBadge
+                review={steamReviews?.steam_all_review ?? undefined}
+              />
+            </div>
+          )}
 
           {/* Total Dislikes */}
           <div

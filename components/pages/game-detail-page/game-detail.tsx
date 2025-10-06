@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2,
-  Ghost,
+  Hammer,
   BriefcaseBusiness,
   Tag,
   Monitor,
@@ -15,12 +15,13 @@ import {
   Trophy,
   ArrowLeft,
   ThumbsDown,
+  Joystick,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import GameDetailSection from '@/components/pages/game-detail-page/game-detail-section';
 
-import GameDetailHighlight from './game-detail-highlight';
+import GameDetailHighlight, { StatisticItem } from './game-detail-highlight';
 import GameDetailHeadline from './game-detail-headline';
 
 import { GameDbData } from '@/types';
@@ -98,6 +99,10 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     null,
   );
   const [isLoadingTwitch, setIsLoadingTwitch] = useState(true);
+  const [steamCurrentPlayers, setSteamCurrentPlayers] = useState<number | null>(
+    null,
+  );
+  const [isLoadingSteamPlayers, setIsLoadingSteamPlayers] = useState(true);
 
   const [steamSpyData, setSteamSpyData] = useState<SteamSpyData | null>(null);
   const [isLoadingSteamSpy, setIsLoadingSteamSpy] = useState(true);
@@ -138,10 +143,23 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
       setIsLoadingSales(true);
 
       try {
-        const data = await fetchSalesData(game.slug, game.name);
-        setSalesData(data);
+        // 8 second timeout for sales data
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Sales data request timeout')),
+            8000,
+          ),
+        );
+        const data = await Promise.race([
+          fetchSalesData(game.slug, game.name),
+          timeoutPromise,
+        ]);
+        setSalesData(data as SalesData);
       } catch (error) {
-        console.error('Failed to fetch sales data:', error);
+        // Only log non-timeout errors to reduce noise
+        if (error instanceof Error && !error.message.includes('timeout')) {
+          console.error('Failed to fetch sales data:', error);
+        }
         setSalesData({ value: null, source: null });
       } finally {
         setIsLoadingSales(false);
@@ -153,9 +171,16 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
       setIsLoadingTwitch(true);
       try {
+        // 5 second timeout for Twitch
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
         const response = await fetch(
           `/api/twitch?name=${encodeURIComponent(game.name)}`,
+          { signal: controller.signal },
         );
+        clearTimeout(timeoutId);
+
         if (response.ok) {
           const result = await response.json();
           setTwitchLiveViewers(result.data?.liveViewers || null);
@@ -165,6 +190,38 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
         setTwitchLiveViewers(null);
       } finally {
         setIsLoadingTwitch(false);
+      }
+    };
+
+    const loadSteamCurrentPlayers = async () => {
+      if (!game.steam_app_id) {
+        setIsLoadingSteamPlayers(false);
+        return;
+      }
+
+      setIsLoadingSteamPlayers(true);
+      try {
+        // 3 second timeout for Steam players (should be fast)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        const response = await fetch(
+          `/api/steam/current-players?appId=${game.steam_app_id}`,
+          { signal: controller.signal },
+        );
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const result = await response.json();
+          setSteamCurrentPlayers(result.playerCount || null);
+        } else {
+          setSteamCurrentPlayers(null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch Steam current players:', error);
+        setSteamCurrentPlayers(null);
+      } finally {
+        setIsLoadingSteamPlayers(false);
       }
     };
 
@@ -198,9 +255,10 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
     loadSalesData();
     loadTwitchData();
+    loadSteamCurrentPlayers();
     loadSteamSpyData();
     loadPlaytrackerData();
-  }, [game.slug, game.name]);
+  }, [game.slug, game.name, game.steam_app_id]);
 
   const { steamReviews } = useSteamReviews(game.name);
 
@@ -312,7 +370,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
   // Filter sections with data
   const detailsSections = [
     { title: 'Game Engine', items: game.game_engines, icon: Gamepad2 },
-    { title: 'Developers', items: game.developers, icon: Ghost },
+    { title: 'Developers', items: game.developers, icon: Hammer },
     { title: 'Publishers', items: game.publishers, icon: BriefcaseBusiness },
   ].filter((section) => section.items?.length);
 
@@ -321,16 +379,15 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     { title: 'Platforms', items: game.platforms, icon: Monitor },
   ].filter((section) => section.items?.length);
 
-  // Filter statistics sections with data - only show sections that have actual data
-  const statisticsSections = [
-    // Sales Data - only show if we have data
+  // Convert statistics to StatisticItem format for the highlight component
+  const highlightStatistics: StatisticItem[] = [
+    // Sales Data
     ...(salesData.value
       ? [
           {
             title: getSalesLabel(salesData.source),
-            items: [formatSalesValue(salesData.value, salesData.source)],
+            value: formatSalesValue(salesData.value, salesData.source),
             icon: UsersRound,
-            showTooltip: true,
             tooltipContent: (
               <div className="text-sm">
                 <p>Source: {getSourceName(salesData.source)}</p>
@@ -341,31 +398,39 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
         ]
       : []),
 
-    // Live Viewers - only show if we have data
+    // Steam Current Players
+    ...(steamCurrentPlayers !== null && steamCurrentPlayers > 0
+      ? [
+          {
+            title: 'Current players',
+            value: steamCurrentPlayers.toLocaleString(),
+            icon: Joystick,
+            tooltipContent: <p>Source: Steam (Live)</p>,
+          },
+        ]
+      : []),
+
+    // Live Viewers
     ...(twitchLiveViewers
       ? [
           {
             title: 'Live viewers',
-            items: [`~ ${twitchLiveViewers.toLocaleString()}`],
+            value: `${twitchLiveViewers.toLocaleString()}`,
             icon: ChartColumnIncreasing,
-            showTooltip: true,
             tooltipContent: <p>Source: Twitch</p>,
           },
         ]
       : []),
 
-    // Average Playtime - only show if we have data
+    // Average Playtime
     ...(steamSpyData?.averagePlaytime || playtrackerData?.averagePlaytime
       ? [
           {
             title: 'Average Playtime',
-            items: [
-              steamSpyData?.averagePlaytime
-                ? `~ ${steamSpyData.averagePlaytime} hours`
-                : (playtrackerData?.averagePlaytime as string),
-            ],
+            value: steamSpyData?.averagePlaytime
+              ? `${steamSpyData.averagePlaytime} hours`
+              : (playtrackerData?.averagePlaytime as string),
             icon: Trophy,
-            showTooltip: true,
             tooltipContent: (
               <div className="text-sm">
                 <p>
@@ -381,11 +446,14 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
       : []),
   ];
 
-  // Show loading placeholder for statistics while any are still loading
+  // Only show loading if ALL statistics are still loading (initial load)
+  // This prevents blocking the UI if only one API is slow
   const showStatisticsLoading =
-    isLoadingSales ||
-    isLoadingTwitch ||
-    (isLoadingSteamSpy && isLoadingPlaytracker);
+    isLoadingSales &&
+    isLoadingTwitch &&
+    isLoadingSteamPlayers &&
+    isLoadingSteamSpy &&
+    isLoadingPlaytracker;
 
   return (
     <div className="bg-background text-foreground min-h-screen w-full p-4">
@@ -514,43 +582,17 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
               {/* Genres and Platforms */}
               {metaSections.length > 0 && (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  {metaSections.map((section) => (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  {metaSections.map((section, index) => (
                     <GameDetailSection
                       key={section.title}
                       title={section.title}
                       items={section.items || undefined}
                       icon={section.icon}
-                      className="mb-3"
+                      className={`mb-3 ${metaSections.length === 2 && index === 1 ? 'md:col-span-2' : ''}`}
                     />
                   ))}
                 </div>
-              )}
-
-              {/* Statistics Sections */}
-              {showStatisticsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="flex items-center gap-3 text-gray-400">
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-600 border-t-gray-400"></div>
-                    <span className="text-sm">Loading game statistics...</span>
-                  </div>
-                </div>
-              ) : (
-                statisticsSections.length > 0 && (
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    {statisticsSections.map((section) => (
-                      <GameDetailSection
-                        key={section.title}
-                        title={section.title}
-                        items={section.items}
-                        icon={section.icon}
-                        className="mb-3"
-                        showTooltip={section.showTooltip}
-                        tooltipContent={section.tooltipContent}
-                      />
-                    ))}
-                  </div>
-                )
               )}
             </div>
           </div>
@@ -564,6 +606,8 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
             clickingButton={clickingButton}
             userVoteState={userVoteState}
             onDislikeVote={handleDislikeVote}
+            statistics={highlightStatistics}
+            isLoadingStatistics={showStatisticsLoading}
           />
         </section>
       </main>

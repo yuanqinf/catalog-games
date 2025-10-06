@@ -32,11 +32,18 @@ export default function DynamicTrendChart({
   hideYAxis = false,
 }: DynamicTrendChartProps) {
   const [trends, setTrends] = useState<TrendsResponse | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Start with false to avoid hydration issues
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!keyword?.trim()) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !keyword?.trim()) {
+      return;
+    }
 
     const fetchTrends = async () => {
       setLoading(true);
@@ -68,7 +75,7 @@ export default function DynamicTrendChart({
     };
 
     fetchTrends();
-  }, [keyword]);
+  }, [keyword, mounted]);
 
   // Transform API data to TrendChart format
   const chartData =
@@ -80,47 +87,39 @@ export default function DynamicTrendChart({
       value: point.value,
     })) || [];
 
-  // Show loading state with placeholder data
-  if (loading) {
+  // Determine if we should show error state
+  const hasError = !!error;
+  const hasNoData = !trends || chartData.length === 0;
+
+  // Show initial state before mounted (prevents hydration mismatch)
+  if (!mounted) {
     return (
       <TrendChart
         description={description}
-        data={[{ date: 'Loading...', value: 0 }]}
+        data={[{ date: '', value: 0 }]}
         dataKey="value"
         xKey="date"
         hideXAxis={hideXAxis}
         hideYAxis={hideYAxis}
-        strokeColor="#6b7280"
+        strokeColor="#10b981"
+        isLoading={false}
+        isError={false}
       />
     );
   }
 
-  // Show error or no data state
-  if (error || !trends || chartData.length === 0) {
-    const isError = !!error;
-    return (
-      <TrendChart
-        description={description}
-        data={[{ date: isError ? 'Error' : 'No Data', value: 0 }]}
-        dataKey="value"
-        xKey="date"
-        hideXAxis={hideXAxis}
-        hideYAxis={hideYAxis}
-        strokeColor={isError ? '#ef4444' : '#9ca3af'}
-      />
-    );
-  }
-
-  // Show actual data
   return (
     <TrendChart
       description={description}
-      data={chartData}
+      data={chartData.length > 0 ? chartData : [{ date: '', value: 0 }]}
       dataKey="value"
       xKey="date"
       hideXAxis={hideXAxis}
       hideYAxis={hideYAxis}
       strokeColor="#10b981"
+      isLoading={loading}
+      isError={hasError || (hasNoData && !loading)}
+      errorMessage={hasError ? error : 'No trend data available'}
     />
   );
 }

@@ -20,7 +20,7 @@ import {
 
 type DataItem = Record<string, string | number>;
 
-interface ReusableTrendChartProps {
+interface TrendChartProps {
   title?: string;
   description?: string;
   data: DataItem[];
@@ -33,6 +33,9 @@ interface ReusableTrendChartProps {
   trendIcon?: LucideIcon;
   hideXAxis?: boolean;
   hideYAxis?: boolean;
+  isLoading?: boolean;
+  isError?: boolean;
+  errorMessage?: string;
 }
 
 export function TrendChart({
@@ -48,7 +51,72 @@ export function TrendChart({
   trendIcon: Icon,
   hideXAxis = false,
   hideYAxis = false,
-}: ReusableTrendChartProps) {
+  isLoading = false,
+  isError = false,
+  errorMessage = 'Trend data temporarily unavailable',
+}: TrendChartProps) {
+  // Loading state
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          {description && <CardDescription>{description}</CardDescription>}
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center">
+            <p className="mb-2 text-sm font-medium text-neutral-400">
+              Loading trend data...
+            </p>
+            {/* Animated placeholder mini chart */}
+            <div className="flex h-[70px] w-full items-end justify-around gap-1">
+              {[30, 50, 40, 60, 45, 70, 55].map((height, i) => (
+                <div
+                  key={i}
+                  className="w-full animate-pulse rounded-t bg-neutral-700"
+                  style={{
+                    height: `${height}%`,
+                    animationDelay: `${i * 0.1}s`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          {description && <CardDescription>{description}</CardDescription>}
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center">
+            <p className="mb-1 text-sm font-medium text-neutral-400">
+              ⚠️ {errorMessage}
+            </p>
+            {/* Placeholder mini chart */}
+            <div className="flex h-[70px] w-full items-end justify-around gap-1">
+              {[30, 50, 40, 60, 45, 70, 55].map((height, i) => (
+                <div
+                  key={i}
+                  className="w-full rounded-t bg-neutral-700/50"
+                  style={{ height: `${height}%` }}
+                />
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Normal state with data
   return (
     <Card>
       <CardHeader>

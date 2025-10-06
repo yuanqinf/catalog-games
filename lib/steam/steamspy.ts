@@ -10,9 +10,16 @@ export async function fetchSteamSalesDataFromSteamSpy(
   gameName: string,
 ): Promise<SteamSpyData | null> {
   try {
+    // Add timeout to the fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
     const response = await fetch(
       `/api/steam/steamspy?name=${encodeURIComponent(gameName)}`,
+      { signal: controller.signal },
     );
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       return null;
@@ -29,7 +36,10 @@ export async function fetchSteamSalesDataFromSteamSpy(
 
     return null;
   } catch (error) {
-    console.error('Failed to fetch Steam sales data:', error);
+    // Don't log timeout errors to reduce console noise
+    if (error instanceof Error && error.name !== 'AbortError') {
+      console.error('Failed to fetch Steam sales data:', error);
+    }
     return null;
   }
 }

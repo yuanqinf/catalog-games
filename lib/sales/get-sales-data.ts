@@ -25,9 +25,16 @@ async function fetchVGChartzData(gameSlug: string): Promise<{
   asOfDate: string | null;
 } | null> {
   try {
+    // Add timeout to the fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
     const response = await fetch(
       `/api/vgchartz?slug=${encodeURIComponent(gameSlug)}`,
+      { signal: controller.signal },
     );
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       return null;
@@ -44,7 +51,10 @@ async function fetchVGChartzData(gameSlug: string): Promise<{
 
     return null;
   } catch (error) {
-    console.error('Failed to fetch VGChartz data:', error);
+    // Don't log timeout errors to reduce console noise
+    if (error instanceof Error && error.name !== 'AbortError') {
+      console.error('Failed to fetch VGChartz data:', error);
+    }
     return null;
   }
 }
