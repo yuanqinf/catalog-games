@@ -54,7 +54,7 @@ const ClerkAuth = () => {
     <>
       <style jsx global>{`
         .cl-userButtonPopoverActionButton__manageAccount::before {
-          content: 'Setting' !important;
+          content: 'Account' !important;
           position: absolute !important;
           left: 57 !important;
           width: 100% !important;
@@ -128,7 +128,7 @@ const ClerkAuth = () => {
                       '& [data-localization-key="userButtonPopover.manageAccount"]':
                         {
                           '&::before': {
-                            content: '"Setting"',
+                            content: '"Account"',
                             position: 'absolute',
                             left: '0',
                             top: '0',

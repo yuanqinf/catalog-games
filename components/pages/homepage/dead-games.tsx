@@ -507,7 +507,9 @@ const DeadGames = () => {
             "I've always felt that 'game over' is a state of failure more for the game designer than from the player."
           }
         </p>
-        <p className="mt-2 text-sm text-gray-500">—— David Cage</p>
+        <p className="mt-2 text-sm text-gray-500 italic">
+          — David Cage, Detroit: Become Human
+        </p>
       </div>
     </section>
   );

@@ -166,10 +166,10 @@ const GameExplorePage = () => {
       {/* Header */}
       <div className="mb-4 text-center">
         <h1 className="bg-clip-text text-4xl font-bold text-red-400">
-          Top 100 Disliked Games
+          Top 100 Most Disliked Games
         </h1>
-        <p className="mt-2 text-lg text-zinc-400">
-          The most controversial games ranked by community feedback
+        <p className="text-md mt-2 text-zinc-400">
+          The Most Controversial Titles Ranked by Player Reactions
         </p>
       </div>
       {/* Games grid */}
