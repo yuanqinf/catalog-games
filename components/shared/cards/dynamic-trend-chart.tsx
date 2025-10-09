@@ -55,7 +55,7 @@ export default function DynamicTrendChart({
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch trends');
+          return;
         }
 
         // Parse dates in the response
