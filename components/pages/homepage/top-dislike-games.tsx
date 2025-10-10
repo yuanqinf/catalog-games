@@ -106,43 +106,45 @@ const TopDislikeGames = () => {
   // Update gameOverData when top disliked games data changes and trigger animation on dislike increase
   useEffect(() => {
     if (topDislikedGamesResponse?.data) {
-      const transformedData = topDislikedGamesResponse.data.map(
-        (game, index) => ({
-          id: game.igdb_id.toString(),
-          title: game.name,
-          bannerUrl: game.banner_url || game.cover_url || '',
-          developer: game.developers?.[0] || 'Unknown Developer',
-          dislikeCount: game.dislike_count,
-          rank: index + 1,
-          slug: game.slug,
-        }),
-      );
+      setGameOverData((prevData) => {
+        const transformedData = topDislikedGamesResponse.data.map(
+          (game, index) => ({
+            id: game.igdb_id.toString(),
+            title: game.name,
+            bannerUrl: game.banner_url || game.cover_url || '',
+            developer: game.developers?.[0] || 'Unknown Developer',
+            dislikeCount: game.dislike_count,
+            rank: index + 1,
+            slug: game.slug,
+          }),
+        );
 
-      // Check for dislike count increases and trigger animation
-      transformedData.forEach((newGame) => {
-        const oldGame = gameOverData.find((g) => g.id === newGame.id);
-        if (oldGame) {
-          // Use the utility function to trigger animations
-          triggerCountIncreaseAnimations(
-            newGame.id,
-            oldGame.dislikeCount,
-            newGame.dislikeCount,
-            setFloatingThumbs,
-            (itemId, animationId) => ({
-              id: animationId,
-              gameId: itemId,
-              timestamp: Date.now(),
-              startX: 20 + Math.random() * 60, // Random horizontal position (20-80%)
-              isPowerMode: false, // No power mode for polling updates
-            }),
-            'thumb-polling',
-          );
-        }
+        // Check for dislike count increases and trigger animation
+        transformedData.forEach((newGame) => {
+          const oldGame = prevData.find((g) => g.id === newGame.id);
+          if (oldGame && oldGame.dislikeCount < newGame.dislikeCount) {
+            // Use the utility function to trigger animations
+            triggerCountIncreaseAnimations(
+              newGame.id,
+              oldGame.dislikeCount,
+              newGame.dislikeCount,
+              setFloatingThumbs,
+              (itemId, animationId) => ({
+                id: animationId,
+                gameId: itemId,
+                timestamp: Date.now(),
+                startX: 20 + Math.random() * 60, // Random horizontal position (20-80%)
+                isPowerMode: false, // No power mode for polling updates
+              }),
+              'thumb-polling',
+            );
+          }
+        });
+
+        return transformedData;
       });
-
-      setGameOverData(transformedData);
     }
-  }, [topDislikedGamesResponse]);
+  }, [topDislikedGamesResponse?.data]);
 
   // User voting state - simplified to just track votes
   const [userVoteState, setUserVoteState] = useState<UserVoteState>({
@@ -258,9 +260,10 @@ const TopDislikeGames = () => {
               : game,
           ),
         );
+      } else {
+        // Success - immediately fetch fresh data from server
+        mutate();
       }
-      // Note: We don't call mutate() here to avoid race conditions with rapid clicks
-      // The optimistic updates will keep the UI in sync
     } catch (error) {
       console.error('Error calling dislike API:', error);
       // Revert optimistic update on error

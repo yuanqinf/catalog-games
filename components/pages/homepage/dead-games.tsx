@@ -31,6 +31,7 @@ const DeadGames = () => {
     data: deadGamesResponse,
     error,
     isLoading,
+    mutate,
   } = useSWR<{ success: boolean; data: DeadGameFromAPI[]; error?: string }>(
     '/api/dead-games',
     (url) =>
@@ -40,8 +41,9 @@ const DeadGames = () => {
       }),
     {
       revalidateOnFocus: false,
-      refreshInterval: 5000, // Poll every 5 seconds for real-time updates
-      dedupingInterval: 1000, // Reduce deduping to allow more frequent updates
+      refreshInterval: 5000,
+      dedupingInterval: 2000,
+      revalidateOnReconnect: false,
     },
   );
 
@@ -114,42 +116,44 @@ const DeadGames = () => {
     }
 
     return transformedData;
-  }, [deadGamesResponse?.data, sortByReactions, sortByDate, reactionCounts]);
+  }, [deadGamesResponse?.data, sortByReactions, sortByDate]);
 
   // Initialize reaction counts when data loads and trigger animations on count increases
   useEffect(() => {
     if (deadGamesResponse?.data && deadGamesResponse.data.length > 0) {
-      const newCounts = deadGamesResponse.data.reduce(
-        (acc, deadGame) => ({
-          ...acc,
-          [deadGame.id]: deadGame.user_reaction_count,
-        }),
-        {},
-      );
-
-      // Check for reaction count increases and trigger animations
-      deadGamesResponse.data.forEach((deadGame) => {
-        const oldCount = reactionCounts[deadGame.id] || 0;
-        const newCount = deadGame.user_reaction_count;
-
-        // Use the utility function to trigger animations
-        triggerCountIncreaseAnimations(
-          deadGame.id,
-          oldCount,
-          newCount,
-          setFloatingSkulls,
-          (itemId, animationId) => ({
-            id: animationId,
-            gameId: itemId,
-            timestamp: Date.now(),
-            startX: Math.random() * window.innerWidth * 0.8,
-            startY: Math.random() * 200 + 300, // Position in middle area of screen
+      setReactionCounts((prevCounts) => {
+        const newCounts = deadGamesResponse.data.reduce(
+          (acc, deadGame) => ({
+            ...acc,
+            [deadGame.id]: deadGame.user_reaction_count,
           }),
-          'skull-polling',
+          {},
         );
-      });
 
-      setReactionCounts(newCounts);
+        // Check for reaction count increases and trigger animations
+        deadGamesResponse.data.forEach((deadGame) => {
+          const oldCount = prevCounts[deadGame.id] || 0;
+          const newCount = deadGame.user_reaction_count;
+
+          // Use the utility function to trigger animations
+          triggerCountIncreaseAnimations(
+            deadGame.id,
+            oldCount,
+            newCount,
+            setFloatingSkulls,
+            (itemId, animationId) => ({
+              id: animationId,
+              gameId: itemId,
+              timestamp: Date.now(),
+              startX: Math.random() * window.innerWidth * 0.8,
+              startY: Math.random() * 200 + 300,
+            }),
+            'skull-polling',
+          );
+        });
+
+        return newCounts;
+      });
     }
   }, [deadGamesResponse?.data]);
 
@@ -226,6 +230,9 @@ const DeadGames = () => {
           ...prev,
           [deadGameId]: Math.max((prev[deadGameId] || 0) - 1, 0),
         }));
+      } else {
+        // Success - immediately fetch fresh data from server
+        mutate();
       }
     } catch (error) {
       console.error('Error calling reaction API:', error);
