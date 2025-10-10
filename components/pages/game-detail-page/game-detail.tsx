@@ -41,7 +41,6 @@ import {
   getPlaytrackerData,
   PlaytimeData,
 } from '@/lib/playernet/get-playernet-data';
-import { useSteamReviews } from '@/hooks/useSteamReviews';
 
 // Interface for floating thumbs animation
 interface FloatingThumb {
@@ -316,8 +315,6 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     loadSteamSpyData();
     loadPlaytrackerData();
   }, [game.slug, game.name, game.steam_app_id]);
-
-  const { steamReviews } = useSteamReviews(game.name);
 
   // Handle dislike vote with floating animation
   const handleDislikeVote = async () => {

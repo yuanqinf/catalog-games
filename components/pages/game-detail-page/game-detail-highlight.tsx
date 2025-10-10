@@ -2,22 +2,13 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import {
-  ThumbsDown,
-  Angry,
-  Loader2,
-  LucideIcon,
-  Info,
-  Joystick,
-} from 'lucide-react';
+import { ThumbsDown, Angry, Loader2, LucideIcon, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DynamicTrendChart from '@/components/shared/cards/dynamic-trend-chart';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
-import SteamReviewBadge from '@/components/shared/steam-review-badge';
 import NumberFlow from '@number-flow/react';
 
 import { useGameRating } from '@/hooks/useGameRating';
-import { useSteamReviews } from '@/hooks/useSteamReviews';
 import { GameDbData } from '@/types';
 import {
   Tooltip,
@@ -65,9 +56,6 @@ export default function GameDetailHighlight({
     overallAverage,
     isLoading: isLoadingRating,
   } = useGameRating(game.id);
-
-  // Fetch real-time Steam reviews (client-side only)
-  const { steamReviews } = useSteamReviews(game.name);
 
   return (
     <div className="space-y-6 lg:col-span-1">
@@ -235,19 +223,6 @@ export default function GameDetailHighlight({
           <span className="font-semibold text-neutral-200">
             {overallAverage ? overallAverage : 'N/A'}
           </span>
-        </div>
-
-        {/* Steam Review - client-side real-time data only with slide-in animation */}
-        <div
-          className={`transition-all duration-500 ease-out ${
-            steamReviews?.steam_all_review
-              ? 'translate-x-0 opacity-100'
-              : 'translate-x-4 opacity-0'
-          }`}
-        >
-          <SteamReviewBadge
-            review={steamReviews?.steam_all_review ?? undefined}
-          />
         </div>
       </div>
     </div>

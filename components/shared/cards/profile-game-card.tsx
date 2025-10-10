@@ -4,14 +4,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import type { GameDbData } from '@/types';
-import { Star, Ghost, Gamepad2, Loader2, ThumbsDown } from 'lucide-react';
-import SteamReviewBadge from '@/components/shared/steam-review-badge';
+import { Star, Gamepad2, Loader2, ThumbsDown, Hammer } from 'lucide-react';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 import { useGameRating } from '@/hooks/useGameRating';
-import { useSteamReviews } from '@/hooks/useSteamReviews';
 import NumberFlow from '@number-flow/react';
-
-import DynamicTrendChart from './dynamic-trend-chart';
 
 interface ProfileGameCardProps {
   game: GameDbData;
@@ -37,9 +33,6 @@ export default function ProfileGameCard({
     overallAverage,
     isLoading: isLoadingRating,
   } = useGameRating(game.id);
-
-  // Fetch real-time Steam reviews (client-side only)
-  const { steamReviews } = useSteamReviews(game.name);
 
   // Fetch ranking data for avatar border color
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
@@ -120,7 +113,7 @@ export default function ProfileGameCard({
         {/* Subtext Row */}
         <div className="mb-3 flex items-center space-x-2 truncate text-xs text-neutral-400">
           <div className="flex min-w-0 items-center">
-            <Ghost size={12} className="mr-1 flex-shrink-0" />
+            <Hammer size={12} className="mr-1 flex-shrink-0" />
             <span className="truncate" title={game.developers?.[0] ?? ''}>
               {game.developers?.[0]}
             </span>
@@ -144,7 +137,7 @@ export default function ProfileGameCard({
 
         {/* Media: Banner Image */}
         {game.banner_url && (
-          <div className="mb-3 aspect-[16/9] overflow-hidden rounded-md bg-neutral-800">
+          <div className="mb-4 aspect-[16/9] overflow-hidden rounded-md bg-neutral-800">
             <div className="relative h-full w-full">
               <Image
                 src={game.banner_url}
@@ -156,9 +149,6 @@ export default function ProfileGameCard({
             </div>
           </div>
         )}
-        <div className="mb-4">
-          <DynamicTrendChart keyword={game.name} hideYAxis hideXAxis />
-        </div>
 
         {/* Catalog Rating Section */}
         <div className="highlight-card-section mb-4">
@@ -176,21 +166,6 @@ export default function ProfileGameCard({
 
         {/* Footer Row */}
         <div className="highlight-card-footer">
-          {/* Steam Review - client-side real-time data only with slide-in animation */}
-          {steamReviews?.steam_all_review && (
-            <div
-              className={`transition-all duration-500 ease-out ${
-                steamReviews?.steam_all_review
-                  ? 'translate-x-0 opacity-100'
-                  : 'translate-x-4 opacity-0'
-              }`}
-            >
-              <SteamReviewBadge
-                review={steamReviews?.steam_all_review ?? undefined}
-              />
-            </div>
-          )}
-
           {/* Total Dislikes */}
           <div
             title={`Total Dislikes: ${game.dislike_count || 0}`}
