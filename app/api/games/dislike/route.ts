@@ -173,3 +173,147 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// DELETE endpoint to remove all user's dislikes for a game
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const gameId = searchParams.get('gameId');
+
+    if (!gameId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Game ID is required',
+        },
+        { status: 400 },
+      );
+    }
+
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'User not authenticated',
+        },
+        { status: 401 },
+      );
+    }
+
+    const supabase = createClerkSupabaseClient(null);
+
+    // Get the user's internal ID from the users table
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id')
+      .eq('clerk_id', clerkUser.id)
+      .single();
+
+    if (!userData) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'User not found',
+        },
+        { status: 404 },
+      );
+    }
+
+    // Use PostgreSQL function for atomic operation
+    const { data: result, error: rpcError } = await supabase.rpc(
+      'remove_user_dislike',
+      {
+        p_user_id: userData.id,
+        p_game_id: parseInt(gameId),
+      },
+    );
+
+    if (rpcError) {
+      console.error('Failed to remove user dislike via RPC:', rpcError);
+
+      // Fallback to manual deletion if RPC function doesn't exist
+      const { data: existingDislike } = await supabase
+        .from('dislikes')
+        .select('count')
+        .eq('user_id', userData.id)
+        .eq('game_id', parseInt(gameId))
+        .maybeSingle();
+
+      if (!existingDislike || existingDislike.count === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'No dislikes found for this game',
+          },
+          { status: 404 },
+        );
+      }
+
+      const userDislikeCount = existingDislike.count;
+
+      // Delete the user's dislike record
+      const { error: deleteError } = await supabase
+        .from('dislikes')
+        .delete()
+        .eq('user_id', userData.id)
+        .eq('game_id', parseInt(gameId));
+
+      if (deleteError) {
+        console.error('Failed to delete user dislike:', deleteError);
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Failed to remove dislikes',
+          },
+          { status: 500 },
+        );
+      }
+
+      // Decrement the game's total dislike count
+      const gameService = new GameService();
+      const newDislikeCount = await gameService.incrementGameDislike(
+        parseInt(gameId),
+        -userDislikeCount,
+      );
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          gameId: parseInt(gameId),
+          removedCount: userDislikeCount,
+          newDislikeCount,
+        },
+      });
+    }
+
+    // Check if the RPC function returned an error
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: result.error,
+        },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        gameId: parseInt(gameId),
+        removedCount: result.removed_count,
+        newDislikeCount: result.new_dislike_count,
+      },
+    });
+  } catch (error) {
+    console.error('Failed to remove game dislike:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 },
+    );
+  }
+}

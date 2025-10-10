@@ -3,11 +3,29 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import type { GameDbData } from '@/types';
-import { Star, Gamepad2, Loader2, ThumbsDown, Hammer } from 'lucide-react';
+import {
+  Star,
+  Gamepad2,
+  Loader2,
+  ThumbsDown,
+  Hammer,
+  CircleX,
+} from 'lucide-react';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 import { useGameRating } from '@/hooks/useGameRating';
 import NumberFlow from '@number-flow/react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface ProfileGameCardProps {
   game: GameDbData;
@@ -36,6 +54,8 @@ export default function ProfileGameCard({
 
   // Fetch ranking data for avatar border color
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   useEffect(() => {
     async function fetchRankingData() {
@@ -64,9 +84,37 @@ export default function ProfileGameCard({
 
   const avatarBorderColorClass = `border-${getRankingColor(rankingData?.currentGame.rank ?? null)}-600`;
 
+  const handleUndoDislike = async () => {
+    if (!game.id) return;
+
+    setIsRemoving(true);
+    try {
+      const response = await fetch(`/api/games/dislike?gameId=${game.id}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(`Successfully removed all dislikes for ${game.name}`);
+        setIsDialogOpen(false);
+
+        // Refresh the page to update the UI
+        window.location.reload();
+      } else {
+        toast.error(result.error || 'Failed to remove dislikes');
+      }
+    } catch (error) {
+      console.error('Error removing dislikes:', error);
+      toast.error('An error occurred while removing dislikes');
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
   return (
-    <Link href={`/detail/${game.slug}`}>
-      <div className="highlight-card cursor-pointer transition-transform duration-200 hover:scale-[1.02]">
+    <div className="highlight-card transition-transform duration-200 hover:scale-[1.02]">
+      <Link href={`/detail/${game.slug}`} className="cursor-pointer">
         {/* Top Row */}
         <div className="mb-3 flex items-center">
           <div
@@ -163,23 +211,74 @@ export default function ProfileGameCard({
             }
           />
         </div>
+      </Link>
 
-        {/* Footer Row */}
-        <div className="highlight-card-footer">
-          {/* Total Dislikes */}
-          <div
-            title={`Total Dislikes: ${game.dislike_count || 0}`}
-            className="flex items-center"
-          >
-            <span className="mr-1 hidden sm:inline-block">
-              Total Dislikes:{' '}
-            </span>
-            <span className="font-semibold text-neutral-200">
-              <NumberFlow value={game.dislike_count || 0} />
-            </span>
-          </div>
+      {/* Footer Row */}
+      <div className="highlight-card-footer">
+        {/* Catalog User Rating */}
+        <div
+          title={`Catalog User Rating: ${overallAverage}`}
+          className="flex items-center"
+        >
+          <Image
+            src="/images/logo.png"
+            alt="Catalog Logo"
+            width={24}
+            height={24}
+            className="mr-1"
+          />
+          <span className="mr-2 hidden sm:inline-block">Catalog Rating: </span>
+          <span className="font-semibold text-neutral-200">
+            {overallAverage ? overallAverage : 'N/A'}
+          </span>
         </div>
+
+        {/* Undo Button */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              size="sm"
+              className="bg-red-500 font-bold text-white transition-all hover:scale-105 hover:bg-red-600 hover:shadow-lg"
+            >
+              <CircleX className="h-4 w-4" />
+              Remove
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Remove Dislikes</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to remove all your dislikes for{' '}
+                <span className="font-semibold text-white">{game.name}</span>?
+                This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                disabled={isRemoving}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUndoDislike}
+                className="bg-red-600 text-white hover:bg-red-700"
+                disabled={isRemoving}
+              >
+                {isRemoving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Removing...
+                  </>
+                ) : (
+                  'Remove Dislikes'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-    </Link>
+    </div>
   );
 }
