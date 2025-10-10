@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
 import MiniGameCard from '@/components/shared/cards/mini-game-card';
 import {
@@ -50,102 +51,33 @@ const cardVariants = {
 };
 
 const GameExplorePage = () => {
-  const [games, setGames] = useState<GameDbData[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const totalPages = Math.ceil(TOP_GAMES_LIMIT / GAMES_PER_PAGE);
 
-  const gameService = useMemo(() => new GameService(), []);
-
-  // Fetch games for current page sorted by dislike count
-  const fetchGamesForPage = useCallback(
-    async (page: number) => {
-      setIsLoading(true);
-      try {
-        console.log(
-          `🎮 Fetching games for page ${page} (sorted by dislike count)...`,
-        );
-
-        const offset = (page - 1) * GAMES_PER_PAGE;
-        const pageGames = await gameService.getGamesForExplorePage(
-          offset,
-          GAMES_PER_PAGE,
-          TOP_GAMES_LIMIT,
-        );
-
-        console.log(`📊 Loaded ${pageGames.length} games for page ${page}`);
-        setGames(pageGames);
-      } catch (error) {
-        console.error('❌ Failed to fetch games:', error);
-        setGames([]);
-      } finally {
-        setIsLoading(false);
-      }
+  // Fetch games with SWR and polling
+  const { data: games, isLoading } = useSWR<GameDbData[]>(
+    ['explore-games', currentPage],
+    async ([, page]: [string, number]) => {
+      const gameService = new GameService();
+      const offset = (page - 1) * GAMES_PER_PAGE;
+      console.log(
+        `🎮 Fetching games for page ${page} (sorted by dislike count)...`,
+      );
+      const pageGames = await gameService.getGamesForExplorePage(
+        offset,
+        GAMES_PER_PAGE,
+        TOP_GAMES_LIMIT,
+      );
+      console.log(`📊 Loaded ${pageGames.length} games for page ${page}`);
+      return pageGames;
     },
-    [gameService],
+    {
+      revalidateOnFocus: false,
+      refreshInterval: 5000,
+      dedupingInterval: 2000,
+      revalidateOnReconnect: false,
+    },
   );
-
-  // Initialize total pages count based on TOP_GAMES_LIMIT
-  useEffect(() => {
-    const calculatedTotalPages = Math.ceil(TOP_GAMES_LIMIT / GAMES_PER_PAGE);
-    setTotalPages(calculatedTotalPages);
-    console.log(
-      `📄 Total pages for top ${TOP_GAMES_LIMIT} games: ${calculatedTotalPages}`,
-    );
-  }, []);
-
-  // Fetch games when page or sorting changes
-  useEffect(() => {
-    if (totalPages > 0) {
-      fetchGamesForPage(currentPage);
-    }
-  }, [currentPage, totalPages, fetchGamesForPage]);
-
-  // Short polling for real-time updates (every 5 seconds)
-  useEffect(() => {
-    if (totalPages === 0 || games.length === 0) return; // Don't poll until initialized
-
-    const pollInterval = setInterval(async () => {
-      console.log('🔄 Polling for dislike count updates on explore page...');
-
-      try {
-        const offset = (currentPage - 1) * GAMES_PER_PAGE;
-        const freshGames = await gameService.getGamesForExplorePage(
-          offset,
-          GAMES_PER_PAGE,
-          TOP_GAMES_LIMIT,
-        );
-
-        // Check if order has changed by comparing igdb_ids
-        const orderChanged = freshGames.some(
-          (freshGame, index) => freshGame.igdb_id !== games[index]?.igdb_id,
-        );
-
-        if (orderChanged) {
-          // Order changed, update entire list
-          console.log('📊 Game order changed, updating full list');
-          setGames(freshGames);
-        } else {
-          // Order unchanged, only update dislike counts
-          console.log('🔢 Updating dislike counts only');
-          setGames((prevGames) =>
-            prevGames.map((game) => {
-              const freshGame = freshGames.find(
-                (fg) => fg.igdb_id === game.igdb_id,
-              );
-              return freshGame
-                ? { ...game, dislike_count: freshGame.dislike_count }
-                : game;
-            }),
-          );
-        }
-      } catch (error) {
-        console.error('❌ Failed to poll for updates:', error);
-      }
-    }, 5000);
-
-    return () => clearInterval(pollInterval);
-  }, [currentPage, totalPages, games, gameService]);
 
   // Handle page change
   const handlePageChange = useCallback(
@@ -237,7 +169,7 @@ const GameExplorePage = () => {
             initial="hidden"
             animate="visible"
           >
-            {games.map((game, index) => {
+            {games?.map((game, index) => {
               // Calculate ranking based on current page and index
               const ranking = (currentPage - 1) * GAMES_PER_PAGE + index + 1;
               return (

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
+import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2,
@@ -71,14 +72,9 @@ interface DislikeResponse {
 }
 
 const GameDetail = ({ game }: { game: GameDbData }) => {
-  // Dislike functionality states
-  const [dislikeCount, setDislikeCount] = useState(game.dislike_count || 0);
-  const [clickingButton, setClickingButton] = useState(false);
-  const [userDislikeCount, setUserDislikeCount] = useState<number>(0);
-  const [isLoadingUserDislike, setIsLoadingUserDislike] = useState(true);
-
   // Floating thumbs animation state
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
+  const [clickingButton, setClickingButton] = useState(false);
 
   // User voting state for power mode
   const [userVoteState, setUserVoteState] = useState<UserVoteState>({
@@ -90,6 +86,65 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
   // Track pending votes to batch API calls
   const pendingVotesRef = useRef<number>(0);
   const voteTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch dislike count and user dislike count with SWR
+  const { data: dislikeData, mutate: mutateDislike } = useSWR<{
+    dislikeCount: number;
+    userDislikeCount: number;
+  }>(
+    game.id ? ['game-dislike', game.id] : null,
+    async ([, gameId]: [string, number]) => {
+      const [dislikeResponse, userDislikeResponse] = await Promise.all([
+        fetch(`/api/games/dislike?gameId=${gameId}`),
+        fetch(`/api/users/game-dislike-count?gameId=${gameId}`),
+      ]);
+
+      const dislikeResult = await dislikeResponse.json();
+      const userDislikeResult = await userDislikeResponse.json();
+
+      return {
+        dislikeCount: dislikeResult.success
+          ? dislikeResult.data.dislikeCount
+          : 0,
+        userDislikeCount: userDislikeResult.success
+          ? userDislikeResult.data.userDislikeCount
+          : 0,
+      };
+    },
+    {
+      revalidateOnFocus: false,
+      refreshInterval: 5000,
+      dedupingInterval: 2000,
+      revalidateOnReconnect: false,
+      onSuccess: (newData, key, config) => {
+        // Trigger animations when count increases from polling
+        if (
+          dislikeData &&
+          newData.dislikeCount > dislikeData.dislikeCount &&
+          game.id
+        ) {
+          triggerCountIncreaseAnimations(
+            game.id.toString(),
+            dislikeData.dislikeCount,
+            newData.dislikeCount,
+            setFloatingThumbs,
+            (itemId, animationId) => ({
+              id: animationId,
+              timestamp: Date.now(),
+              startX: Math.random() * 70 + 15,
+              startY: Math.random() * 30 + 60,
+              isPowerMode: false,
+            }),
+            'thumb-polling',
+          );
+        }
+      },
+    },
+  );
+
+  const dislikeCount = dislikeData?.dislikeCount ?? game.dislike_count ?? 0;
+  const userDislikeCount = dislikeData?.userDislikeCount ?? 0;
+  const isLoadingUserDislike = !dislikeData;
   const [salesData, setSalesData] = useState<SalesData>({
     value: null,
     source: null,
@@ -111,87 +166,6 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     null,
   );
   const [isLoadingPlaytracker, setIsLoadingPlaytracker] = useState(true);
-
-  // Fetch user's dislike count for this game
-  useEffect(() => {
-    const fetchUserDislikeCount = async () => {
-      if (!game.id) return;
-
-      setIsLoadingUserDislike(true);
-      try {
-        const response = await fetch(
-          `/api/users/game-dislike-count?gameId=${game.id}`,
-        );
-        const result = await response.json();
-
-        if (result.success) {
-          setUserDislikeCount(result.data.userDislikeCount);
-        }
-      } catch (error) {
-        console.error('Failed to fetch user dislike count:', error);
-      } finally {
-        setIsLoadingUserDislike(false);
-      }
-    };
-
-    fetchUserDislikeCount();
-  }, [game.id]);
-
-  // Short polling for real-time dislike count updates (every 5 seconds)
-  useEffect(() => {
-    if (!game.id) return;
-
-    const pollInterval = setInterval(async () => {
-      console.log('🔄 Polling for dislike count updates on game detail...');
-
-      try {
-        // Fetch fresh dislike count from the database
-        const response = await fetch(`/api/games/dislike?gameId=${game.id}`);
-        const result = await response.json();
-
-        if (result.success && result.data) {
-          const freshDislikeCount = result.data.dislikeCount;
-
-          // Check for dislike count increase and trigger animations
-          setDislikeCount((prevCount) => {
-            if (
-              prevCount !== freshDislikeCount &&
-              freshDislikeCount > prevCount
-            ) {
-              console.log(
-                `🔢 Dislike count updated: ${prevCount} → ${freshDislikeCount}`,
-              );
-
-              // Trigger floating thumb animations using the utility function
-              if (game.id) {
-                triggerCountIncreaseAnimations(
-                  game.id.toString(),
-                  prevCount,
-                  freshDislikeCount,
-                  setFloatingThumbs,
-                  (itemId, animationId) => ({
-                    id: animationId,
-                    timestamp: Date.now(),
-                    startX: Math.random() * 70 + 15, // Random position between 15% and 85%
-                    startY: Math.random() * 30 + 60, // Random Y position in the banner area
-                    isPowerMode: false, // No power mode for polling updates
-                  }),
-                  'thumb-polling',
-                );
-              }
-
-              return freshDislikeCount;
-            }
-            return prevCount;
-          });
-        }
-      } catch (error) {
-        console.error('❌ Failed to poll for dislike count:', error);
-      }
-    }, 5000);
-
-    return () => clearInterval(pollInterval);
-  }, [game.id]);
 
   // Fetch sales data with fallback logic
   useEffect(() => {
@@ -358,9 +332,17 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
     setFloatingThumbs((prev) => [...prev, newThumb]);
 
-    // Optimistically update the UI immediately
-    setDislikeCount((prev) => prev + increment);
-    setUserDislikeCount((prev) => prev + increment);
+    // Optimistically update SWR cache immediately
+    mutateDislike(
+      (current) =>
+        current
+          ? {
+              dislikeCount: current.dislikeCount + increment,
+              userDislikeCount: current.userDislikeCount + increment,
+            }
+          : current,
+      { revalidate: false },
+    );
 
     // Batch API calls - accumulate votes and send after a short delay
     pendingVotesRef.current += increment;
@@ -394,14 +376,15 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
         if (!result.success) {
           console.error('Failed to update dislike count:', result.error);
           // Revert optimistic update on error
-          setDislikeCount((prev) => prev - totalIncrement);
-          setUserDislikeCount((prev) => prev - totalIncrement);
+          mutateDislike();
+        } else {
+          // Success - refresh from server
+          mutateDislike();
         }
       } catch (error) {
         console.error('Error calling dislike API:', error);
         // Revert optimistic update on error
-        setDislikeCount((prev) => prev - totalIncrement);
-        setUserDislikeCount((prev) => prev - totalIncrement);
+        mutateDislike();
       }
     }, 300);
   };
