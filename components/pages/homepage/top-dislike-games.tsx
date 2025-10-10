@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import PaginationDots from '@/components/shared/pagination-dots';
 import MiniGameCard from '@/components/shared/cards/mini-game-card';
+import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 
 // Types for Top Disliked Games data
 interface TopDislikedGame {
@@ -79,7 +80,7 @@ const TopDislikeGames = () => {
     }>
   >([]);
 
-  // Fetch top disliked games data from Supabase
+  // Fetch top disliked games data from Supabase with short polling for real-time updates
   const {
     data: topDislikedGamesResponse,
     error,
@@ -94,14 +95,15 @@ const TopDislikeGames = () => {
       }),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 60000, // 1 minute cache (shorter for real-time updates)
+      refreshInterval: 5000, // Poll every 5 seconds for real-time updates
+      dedupingInterval: 1000, // Reduce deduping to allow more frequent updates
     },
   );
 
   // Transform top disliked games to GameOver format
   const [gameOverData, setGameOverData] = useState<GameOverEntry[]>([]);
 
-  // Update gameOverData when top disliked games data changes
+  // Update gameOverData when top disliked games data changes and trigger animation on dislike increase
   useEffect(() => {
     if (topDislikedGamesResponse?.data) {
       const transformedData = topDislikedGamesResponse.data.map(
@@ -115,6 +117,29 @@ const TopDislikeGames = () => {
           slug: game.slug,
         }),
       );
+
+      // Check for dislike count increases and trigger animation
+      transformedData.forEach((newGame) => {
+        const oldGame = gameOverData.find((g) => g.id === newGame.id);
+        if (oldGame) {
+          // Use the utility function to trigger animations
+          triggerCountIncreaseAnimations(
+            newGame.id,
+            oldGame.dislikeCount,
+            newGame.dislikeCount,
+            setFloatingThumbs,
+            (itemId, animationId) => ({
+              id: animationId,
+              gameId: itemId,
+              timestamp: Date.now(),
+              startX: 20 + Math.random() * 60, // Random horizontal position (20-80%)
+              isPowerMode: false, // No power mode for polling updates
+            }),
+            'thumb-polling',
+          );
+        }
+      });
+
       setGameOverData(transformedData);
     }
   }, [topDislikedGamesResponse]);

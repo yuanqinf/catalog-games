@@ -23,6 +23,7 @@ import GameDetailSection from '@/components/pages/game-detail-page/game-detail-s
 
 import GameDetailHighlight, { StatisticItem } from './game-detail-highlight';
 import GameDetailHeadline from './game-detail-headline';
+import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 
 import { GameDbData } from '@/types';
 import {
@@ -135,6 +136,62 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     };
 
     fetchUserDislikeCount();
+  }, [game.id]);
+
+  // Short polling for real-time dislike count updates (every 5 seconds)
+  useEffect(() => {
+    if (!game.id) return;
+
+    const pollInterval = setInterval(async () => {
+      console.log('🔄 Polling for dislike count updates on game detail...');
+
+      try {
+        // Fetch fresh dislike count from the database
+        const response = await fetch(`/api/games/dislike?gameId=${game.id}`);
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          const freshDislikeCount = result.data.dislikeCount;
+
+          // Check for dislike count increase and trigger animations
+          setDislikeCount((prevCount) => {
+            if (
+              prevCount !== freshDislikeCount &&
+              freshDislikeCount > prevCount
+            ) {
+              console.log(
+                `🔢 Dislike count updated: ${prevCount} → ${freshDislikeCount}`,
+              );
+
+              // Trigger floating thumb animations using the utility function
+              if (game.id) {
+                triggerCountIncreaseAnimations(
+                  game.id.toString(),
+                  prevCount,
+                  freshDislikeCount,
+                  setFloatingThumbs,
+                  (itemId, animationId) => ({
+                    id: animationId,
+                    timestamp: Date.now(),
+                    startX: Math.random() * 70 + 15, // Random position between 15% and 85%
+                    startY: Math.random() * 30 + 60, // Random Y position in the banner area
+                    isPowerMode: false, // No power mode for polling updates
+                  }),
+                  'thumb-polling',
+                );
+              }
+
+              return freshDislikeCount;
+            }
+            return prevCount;
+          });
+        }
+      } catch (error) {
+        console.error('❌ Failed to poll for dislike count:', error);
+      }
+    }, 5000);
+
+    return () => clearInterval(pollInterval);
   }, [game.id]);
 
   // Fetch sales data with fallback logic

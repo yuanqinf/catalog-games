@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Gamepad2, Calendar, ThumbsDown, MoreHorizontal } from 'lucide-react';
@@ -21,6 +22,7 @@ import {
 } from '@/components/ui/tooltip';
 import type { GameDbData } from '@/types';
 import { unifyPlatforms, type UnifiedPlatform } from '@/utils/platform-utils';
+import { Button } from '@/components/ui/button';
 
 type PlatformIconData =
   | {
@@ -59,6 +61,20 @@ const MiniGameCard = ({
   game: GameDbData;
   ranking?: number;
 }) => {
+  const [isClicking, setIsClicking] = useState(false);
+  const [localDislikeCount, setLocalDislikeCount] = useState(
+    game.dislike_count || 0,
+  );
+
+  // Sync local dislike count with prop changes (for live polling updates)
+  // Only update if the prop count is higher than local (from other users' votes)
+  useEffect(() => {
+    const propCount = game.dislike_count || 0;
+    if (propCount > localDislikeCount) {
+      setLocalDislikeCount(propCount);
+    }
+  }, [game.dislike_count]);
+
   // Get unified platforms and their icons
   const unifiedPlatforms = unifyPlatforms(game.platforms);
   const displayedPlatforms = unifiedPlatforms.slice(0, 3); // Show only 3 platforms if more than 4
@@ -66,6 +82,50 @@ const MiniGameCard = ({
   const platformIconsData = displayedPlatforms.map((platform) =>
     getPlatformIcon(platform, game),
   );
+
+  // Handle dislike vote
+  const handleDislikeVote = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Play pop sound effect
+    const audio = new Audio('/sound/pop_sound.wav');
+    audio.volume = 0.3;
+    audio.play().catch((error) => console.error('Error playing sound:', error));
+
+    // Add button click animation
+    setIsClicking(true);
+    setTimeout(() => setIsClicking(false), 200);
+
+    // Optimistically update the UI immediately
+    setLocalDislikeCount((prev) => prev + 1);
+
+    // Call backend API to update the database
+    try {
+      const response = await fetch('/api/games/dislike', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          igdbId: game.igdb_id,
+          incrementBy: 1,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        console.error('Failed to update dislike count:', result.error);
+        // Revert optimistic update on error
+        setLocalDislikeCount((prev) => prev - 1);
+      }
+    } catch (error) {
+      console.error('Error calling dislike API:', error);
+      // Revert optimistic update on error
+      setLocalDislikeCount((prev) => prev - 1);
+    }
+  };
 
   return (
     <div className="p-1">
@@ -82,12 +142,22 @@ const MiniGameCard = ({
                     : 'bg-yellow-600/90 hover:bg-yellow-600'
               }`}
             >
-              {ranking <= 5 && (
-                <ThumbsDown size={12} className="text-yellow-300" />
-              )}
               #{ranking}
             </Badge>
           )}
+
+          {/* Dislike Button */}
+          <Button
+            size="icon"
+            className={`absolute top-2 right-2 z-20 bg-red-400 transition-all duration-200 hover:scale-110 hover:bg-red-600 ${
+              isClicking ? 'scale-90' : ''
+            }`}
+            aria-label="dislike"
+            onClick={handleDislikeVote}
+          >
+            <ThumbsDown className="!h-[18px] !w-[18px] text-white" />
+          </Button>
+
           <div
             className="relative mb-2 overflow-hidden rounded bg-zinc-700 transition-shadow duration-200 group-hover:shadow-md"
             style={{ aspectRatio: '672/895' }}
@@ -179,7 +249,7 @@ const MiniGameCard = ({
                   size={14}
                   className="mr-1 flex-shrink-0 text-red-400 transition-all duration-300 group-hover:scale-110 group-hover:text-red-300"
                 />
-                <NumberFlow value={game.dislike_count || 0} />
+                <NumberFlow value={localDislikeCount} />
               </p>
             </div>
           </div>

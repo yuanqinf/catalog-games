@@ -101,6 +101,52 @@ const GameExplorePage = () => {
     }
   }, [currentPage, totalPages, fetchGamesForPage]);
 
+  // Short polling for real-time updates (every 5 seconds)
+  useEffect(() => {
+    if (totalPages === 0 || games.length === 0) return; // Don't poll until initialized
+
+    const pollInterval = setInterval(async () => {
+      console.log('🔄 Polling for dislike count updates on explore page...');
+
+      try {
+        const offset = (currentPage - 1) * GAMES_PER_PAGE;
+        const freshGames = await gameService.getGamesForExplorePage(
+          offset,
+          GAMES_PER_PAGE,
+          TOP_GAMES_LIMIT,
+        );
+
+        // Check if order has changed by comparing igdb_ids
+        const orderChanged = freshGames.some(
+          (freshGame, index) => freshGame.igdb_id !== games[index]?.igdb_id,
+        );
+
+        if (orderChanged) {
+          // Order changed, update entire list
+          console.log('📊 Game order changed, updating full list');
+          setGames(freshGames);
+        } else {
+          // Order unchanged, only update dislike counts
+          console.log('🔢 Updating dislike counts only');
+          setGames((prevGames) =>
+            prevGames.map((game) => {
+              const freshGame = freshGames.find(
+                (fg) => fg.igdb_id === game.igdb_id,
+              );
+              return freshGame
+                ? { ...game, dislike_count: freshGame.dislike_count }
+                : game;
+            }),
+          );
+        }
+      } catch (error) {
+        console.error('❌ Failed to poll for updates:', error);
+      }
+    }, 5000);
+
+    return () => clearInterval(pollInterval);
+  }, [currentPage, totalPages, games, gameService]);
+
   // Handle page change
   const handlePageChange = useCallback(
     (page: number) => {

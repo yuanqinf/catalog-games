@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ArrowUpDown,
 } from 'lucide-react';
+import NumberFlow from '@number-flow/react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -22,9 +23,10 @@ import {
 } from '@/components/ui/table';
 
 import { DeadGameFromAPI, DeadGame } from '@/types';
+import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 
 const DeadGames = () => {
-  // Fetch dead games data from Supabase
+  // Fetch dead games data from Supabase with short polling for real-time updates
   const {
     data: deadGamesResponse,
     error,
@@ -38,7 +40,8 @@ const DeadGames = () => {
       }),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 60000, // 1 minute cache
+      refreshInterval: 5000, // Poll every 5 seconds for real-time updates
+      dedupingInterval: 1000, // Reduce deduping to allow more frequent updates
     },
   );
 
@@ -113,17 +116,40 @@ const DeadGames = () => {
     return transformedData;
   }, [deadGamesResponse?.data, sortByReactions, sortByDate, reactionCounts]);
 
-  // Initialize reaction counts when data loads (only when API data changes, not when sorting changes)
+  // Initialize reaction counts when data loads and trigger animations on count increases
   useEffect(() => {
     if (deadGamesResponse?.data && deadGamesResponse.data.length > 0) {
-      const counts = deadGamesResponse.data.reduce(
+      const newCounts = deadGamesResponse.data.reduce(
         (acc, deadGame) => ({
           ...acc,
           [deadGame.id]: deadGame.user_reaction_count,
         }),
         {},
       );
-      setReactionCounts(counts);
+
+      // Check for reaction count increases and trigger animations
+      deadGamesResponse.data.forEach((deadGame) => {
+        const oldCount = reactionCounts[deadGame.id] || 0;
+        const newCount = deadGame.user_reaction_count;
+
+        // Use the utility function to trigger animations
+        triggerCountIncreaseAnimations(
+          deadGame.id,
+          oldCount,
+          newCount,
+          setFloatingSkulls,
+          (itemId, animationId) => ({
+            id: animationId,
+            gameId: itemId,
+            timestamp: Date.now(),
+            startX: Math.random() * window.innerWidth * 0.8,
+            startY: Math.random() * 200 + 300, // Position in middle area of screen
+          }),
+          'skull-polling',
+        );
+      });
+
+      setReactionCounts(newCounts);
     }
   }, [deadGamesResponse?.data]);
 
@@ -489,7 +515,7 @@ const DeadGames = () => {
                     >
                       <Skull className="mr-2 h-4 w-4 text-zinc-400 transition-colors group-hover:text-white" />
                       <span className="font-medium text-zinc-300 group-hover:text-white">
-                        {reactionCounts[game.id]?.toLocaleString() || 0}
+                        <NumberFlow value={reactionCounts[game.id] || 0} />
                       </span>
                     </Button>
                   </TableCell>

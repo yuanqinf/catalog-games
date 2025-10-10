@@ -2,6 +2,71 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GameService, createClerkSupabaseClient } from '@/lib/supabase/client';
 import { currentUser } from '@clerk/nextjs/server';
 
+// GET endpoint to fetch current dislike count for a game
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const gameId = searchParams.get('gameId');
+
+    if (!gameId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Game ID is required',
+        },
+        { status: 400 },
+      );
+    }
+
+    const supabase = createClerkSupabaseClient(null);
+
+    // Fetch the game's dislike count directly from the database
+    const { data: game, error } = await supabase
+      .from('games')
+      .select('id, dislike_count')
+      .eq('id', parseInt(gameId))
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching game:', error);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to fetch game',
+        },
+        { status: 500 },
+      );
+    }
+
+    if (!game) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Game not found',
+        },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        gameId: game.id,
+        dislikeCount: game.dislike_count || 0,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching dislike count:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to fetch dislike count',
+      },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
