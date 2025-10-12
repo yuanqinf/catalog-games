@@ -231,22 +231,18 @@ const GameDetailHeadline = ({
                   <span className="text-lg font-bold text-red-400">
                     <NumberFlow value={dislikeCount || 0} />
                   </span>
-                  <span className="text-sm text-gray-400">dislikes</span>
                 </div>
 
                 {/* Disliked User Count */}
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-orange-400" />
-                  <span className="text-sm text-gray-400">
-                    {isLoadingUsersCount ? (
-                      <Loader2 className="inline h-3 w-3 animate-spin" />
-                    ) : (
-                      <>
-                        <NumberFlow value={dislikedUsersCount} />{' '}
-                        {dislikedUsersCount === 1 ? 'user' : 'users'}
-                      </>
-                    )}
-                  </span>
+                  <Users className="h-4 w-4 text-yellow-500" />
+                  {isLoadingUsersCount ? (
+                    <Loader2 className="inline h-3 w-3 animate-spin" />
+                  ) : (
+                    <p className="text-sm font-bold text-yellow-500">
+                      {dislikedUsersCount}
+                    </p>
+                  )}
                 </div>
 
                 {/* Release Date */}
