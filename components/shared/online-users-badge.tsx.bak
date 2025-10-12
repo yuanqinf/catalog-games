@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import useSWR from 'swr';
-import { X, ThumbsDown } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
-import NumberFlow from '@number-flow/react';
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -27,16 +26,8 @@ const OnlineUsersBadge = () => {
     dedupingInterval: 2000,
   });
 
-  // Fetch total dislike count with SWR polling
-  const { data: dislikeData } = useSWR('/api/stats/total-dislikes', fetcher, {
-    refreshInterval: 10000,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-    dedupingInterval: 5000,
-  });
-
-  const onlineCount = onlineData?.count ?? '0';
-  const totalDislikes = dislikeData?.data?.totalDislikes ?? 0;
+  const onlineCount = onlineData?.count ?? 0;
+  console.log('onlineCount', onlineCount);
 
   // Send heartbeat to update last_seen
   useEffect(() => {
@@ -70,10 +61,10 @@ const OnlineUsersBadge = () => {
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, x: 100 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 100 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        whileHover={{ scale: 1.05, y: -2 }}
         className="fixed right-6 bottom-6 z-50"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -89,37 +80,23 @@ const OnlineUsersBadge = () => {
           </div>
 
           {/* Count */}
-          <span className="pointer-events-none font-medium text-white">
-            <NumberFlow value={onlineCount} /> online
+          <span className="font-medium text-white">
+            {onlineCount.toLocaleString()} online
           </span>
 
-          {/* Expanded info on hover */}
+          {/* Close button */}
           <AnimatePresence>
             {isHovered && (
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 'auto', opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                className="flex items-center gap-2 overflow-hidden"
+              <motion.button
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                transition={{ duration: 0.15 }}
+                onClick={handleClose}
+                className="ml-1 rounded-full p-0.5 text-zinc-400 hover:bg-zinc-700 hover:text-white"
               >
-                <ThumbsDown className="h-3.5 w-3.5 fill-current text-red-500" />
-                <span className="pointer-events-none font-medium whitespace-nowrap text-white">
-                  <NumberFlow value={totalDislikes} /> dislikes
-                </span>
-
-                {/* Close button */}
-                <motion.button
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0 }}
-                  transition={{ delay: 0.1, duration: 0.15 }}
-                  onClick={handleClose}
-                  className="ml-1 rounded-full p-0.5 text-zinc-400 hover:bg-zinc-700 hover:text-white"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </motion.button>
-              </motion.div>
+                <X className="h-3.5 w-3.5" />
+              </motion.button>
             )}
           </AnimatePresence>
         </Badge>
