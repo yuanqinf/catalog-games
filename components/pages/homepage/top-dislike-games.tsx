@@ -335,7 +335,7 @@ const TopDislikeGames = () => {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <ThumbsDown className="h-6 w-6 text-red-500" />
+            <ThumbsDown className="h-6 w-6 fill-current text-red-500" />
             <h2 className="text-2xl font-bold">Hall of Shame</h2>
           </div>
           <Link href="/explore">
@@ -397,7 +397,7 @@ const TopDislikeGames = () => {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <ThumbsDown className="h-6 w-6 text-red-500" />
+          <ThumbsDown className="h-6 w-6 fill-current text-red-500" />
           <h2 className="text-2xl font-bold">Hall of Shame</h2>
         </div>
       </div>

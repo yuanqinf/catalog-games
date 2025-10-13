@@ -1,45 +1,27 @@
 import { NextResponse } from 'next/server';
-import { createClerkSupabaseClient } from '@/lib/supabase/client';
-import { auth } from '@clerk/nextjs/server';
+import { getAuthenticatedUser } from '@/lib/auth/helpers';
 
 export async function GET() {
   try {
-    const { userId } = await auth();
+    const authResult = await getAuthenticatedUser();
 
-    if (!userId) {
+    if ('error' in authResult) {
       return NextResponse.json(
         {
           success: false,
-          error: 'User not authenticated',
+          error: authResult.error,
         },
-        { status: 401 },
+        { status: authResult.status },
       );
     }
 
-    const supabase = createClerkSupabaseClient(null);
-
-    // Get the user's internal ID from the users table
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('clerk_id', userId)
-      .single();
-
-    if (userError || !userData) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'User not found',
-        },
-        { status: 404 },
-      );
-    }
+    const { internalUserId, supabase } = authResult;
 
     // Get all dislikes for this user and sum the counts
     const { data: dislikes, error: dislikesError } = await supabase
       .from('dislikes')
       .select('count')
-      .eq('user_id', userData.id);
+      .eq('user_id', internalUserId);
 
     if (dislikesError) {
       throw new Error(dislikesError.message || 'Failed to fetch dislikes');

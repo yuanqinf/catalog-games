@@ -1,23 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClerkSupabaseClient } from '@/lib/supabase/client';
-import { auth } from '@clerk/nextjs/server';
+import { getAuthenticatedUser } from '@/lib/auth/helpers';
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json(
-        {
-          success: true,
-          data: {
-            userDislikeCount: 0,
-          },
-        },
-        { status: 200 },
-      );
-    }
-
     const { searchParams } = new URL(request.url);
     const gameId = searchParams.get('gameId');
 
@@ -31,30 +16,38 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createClerkSupabaseClient(null);
+    const authResult = await getAuthenticatedUser();
 
-    // Get the user's internal ID from the users table
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('clerk_id', userId)
-      .single();
+    if ('error' in authResult) {
+      // Return 0 count for unauthenticated users instead of error
+      if (authResult.status === 401) {
+        return NextResponse.json(
+          {
+            success: true,
+            data: {
+              userDislikeCount: 0,
+            },
+          },
+          { status: 200 },
+        );
+      }
 
-    if (userError || !userData) {
       return NextResponse.json(
         {
           success: false,
-          error: 'User not found',
+          error: authResult.error,
         },
-        { status: 404 },
+        { status: authResult.status },
       );
     }
+
+    const { internalUserId, supabase } = authResult;
 
     // Get the user's dislike count for this specific game
     const { data: dislikeData, error: dislikeError } = await supabase
       .from('dislikes')
       .select('count')
-      .eq('user_id', userData.id)
+      .eq('user_id', internalUserId)
       .eq('game_id', gameId)
       .maybeSingle();
 

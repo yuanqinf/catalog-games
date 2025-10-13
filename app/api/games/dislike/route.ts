@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GameService, createClerkSupabaseClient } from '@/lib/supabase/client';
-import { auth } from '@clerk/nextjs/server';
+import { getAuthenticatedUser } from '@/lib/auth/helpers';
 
 // GET endpoint to fetch current dislike count for a game
 export async function GET(request: NextRequest) {
@@ -104,23 +104,16 @@ export async function POST(request: NextRequest) {
     );
 
     // Record the user's dislike in the dislikes table
-    const { userId } = await auth();
-    if (userId) {
-      const supabase = createClerkSupabaseClient(null);
+    const authResult = await getAuthenticatedUser();
+    if (!('error' in authResult)) {
+      const { internalUserId, supabase } = authResult;
 
-      // Get the user's internal ID from the users table
-      const { data: userData } = await supabase
-        .from('users')
-        .select('id')
-        .eq('clerk_id', userId)
-        .single();
-
-      if (userData) {
+      if (internalUserId) {
         // Use PostgreSQL's INSERT ... ON CONFLICT for atomic upsert
         const { error: upsertError } = await supabase.rpc(
           'upsert_user_dislike',
           {
-            p_user_id: userData.id,
+            p_user_id: internalUserId,
             p_game_id: game.id,
             p_increment: incrementBy,
           },
@@ -132,7 +125,7 @@ export async function POST(request: NextRequest) {
           const { data: existingDislike } = await supabase
             .from('dislikes')
             .select('count')
-            .eq('user_id', userData.id)
+            .eq('user_id', internalUserId)
             .eq('game_id', game.id)
             .maybeSingle();
 
@@ -140,11 +133,11 @@ export async function POST(request: NextRequest) {
             await supabase
               .from('dislikes')
               .update({ count: existingDislike.count + incrementBy })
-              .eq('user_id', userData.id)
+              .eq('user_id', internalUserId)
               .eq('game_id', game.id);
           } else {
             await supabase.from('dislikes').insert({
-              user_id: userData.id,
+              user_id: internalUserId,
               game_id: game.id,
               count: incrementBy,
             });
@@ -190,41 +183,24 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { userId } = await auth();
-    if (!userId) {
+    const authResult = await getAuthenticatedUser();
+    if ('error' in authResult) {
       return NextResponse.json(
         {
           success: false,
-          error: 'User not authenticated',
+          error: authResult.error,
         },
-        { status: 401 },
+        { status: authResult.status },
       );
     }
 
-    const supabase = createClerkSupabaseClient(null);
-
-    // Get the user's internal ID from the users table
-    const { data: userData } = await supabase
-      .from('users')
-      .select('id')
-      .eq('clerk_id', userId)
-      .single();
-
-    if (!userData) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'User not found',
-        },
-        { status: 404 },
-      );
-    }
+    const { internalUserId, supabase } = authResult;
 
     // Use PostgreSQL function for atomic operation
     const { data: result, error: rpcError } = await supabase.rpc(
       'remove_user_dislike',
       {
-        p_user_id: userData.id,
+        p_user_id: internalUserId,
         p_game_id: parseInt(gameId),
       },
     );
@@ -236,7 +212,7 @@ export async function DELETE(request: NextRequest) {
       const { data: existingDislike } = await supabase
         .from('dislikes')
         .select('count')
-        .eq('user_id', userData.id)
+        .eq('user_id', internalUserId)
         .eq('game_id', parseInt(gameId))
         .maybeSingle();
 
@@ -256,7 +232,7 @@ export async function DELETE(request: NextRequest) {
       const { error: deleteError } = await supabase
         .from('dislikes')
         .delete()
-        .eq('user_id', userData.id)
+        .eq('user_id', internalUserId)
         .eq('game_id', parseInt(gameId));
 
       if (deleteError) {
