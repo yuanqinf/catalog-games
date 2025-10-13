@@ -14,8 +14,9 @@ export async function GET() {
       thresholdTime.getMinutes() - ONLINE_THRESHOLD_MINUTES,
     );
 
+    // Count active sessions (both authenticated and anonymous users)
     const { count, error } = await supabase
-      .from('users')
+      .from('active_sessions')
       .select('*', { count: 'exact', head: true })
       .gte('last_seen', thresholdTime.toISOString());
 

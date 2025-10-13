@@ -3,27 +3,45 @@ import { createClerkSupabaseClient } from '@/lib/supabase/client';
 
 export async function POST(req: Request) {
   try {
-    console.log('heartbeat');
+    const supabase = createClerkSupabaseClient(null);
 
-    const supabase = createClerkSupabaseClient();
+    const { user_id, session_id } = await req.json();
 
-    console.log('heartbeat2');
-    const { user_id } = await req.json();
-    console.log('user_id: ', user_id);
-
-    if (!user_id) {
+    if (!session_id) {
       return NextResponse.json(
-        { success: false, error: 'user_id is required' },
+        { success: false, error: 'session_id is required' },
         { status: 400 },
       );
     }
 
-    const { error } = await supabase
-      .from('users')
-      .update({ last_seen: new Date().toISOString() })
-      .eq('clerk_id', user_id);
+    // Get user UUID from users table if authenticated
+    let userUuid = null;
+    if (user_id) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('clerk_id', user_id)
+        .single();
+
+      userUuid = userData?.id; // This is UUID from users.id
+
+      // Also update the users table for authenticated users
+      if (userUuid) {
+        await supabase
+          .from('users')
+          .update({ last_seen: new Date().toISOString() })
+          .eq('clerk_id', user_id);
+      }
+    }
+
+    // Upsert active session for both authenticated and anonymous users
+    const { error } = await supabase.rpc('upsert_active_session', {
+      p_session_id: session_id,
+      p_user_id: userUuid, // Pass UUID (or null for anonymous)
+    });
 
     if (error) {
+      console.error('Heartbeat error:', error);
       return NextResponse.json(
         { success: false, error: error.message },
         { status: 500 },

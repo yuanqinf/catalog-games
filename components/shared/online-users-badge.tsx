@@ -38,16 +38,24 @@ const OnlineUsersBadge = () => {
   const onlineCount = onlineData?.count ?? '0';
   const totalDislikes = dislikeData?.data?.totalDislikes ?? 0;
 
-  // Send heartbeat to update last_seen
+  // Send heartbeat to update last_seen (for both authenticated and anonymous users)
   useEffect(() => {
-    if (!user?.id) return;
+    // Generate or retrieve session ID from localStorage
+    let sessionId = localStorage.getItem('session_id');
+    if (!sessionId) {
+      sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      localStorage.setItem('session_id', sessionId);
+    }
 
     const sendHeartbeat = async () => {
       try {
         await fetch('/api/user/heartbeat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: user.id }),
+          body: JSON.stringify({
+            user_id: user?.id || null,
+            session_id: sessionId,
+          }),
         });
       } catch (error) {
         console.error('Heartbeat failed:', error);
