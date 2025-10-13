@@ -18,12 +18,19 @@ export async function GET() {
     const totalDislikes =
       games?.reduce((sum, game) => sum + (game.dislike_count || 0), 0) || 0;
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        totalDislikes,
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          totalDislikes,
+        },
       },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=59',
+        },
+      },
+    );
   } catch (error) {
     console.error('Failed to get total dislike count:', error);
     return NextResponse.json(

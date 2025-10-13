@@ -55,7 +55,9 @@ export async function GET(request: NextRequest) {
         .maybeSingle();
 
       if (dislikeError) {
-        throw new Error(dislikeError.message || 'Failed to fetch dislike count');
+        throw new Error(
+          dislikeError.message || 'Failed to fetch dislike count',
+        );
       }
 
       return NextResponse.json({
