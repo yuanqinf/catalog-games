@@ -41,7 +41,7 @@ const UserProfilePage = () => {
   const fetchUserDislikeCount = async () => {
     try {
       setIsLoadingDislikes(true);
-      const response = await fetch('/api/users/dislike-count');
+      const response = await fetch('/api/users/dislikes?total=true');
       const result = await response.json();
 
       if (result.success) {
@@ -57,7 +57,7 @@ const UserProfilePage = () => {
   const fetchDislikedGames = async () => {
     try {
       setIsLoadingGames(true);
-      const response = await fetch('/api/users/disliked-games');
+      const response = await fetch('/api/users/dislikes');
       const result = await response.json();
 
       if (result.success) {

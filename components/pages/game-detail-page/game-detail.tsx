@@ -96,7 +96,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     async ([, gameId]: [string, number]) => {
       const [dislikeResponse, userDislikeResponse] = await Promise.all([
         fetch(`/api/games/dislike?gameId=${gameId}`),
-        fetch(`/api/users/game-dislike-count?gameId=${gameId}`),
+        fetch(`/api/users/dislikes?gameId=${gameId}`),
       ]);
 
       const dislikeResult = await dislikeResponse.json();
