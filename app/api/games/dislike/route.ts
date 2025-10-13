@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GameService, createClerkSupabaseClient } from '@/lib/supabase/client';
-import { currentUser } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
 
 // GET endpoint to fetch current dislike count for a game
 export async function GET(request: NextRequest) {
@@ -104,15 +104,15 @@ export async function POST(request: NextRequest) {
     );
 
     // Record the user's dislike in the dislikes table
-    const clerkUser = await currentUser();
-    if (clerkUser) {
+    const { userId } = await auth();
+    if (userId) {
       const supabase = createClerkSupabaseClient(null);
 
       // Get the user's internal ID from the users table
       const { data: userData } = await supabase
         .from('users')
         .select('id')
-        .eq('clerk_id', clerkUser.id)
+        .eq('clerk_id', userId)
         .single();
 
       if (userData) {
@@ -190,8 +190,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const clerkUser = await currentUser();
-    if (!clerkUser) {
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json(
         {
           success: false,
@@ -207,7 +207,7 @@ export async function DELETE(request: NextRequest) {
     const { data: userData } = await supabase
       .from('users')
       .select('id')
-      .eq('clerk_id', clerkUser.id)
+      .eq('clerk_id', userId)
       .single();
 
     if (!userData) {

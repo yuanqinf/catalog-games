@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClerkSupabaseClient } from '@/lib/supabase/client';
-import { currentUser } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
 
 export async function GET() {
   try {
-    const clerkUser = await currentUser();
+    const { userId } = await auth();
 
-    if (!clerkUser) {
+    if (!userId) {
       return NextResponse.json(
         {
           success: false,
@@ -22,7 +22,7 @@ export async function GET() {
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('id')
-      .eq('clerk_id', clerkUser.id)
+      .eq('clerk_id', userId)
       .single();
 
     if (userError || !userData) {
