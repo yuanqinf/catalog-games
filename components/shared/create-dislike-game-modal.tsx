@@ -53,7 +53,7 @@ export const CreateDislikeGameModal = ({
   // Handle dislike button click with floating animation (doesn't confirm modal)
   const handleDislikeClick = useCallback(() => {
     // Play pop sound effect
-    const audio = new Audio('/sound/pop_sound.wav');
+    const audio = new Audio('/sounds/pop_sound.wav');
     audio.volume = 0.3;
     audio.play().catch((error) => console.error('Error playing sound:', error));
 

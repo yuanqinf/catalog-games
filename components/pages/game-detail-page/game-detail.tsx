@@ -295,7 +295,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     const currentTime = Date.now();
 
     // Play pop sound effect
-    const audio = new Audio('/sound/pop_sound.wav');
+    const audio = new Audio('/sounds/pop_sound.wav');
     audio.volume = 0.3;
     audio.play().catch((error) => console.error('Error playing sound:', error));
 
