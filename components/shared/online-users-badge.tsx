@@ -35,7 +35,7 @@ const OnlineUsersBadge = () => {
     dedupingInterval: 5000,
   });
 
-  const onlineCount = onlineData?.count ?? '0';
+  const onlineCount = onlineData?.count ?? '1';
   const totalDislikes = dislikeData?.data?.totalDislikes ?? 0;
 
   // Send heartbeat to update last_seen (for both authenticated and anonymous users)
