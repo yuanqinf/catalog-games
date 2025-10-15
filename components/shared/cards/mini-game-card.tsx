@@ -5,6 +5,7 @@ import { Gamepad2, Calendar, ThumbsDown, MoreHorizontal } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGamepad } from '@fortawesome/free-solid-svg-icons';
 import NumberFlow from '@number-flow/react';
+import { motion } from 'framer-motion';
 import {
   faWindows,
   faPlaystation,
@@ -147,16 +148,26 @@ const MiniGameCard = ({
           )}
 
           {/* Dislike Button */}
-          <Button
-            size="icon"
-            className={`absolute top-2 right-2 z-20 bg-red-400 transition-all duration-200 hover:scale-110 hover:bg-red-600 ${
-              isClicking ? 'scale-90' : ''
-            }`}
-            aria-label="dislike"
-            onClick={handleDislikeVote}
+          <motion.div
+            className="absolute top-2 right-2 z-20"
+            animate={
+              isClicking
+                ? {
+                    scale: [1, 0.8, 1.1, 1],
+                  }
+                : {}
+            }
+            transition={{ duration: 0.2 }}
           >
-            <ThumbsDown className="!h-[18px] !w-[18px] text-white" />
-          </Button>
+            <Button
+              size="icon"
+              className="bg-red-500 transition-all duration-200 hover:scale-110 hover:bg-red-500"
+              aria-label="dislike"
+              onClick={handleDislikeVote}
+            >
+              <ThumbsDown className="!h-[18px] !w-[18px] text-white" />
+            </Button>
+          </motion.div>
 
           <div
             className="relative mb-2 overflow-hidden rounded bg-zinc-700 transition-shadow duration-200 group-hover:shadow-md"

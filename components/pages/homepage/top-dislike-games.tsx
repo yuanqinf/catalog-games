@@ -451,25 +451,11 @@ const TopDislikeGames = () => {
                   <ThumbsDown
                     className={`drop-shadow-2xl ${
                       thumb.isPowerMode
-                        ? 'h-12 w-12 text-red-400'
+                        ? 'h-12 w-12 text-red-500'
                         : 'h-8 w-8 text-red-500'
                     }`}
                     fill="currentColor"
                   />
-                  {thumb.isPowerMode && (
-                    <motion.div
-                      className="absolute -inset-2 rounded-full bg-red-500/30"
-                      animate={{
-                        scale: [0.8, 1.2, 0.8],
-                        opacity: [0.8, 0.3, 0.8],
-                      }}
-                      transition={{
-                        duration: 0.5,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                      }}
-                    />
-                  )}
                 </motion.div>
               ))}
           </AnimatePresence>
@@ -627,32 +613,14 @@ const TopDislikeGames = () => {
                     >
                       <Button
                         size="sm"
-                        variant="destructive"
-                        className={`relative h-8 w-8 flex-shrink-0 p-0 transition-all hover:scale-110 ${
-                          userVoteState.isPowerMode
-                            ? 'bg-red-600 shadow-lg shadow-red-500/50 hover:bg-red-700'
-                            : ''
-                        }`}
+                        // variant="destructive"
+                        className={`relative h-8 w-8 flex-shrink-0 bg-red-500 p-0 transition-all hover:scale-110 hover:bg-red-500`}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDislikeVote(game.id);
                         }}
                       >
-                        <ThumbsDown size={14} />
-                        {userVoteState.isPowerMode && (
-                          <motion.div
-                            className="absolute -inset-1 -z-10 rounded bg-red-500/30"
-                            animate={{
-                              scale: [0.9, 1.1, 0.9],
-                              opacity: [0.5, 0.8, 0.5],
-                            }}
-                            transition={{
-                              duration: 1,
-                              repeat: Infinity,
-                              ease: 'easeInOut',
-                            }}
-                          />
-                        )}
+                        <ThumbsDown className="text-white" />
                       </Button>
                     </motion.div>
                   </div>

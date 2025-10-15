@@ -119,12 +119,6 @@ export default function GameDetailHighlight({
             </Button>
           </motion.div>
         </div>
-
-        {userVoteState.isPowerMode && (
-          <div className="mt-2 animate-pulse text-center text-xs text-red-400">
-            🔥 POWER MODE ACTIVE! 🔥
-          </div>
-        )}
       </div>
 
       <div>

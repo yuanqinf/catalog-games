@@ -27,7 +27,6 @@ interface CreateDislikeGameModalProps {
 interface FloatingThumb {
   id: string;
   startX: number;
-  isPowerMode: boolean;
 }
 
 const extractDeveloper = (game: IgdbGame): string => {
@@ -48,7 +47,6 @@ export const CreateDislikeGameModal = ({
 }: CreateDislikeGameModalProps) => {
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
   const [dislikeCount, setDislikeCount] = useState(0);
-  const [powerModeCount, setPowerModeCount] = useState(0);
 
   // Handle dislike button click with floating animation (doesn't confirm modal)
   const handleDislikeClick = useCallback(() => {
@@ -60,30 +58,17 @@ export const CreateDislikeGameModal = ({
     const newThumb: FloatingThumb = {
       id: `thumb-${Date.now()}-${Math.random()}`,
       startX: Math.random() * 60 + 20, // Random position between 20% and 80%
-      isPowerMode: powerModeCount >= 2, // Power mode after 3 consecutive clicks
     };
 
     setFloatingThumbs((prev) => [...prev, newThumb]);
     setDislikeCount((prev) => prev + 1);
-    setPowerModeCount((prev) => prev + 1);
-  }, [powerModeCount]);
-
-  // Reset power mode count after a delay
-  useEffect(() => {
-    if (powerModeCount > 0) {
-      const timer = setTimeout(() => {
-        setPowerModeCount(0);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [powerModeCount]);
+  }, []);
 
   // Reset states when modal closes
   useEffect(() => {
     if (!isOpen) {
       setFloatingThumbs([]);
       setDislikeCount(0);
-      setPowerModeCount(0);
     }
   }, [isOpen]);
 
@@ -195,11 +180,7 @@ export const CreateDislikeGameModal = ({
                 onClick={handleDislikeClick}
                 variant="outline"
                 size="sm"
-                className={`border-destructive/30 bg-destructive/10 hover:bg-destructive/20 text-destructive transition-all ${
-                  powerModeCount >= 2
-                    ? 'ring-destructive/50 shadow-lg ring-2'
-                    : ''
-                }`}
+                className="border-destructive/30 bg-destructive/10 hover:bg-destructive/20 text-destructive transition-all"
               >
                 <ThumbsDown className="h-4 w-4" />
                 Dislike
@@ -251,20 +232,16 @@ export const CreateDislikeGameModal = ({
               }}
               animate={{
                 opacity: [0, 1, 1, 0],
-                scale: thumb.isPowerMode
-                  ? [0.2, 2.2, 2.0, 1.3]
-                  : [0.2, 1.5, 1.3, 0.9],
-                y: thumb.isPowerMode
-                  ? [0, -60, -180, -350]
-                  : [0, -40, -120, -250],
+                scale: [0.2, 1.5, 1.3, 0.9],
+                y: [0, -40, -120, -250],
               }}
               exit={{
                 opacity: 0,
-                scale: thumb.isPowerMode ? 1.0 : 0.6,
-                y: thumb.isPowerMode ? -400 : -300,
+                scale: 0.6,
+                y: -300,
               }}
               transition={{
-                duration: thumb.isPowerMode ? 3.5 : 2.5,
+                duration: 2.5,
                 ease: [0.25, 0.46, 0.45, 0.94],
                 times: [0, 0.15, 0.6, 1],
               }}
@@ -275,27 +252,9 @@ export const CreateDislikeGameModal = ({
               }}
             >
               <ThumbsDown
-                className={`drop-shadow-2xl ${
-                  thumb.isPowerMode
-                    ? 'h-12 w-12 text-red-400'
-                    : 'h-8 w-8 text-red-500'
-                }`}
+                className="h-8 w-8 text-red-500 drop-shadow-2xl"
                 fill="currentColor"
               />
-              {thumb.isPowerMode && (
-                <motion.div
-                  className="absolute -inset-2 rounded-full bg-red-500/30"
-                  animate={{
-                    scale: [0.8, 1.2, 0.8],
-                    opacity: [0.8, 0.3, 0.8],
-                  }}
-                  transition={{
-                    duration: 0.5,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }}
-                />
-              )}
             </motion.div>
           ))}
         </AnimatePresence>

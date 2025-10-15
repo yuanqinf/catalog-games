@@ -728,25 +728,11 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                       <ThumbsDown
                         className={`drop-shadow-2xl ${
                           thumb.isPowerMode
-                            ? 'h-12 w-12 text-red-400'
+                            ? 'h-12 w-12 text-red-500'
                             : 'h-8 w-8 text-red-500'
                         }`}
                         fill="currentColor"
                       />
-                      {thumb.isPowerMode && (
-                        <motion.div
-                          className="absolute -inset-2 rounded-full bg-red-500/30"
-                          animate={{
-                            scale: [0.8, 1.2, 0.8],
-                            opacity: [0.8, 0.3, 0.8],
-                          }}
-                          transition={{
-                            duration: 0.5,
-                            repeat: Infinity,
-                            ease: 'easeInOut',
-                          }}
-                        />
-                      )}
                     </motion.div>
                   ))}
                 </AnimatePresence>
