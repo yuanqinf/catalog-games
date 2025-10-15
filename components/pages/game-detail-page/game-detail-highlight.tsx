@@ -101,7 +101,7 @@ export default function GameDetailHighlight({
               }`}
               size="sm"
             >
-              <ThumbsDown className="h-5 w-5" />
+              <ThumbsDown className="!h-5 !w-5" />
               {userVoteState.isPowerMode && (
                 <motion.div
                   className="absolute -inset-1 -z-10 rounded bg-red-500/30"

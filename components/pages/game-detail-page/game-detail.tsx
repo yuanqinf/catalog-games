@@ -17,9 +17,34 @@ import {
   ArrowLeft,
   ThumbsDown,
   Joystick,
+  SmilePlus,
 } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import {
+  faFaceGrinTongue,
+  faFaceGrinBeamSweat,
+  faFaceSurprise,
+  faFaceSadTear,
+  faFaceRollingEyes,
+  faFaceMeh,
+  faFaceGrimace,
+  faFaceAngry,
+  faFaceDizzy,
+  faFaceFrown,
+  faFaceFlushed,
+  faFaceTired,
+  faHeartCrack,
+  faBug,
+  faPoop,
+} from '@fortawesome/free-solid-svg-icons';
 
 import { Button } from '@/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import GameDetailSection from '@/components/pages/game-detail-page/game-detail-section';
 
 import GameDetailHighlight, { StatisticItem } from './game-detail-highlight';
@@ -75,6 +100,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
   // Floating thumbs animation state
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
   const [clickingButton, setClickingButton] = useState(false);
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
 
   // User voting state for power mode
   const [userVoteState, setUserVoteState] = useState<UserVoteState>({
@@ -524,7 +550,68 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
           <div className="flex flex-col gap-10 lg:col-span-2">
             {/* Game Banner Section with Floating Animations */}
             {game.banner_url && (
-              <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black">
+              <div className="relative aspect-video w-full overflow-visible rounded-lg bg-black">
+                {/* Emoji Adder Button */}
+                <div className="absolute -right-6 -bottom-6 z-50">
+                  <Popover
+                    open={isEmojiPickerOpen}
+                    onOpenChange={setIsEmojiPickerOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        className="h-12 w-12 shadow-xl backdrop-blur-sm transition-all"
+                        aria-label="Add emoji reaction"
+                      >
+                        <SmilePlus className="!h-6 !w-6" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4" align="start">
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-5 gap-2">
+                          {[
+                            { icon: faFaceAngry, name: 'angry' },
+                            { icon: faFaceFrown, name: 'frown' },
+                            { icon: faFaceTired, name: 'tired' },
+                            { icon: faFaceDizzy, name: 'dizzy' },
+                            { icon: faFaceSurprise, name: 'surprised' },
+
+                            {
+                              icon: faFaceGrinBeamSweat,
+                              name: 'grin-beam-sweat',
+                            },
+                            { icon: faFaceSadTear, name: 'sad-tear' },
+                            { icon: faFaceRollingEyes, name: 'rolling-eyes' },
+                            { icon: faFaceMeh, name: 'meh' },
+                            { icon: faFaceGrimace, name: 'grimace' },
+                            { icon: faFaceFlushed, name: 'flushed' },
+                            { icon: faFaceGrinTongue, name: 'grin-tongue' },
+                            { icon: faHeartCrack, name: 'heart-crack' },
+                            { icon: faBug, name: 'bug' },
+                            { icon: faPoop, name: 'poop' },
+                          ].map((item) => (
+                            <Button
+                              key={item.name}
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                console.log('Selected icon:', item.name);
+                                setIsEmojiPickerOpen(false);
+                              }}
+                              className="h-12 w-12 transition-transform hover:scale-125"
+                            >
+                              <FontAwesomeIcon
+                                icon={item.icon}
+                                className="!h-6 !w-6 text-yellow-400"
+                              />
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <Image
                   src={game.banner_url}
                   alt={`${game.name} banner`}
