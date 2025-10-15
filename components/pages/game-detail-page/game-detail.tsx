@@ -77,6 +77,15 @@ interface FloatingThumb {
   isPowerMode?: boolean;
 }
 
+// Interface for floating emoji animation
+interface FloatingEmoji {
+  id: string;
+  icon: any;
+  timestamp: number;
+  startX: number;
+  startY: number;
+}
+
 // Interface for user vote state
 interface UserVoteState {
   continuousClicks: number;
@@ -99,6 +108,7 @@ interface DislikeResponse {
 const GameDetail = ({ game }: { game: GameDbData }) => {
   // Floating thumbs animation state
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
+  const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
   const [clickingButton, setClickingButton] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
 
@@ -192,6 +202,27 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     null,
   );
   const [isLoadingPlaytracker, setIsLoadingPlaytracker] = useState(true);
+
+  // Handle emoji reaction click
+  const handleEmojiClick = (icon: any, name: string) => {
+    console.log('Selected icon:', name);
+
+    // Play pop sound effect
+    const audio = new Audio('/sounds/pop_sound.wav');
+    audio.volume = 0.3;
+    audio.play();
+
+    // Create floating emoji animation
+    const newEmoji: FloatingEmoji = {
+      id: `emoji-${Date.now()}-${Math.random()}`,
+      icon: icon,
+      timestamp: Date.now(),
+      startX: Math.random() * 70 + 15,
+      startY: Math.random() * 30 + 35,
+    };
+
+    setFloatingEmojis((prev) => [...prev, newEmoji]);
+  };
 
   // Fetch sales data with fallback logic
   useEffect(() => {
@@ -595,10 +626,9 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                               key={item.name}
                               variant="ghost"
                               size="icon"
-                              onClick={() => {
-                                console.log('Selected icon:', item.name);
-                                setIsEmojiPickerOpen(false);
-                              }}
+                              onClick={() =>
+                                handleEmojiClick(item.icon, item.name)
+                              }
                               className="h-12 w-12 transition-transform hover:scale-125"
                             >
                               <FontAwesomeIcon
@@ -683,6 +713,52 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                           }}
                         />
                       )}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+
+                {/* Floating Emoji Animations */}
+                <AnimatePresence>
+                  {floatingEmojis.map((emoji) => (
+                    <motion.div
+                      key={emoji.id}
+                      className="pointer-events-none absolute z-50"
+                      style={{
+                        left: `${emoji.startX}%`,
+                        top: `${emoji.startY}%`,
+                      }}
+                      initial={{
+                        opacity: 0,
+                        scale: 0.2,
+                        y: 0,
+                        rotate: -20,
+                      }}
+                      animate={{
+                        opacity: [0, 1, 1, 0],
+                        scale: [0.2, 1.8, 1.5, 1.0],
+                        y: [0, -50, -150, -280],
+                        rotate: [0, 10, -10, 0],
+                      }}
+                      exit={{
+                        opacity: 0,
+                        scale: 0.8,
+                        y: -320,
+                      }}
+                      transition={{
+                        duration: 2.5,
+                        ease: [0.25, 0.46, 0.45, 0.94],
+                        times: [0, 0.15, 0.6, 1],
+                      }}
+                      onAnimationComplete={() => {
+                        setFloatingEmojis((prev) =>
+                          prev.filter((e) => e.id !== emoji.id),
+                        );
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={emoji.icon}
+                        className="h-10 w-10 text-yellow-400 drop-shadow-2xl"
+                      />
                     </motion.div>
                   ))}
                 </AnimatePresence>
