@@ -50,6 +50,7 @@ import GameDetailSection from '@/components/pages/game-detail-page/game-detail-s
 import GameDetailHighlight, { StatisticItem } from './game-detail-highlight';
 import GameDetailHeadline from './game-detail-headline';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
+import NumberFlow from '@number-flow/react';
 
 import { GameDbData } from '@/types';
 import {
@@ -111,6 +112,9 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
   const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
   const [clickingButton, setClickingButton] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
+  const [emojiReactions, setEmojiReactions] = useState<Record<string, number>>(
+    {},
+  );
 
   // User voting state for power mode
   const [userVoteState, setUserVoteState] = useState<UserVoteState>({
@@ -222,6 +226,36 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     };
 
     setFloatingEmojis((prev) => [...prev, newEmoji]);
+
+    // Update emoji reaction count
+    setEmojiReactions((prev) => ({
+      ...prev,
+      [name]: (prev[name] || 0) + 1,
+    }));
+
+    console.log(emojiReactions);
+  };
+
+  // Get emoji icon by name
+  const getEmojiIcon = (name: string) => {
+    const emojiMap: Record<string, any> = {
+      angry: faFaceAngry,
+      frown: faFaceFrown,
+      tired: faFaceTired,
+      dizzy: faFaceDizzy,
+      surprised: faFaceSurprise,
+      'grin-beam-sweat': faFaceGrinBeamSweat,
+      'sad-tear': faFaceSadTear,
+      'rolling-eyes': faFaceRollingEyes,
+      meh: faFaceMeh,
+      grimace: faFaceGrimace,
+      flushed: faFaceFlushed,
+      'grin-tongue': faFaceGrinTongue,
+      'heart-crack': faHeartCrack,
+      bug: faBug,
+      poop: faPoop,
+    };
+    return emojiMap[name];
   };
 
   // Fetch sales data with fallback logic
@@ -578,7 +612,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
         {/* Game Detail Main Section */}
         <section className="grid grid-cols-1 gap-16 lg:grid-cols-3">
           {/* Left Column */}
-          <div className="flex flex-col gap-10 lg:col-span-2">
+          <div className="flex flex-col gap-6 lg:col-span-2">
             {/* Game Banner Section with Floating Animations */}
             {game.banner_url && (
               <div className="relative aspect-video w-full overflow-visible rounded-lg bg-black">
@@ -764,6 +798,35 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                 </AnimatePresence>
               </div>
             )}
+
+            {/* Emoji Reactions Section */}
+            {Object.keys(emojiReactions).length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(emojiReactions).map(([name, count]) => (
+                  <Button
+                    key={name}
+                    variant="outline"
+                    size="lg"
+                    onClick={() => {
+                      const icon = getEmojiIcon(name);
+                      if (icon) {
+                        handleEmojiClick(icon, name);
+                      }
+                    }}
+                    className="flex items-center gap-2 bg-zinc-900/50 px-3 py-1 transition-all hover:scale-105 hover:bg-zinc-800"
+                  >
+                    <FontAwesomeIcon
+                      icon={getEmojiIcon(name)}
+                      className="!h-5 !w-5 text-yellow-400"
+                    />
+                    <span className="text-md font-bold text-white">
+                      <NumberFlow value={count} />
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            )}
+
             {/* Game Information Section */}
             <div className="mb-8 space-y-6">
               {/* Game Details */}
