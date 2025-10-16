@@ -45,7 +45,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';
 import GameDetailSection from '@/components/pages/game-detail-page/game-detail-section';
 
 import GameDetailHighlight, { StatisticItem } from './game-detail-highlight';
@@ -108,14 +116,14 @@ interface DislikeResponse {
 }
 
 const GameDetail = ({ game }: { game: GameDbData }) => {
+  const { isSignedIn } = useUser();
+
   // Floating thumbs animation state
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
   const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
   const [clickingButton, setClickingButton] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
-  const [emojiReactions, setEmojiReactions] = useState<Record<string, number>>(
-    {},
-  );
+  const [showSignInDialog, setShowSignInDialog] = useState(false);
 
   // User voting state for power mode
   const [userVoteState, setUserVoteState] = useState<UserVoteState>({
@@ -208,8 +216,39 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
   );
   const [isLoadingPlaytracker, setIsLoadingPlaytracker] = useState(true);
 
+  // Fetch emoji reactions with real-time polling using SWR
+  const {
+    data: emojiReactionsData,
+    mutate: mutateEmojiReactions,
+    isLoading: isLoadingEmojiReactions,
+  } = useSWR(
+    game.id ? `/api/games/emoji-reaction?gameId=${game.id}` : null,
+    (url) =>
+      fetch(url).then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch emoji reactions');
+        return res.json();
+      }),
+    {
+      revalidateOnFocus: false,
+      refreshInterval: 5000, // Poll every 5 seconds for real-time updates
+      dedupingInterval: 1000,
+    },
+  );
+
+  const emojiReactions = emojiReactionsData?.success
+    ? emojiReactionsData.data
+    : {};
+  const hasEmojiReactions = Object.keys(emojiReactions).length > 0;
+
   // Handle emoji reaction click
-  const handleEmojiClick = (icon: any, name: string) => {
+  const handleEmojiClick = async (icon: any, name: string) => {
+    // Check if user is signed in
+    if (!isSignedIn) {
+      setShowSignInDialog(true);
+      setIsEmojiPickerOpen(false);
+      return;
+    }
+
     console.log('Selected icon:', name);
 
     // Play pop sound effect
@@ -228,13 +267,47 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
     setFloatingEmojis((prev) => [...prev, newEmoji]);
 
-    // Update emoji reaction count
-    setEmojiReactions((prev) => ({
-      ...prev,
-      [name]: (prev[name] || 0) + 1,
-    }));
+    // Optimistically update UI immediately using SWR's mutate
+    mutateEmojiReactions(
+      (currentData: any) => {
+        if (!currentData?.success) return currentData;
+        return {
+          ...currentData,
+          data: {
+            ...currentData.data,
+            [name]: (currentData.data[name] || 0) + 1,
+          },
+        };
+      },
+      false, // Don't revalidate immediately
+    );
 
-    console.log(emojiReactions);
+    // Save to database
+    try {
+      const response = await fetch('/api/games/emoji-reaction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gameId: game.id,
+          emojiName: name,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        console.error('Failed to save emoji reaction:', result.error);
+      } else {
+        // Success - immediately fetch fresh data from server
+        mutateEmojiReactions();
+      }
+    } catch (error) {
+      console.error('Error saving emoji reaction:', error);
+      // Revert optimistic update on error
+      mutateEmojiReactions();
+    }
   };
 
   // Get emoji icon by name
@@ -617,78 +690,6 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
             {/* Game Banner Section with Floating Animations */}
             {game.banner_url && (
               <div className="relative aspect-video w-full overflow-visible rounded-lg bg-black">
-                {/* Emoji Adder Button */}
-                <div className="absolute -right-6 -bottom-6 z-50">
-                  <Popover
-                    open={isEmojiPickerOpen}
-                    onOpenChange={setIsEmojiPickerOpen}
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="h-12 w-12 shadow-xl backdrop-blur-sm transition-all"
-                        aria-label="Add emoji reaction"
-                      >
-                        <SmilePlus className="!h-6 !w-6" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 p-4" align="start">
-                      <SignedIn>
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-5 gap-2">
-                            {[
-                              { icon: faFaceAngry, name: 'angry' },
-                              { icon: faFaceFrown, name: 'frown' },
-                              { icon: faFaceTired, name: 'tired' },
-                              { icon: faFaceDizzy, name: 'dizzy' },
-                              { icon: faFaceSurprise, name: 'surprised' },
-                              {
-                                icon: faFaceGrinBeamSweat,
-                                name: 'grin-beam-sweat',
-                              },
-                              { icon: faFaceSadTear, name: 'sad-tear' },
-                              { icon: faFaceRollingEyes, name: 'rolling-eyes' },
-                              { icon: faFaceMeh, name: 'meh' },
-                              { icon: faFaceGrimace, name: 'grimace' },
-                              { icon: faFaceFlushed, name: 'flushed' },
-                              { icon: faFaceGrinTongue, name: 'grin-tongue' },
-                              { icon: faHeartCrack, name: 'heart-crack' },
-                              { icon: faBug, name: 'bug' },
-                              { icon: faPoop, name: 'poop' },
-                            ].map((item) => (
-                              <Button
-                                key={item.name}
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  handleEmojiClick(item.icon, item.name)
-                                }
-                                className="h-12 w-12 transition-transform hover:scale-125"
-                              >
-                                <FontAwesomeIcon
-                                  icon={item.icon}
-                                  className="!h-6 !w-6 text-yellow-400"
-                                />
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      </SignedIn>
-
-                      <SignedOut>
-                        <div className="space-y-4 py-6 text-center">
-                          <h3 className="text-base font-medium text-white">
-                            Sign in to react
-                          </h3>
-                          <SignInButton>
-                            <Button>Sign In</Button>
-                          </SignInButton>
-                        </div>
-                      </SignedOut>
-                    </PopoverContent>
-                  </Popover>
-                </div>
                 <Image
                   src={game.banner_url}
                   alt={`${game.name} banner`}
@@ -799,32 +800,174 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
             )}
 
             {/* Emoji Reactions Section */}
-            {Object.keys(emojiReactions).length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(emojiReactions).map(([name, count]) => (
-                  <Button
-                    key={name}
-                    variant="outline"
-                    size="lg"
-                    onClick={() => {
-                      const icon = getEmojiIcon(name);
-                      if (icon) {
-                        handleEmojiClick(icon, name);
-                      }
-                    }}
-                    className="flex items-center gap-2 bg-zinc-900/50 px-3 py-1 transition-all hover:scale-105 hover:bg-zinc-800"
+            <div className="space-y-3">
+              {isLoadingEmojiReactions ? (
+                // Loading state
+                <div className="flex flex-wrap gap-2">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="h-10 w-20 rounded-full" />
+                  ))}
+                </div>
+              ) : hasEmojiReactions ? (
+                // Emoji reactions with adder button (Slack style)
+                <div className="flex flex-wrap items-center gap-2">
+                  {Object.entries(emojiReactions)
+                    .sort(
+                      ([, countA], [, countB]) =>
+                        (countB as number) - (countA as number),
+                    )
+                    .map(([name, count]) => (
+                      <Button
+                        key={name}
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                          const icon = getEmojiIcon(name);
+                          if (icon) {
+                            handleEmojiClick(icon, name);
+                          }
+                        }}
+                        className="flex items-center gap-2 bg-zinc-900/50 px-3 py-1 transition-all hover:scale-105 hover:bg-zinc-800"
+                      >
+                        <FontAwesomeIcon
+                          icon={getEmojiIcon(name)}
+                          className="!h-5 !w-5 text-yellow-400"
+                        />
+                        <span className="text-md font-bold text-white">
+                          <NumberFlow value={count as number} />
+                        </span>
+                      </Button>
+                    ))}
+
+                  {/* Emoji Adder Button */}
+                  <Popover
+                    open={isEmojiPickerOpen}
+                    onOpenChange={setIsEmojiPickerOpen}
                   >
-                    <FontAwesomeIcon
-                      icon={getEmojiIcon(name)}
-                      className="!h-5 !w-5 text-yellow-400"
-                    />
-                    <span className="text-md font-bold text-white">
-                      <NumberFlow value={count} />
-                    </span>
-                  </Button>
-                ))}
-              </div>
-            )}
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="flex items-center gap-2 border-dashed bg-zinc-900/30 px-3 py-1 transition-all hover:bg-zinc-800/50"
+                        aria-label="Add emoji reaction"
+                      >
+                        <SmilePlus className="!h-5 !w-5" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4" align="start">
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-5 gap-2">
+                          {[
+                            { icon: faFaceAngry, name: 'angry' },
+                            { icon: faFaceFrown, name: 'frown' },
+                            { icon: faFaceTired, name: 'tired' },
+                            { icon: faFaceDizzy, name: 'dizzy' },
+                            { icon: faFaceSurprise, name: 'surprised' },
+                            {
+                              icon: faFaceGrinBeamSweat,
+                              name: 'grin-beam-sweat',
+                            },
+                            { icon: faFaceSadTear, name: 'sad-tear' },
+                            { icon: faFaceRollingEyes, name: 'rolling-eyes' },
+                            { icon: faFaceMeh, name: 'meh' },
+                            { icon: faFaceGrimace, name: 'grimace' },
+                            { icon: faFaceFlushed, name: 'flushed' },
+                            { icon: faFaceGrinTongue, name: 'grin-tongue' },
+                            { icon: faHeartCrack, name: 'heart-crack' },
+                            { icon: faBug, name: 'bug' },
+                            { icon: faPoop, name: 'poop' },
+                          ].map((item) => (
+                            <Button
+                              key={item.name}
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                handleEmojiClick(item.icon, item.name)
+                              }
+                              className="h-12 w-12 transition-transform hover:scale-125"
+                            >
+                              <FontAwesomeIcon
+                                icon={item.icon}
+                                className="!h-6 !w-6 text-yellow-400"
+                              />
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              ) : (
+                // Empty state - encourage first reaction
+                <div className="flex items-center gap-3 rounded-lg border-2 border-dashed border-zinc-700 bg-zinc-900/30 p-3">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-zinc-300">
+                      No reactions yet
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      Be the first to share how you feel about this game!
+                    </p>
+                  </div>
+                  <Popover
+                    open={isEmojiPickerOpen}
+                    onOpenChange={setIsEmojiPickerOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        className="flex items-center gap-2"
+                        aria-label="Add first emoji reaction"
+                      >
+                        <SmilePlus className="!h-4 !w-4" />
+                        Add Reaction
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4" align="start">
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-5 gap-2">
+                          {[
+                            { icon: faFaceAngry, name: 'angry' },
+                            { icon: faFaceFrown, name: 'frown' },
+                            { icon: faFaceTired, name: 'tired' },
+                            { icon: faFaceDizzy, name: 'dizzy' },
+                            { icon: faFaceSurprise, name: 'surprised' },
+                            {
+                              icon: faFaceGrinBeamSweat,
+                              name: 'grin-beam-sweat',
+                            },
+                            { icon: faFaceSadTear, name: 'sad-tear' },
+                            { icon: faFaceRollingEyes, name: 'rolling-eyes' },
+                            { icon: faFaceMeh, name: 'meh' },
+                            { icon: faFaceGrimace, name: 'grimace' },
+                            { icon: faFaceFlushed, name: 'flushed' },
+                            { icon: faFaceGrinTongue, name: 'grin-tongue' },
+                            { icon: faHeartCrack, name: 'heart-crack' },
+                            { icon: faBug, name: 'bug' },
+                            { icon: faPoop, name: 'poop' },
+                          ].map((item) => (
+                            <Button
+                              key={item.name}
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                handleEmojiClick(item.icon, item.name)
+                              }
+                              className="h-12 w-12 transition-transform hover:scale-125"
+                            >
+                              <FontAwesomeIcon
+                                icon={item.icon}
+                                className="!h-6 !w-6 text-yellow-400"
+                              />
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+            </div>
 
             {/* Game Information Section */}
             <div className="mb-8 space-y-6">
@@ -873,6 +1016,23 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
           />
         </section>
       </main>
+
+      {/* Sign In Dialog */}
+      <Dialog open={showSignInDialog} onOpenChange={setShowSignInDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Sign in to react</DialogTitle>
+            <DialogDescription>
+              You need to be signed in to add emoji reactions to games.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center py-4">
+            <SignInButton>
+              <Button>Login</Button>
+            </SignInButton>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
