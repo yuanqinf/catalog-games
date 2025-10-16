@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { motion } from 'framer-motion';
 import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';
 import { RATING_BLOCK_COLORS, EMPTY_BLOCK_COLOR } from '@/constants/colors';
 import { ratingCategories } from '@/constants/rating-categories';
@@ -95,6 +96,9 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
   const [currentRating, setCurrentRating] = useState<GameRating>(defaultRating);
   const [hoverRating, setHoverRating] = useState<GameRating>(defaultRating);
   const [isSaving, setIsSaving] = useState(false);
+  const [clickingCategory, setClickingCategory] = useState<
+    keyof GameRating | null
+  >(null);
 
   // Use SWR hook for user rating data
   const {
@@ -104,6 +108,15 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
   } = useGameRating(gameId, user?.id);
 
   const handleRatingChange = (category: keyof GameRating, value: number) => {
+    // Play pop sound effect
+    const audio = new Audio('/sounds/pop_sound.wav');
+    audio.volume = 0.2;
+    audio.play();
+
+    // Trigger button animation for this specific category
+    setClickingCategory(category);
+    setTimeout(() => setClickingCategory(null), 200);
+
     setCurrentRating((prev) => ({
       ...prev,
       [category]: value,
@@ -224,21 +237,26 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
                   />
                 );
               })}
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  const currentValue = currentRating[key as keyof GameRating];
-                  const nextValue =
-                    currentValue >= maxRating ? 0 : currentValue + 1;
-                  handleRatingChange(key as keyof GameRating, nextValue);
-                }}
-                className={`h-6 w-6 bg-red-100 p-0 text-red-500 transition-colors hover:text-red-600`}
-                title={`Click to increment rating (${currentRating[key as keyof GameRating]}/${maxRating})`}
+              <motion.div
+                animate={
+                  clickingCategory === key ? { scale: [1, 0.8, 1.1, 1] } : {}
+                }
+                transition={{ duration: 0.2 }}
               >
-                <ThumbsDown size={14} />
-              </Button>
+                <Button
+                  onClick={() => {
+                    const currentValue = currentRating[key as keyof GameRating];
+                    const nextValue =
+                      currentValue >= maxRating ? 0 : currentValue + 1;
+                    handleRatingChange(key as keyof GameRating, nextValue);
+                  }}
+                  className="h-6 w-6 bg-red-600 p-0 text-white hover:bg-red-700"
+                  size="sm"
+                  title={`Click to increment rating (${currentRating[key as keyof GameRating]}/${maxRating})`}
+                >
+                  <ThumbsDown size={14} />
+                </Button>
+              </motion.div>
             </div>
           </div>
         ))}

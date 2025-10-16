@@ -169,7 +169,7 @@ const DeadGames = () => {
 
     // Play pop sound effect
     const audio = new Audio('/sounds/ghost_sound.wav');
-    audio.volume = 0.5;
+    audio.volume = 0.1;
     audio.play().catch((error) => console.error('Error playing sound:', error));
 
     if (buttonRect && containerRect) {

@@ -246,6 +246,7 @@ export default function ProfileGameCard({
                 ? new Date(game.first_release_date) > new Date()
                 : false
             }
+            isProfile
           />
         </div>
       </Link>

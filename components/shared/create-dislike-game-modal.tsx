@@ -52,7 +52,7 @@ export const CreateDislikeGameModal = ({
   const handleDislikeClick = useCallback(() => {
     // Play pop sound effect
     const audio = new Audio('/sounds/pop_sound.wav');
-    audio.volume = 0.5;
+    audio.volume = 0.2;
     audio.play().catch((error) => console.error('Error playing sound:', error));
 
     const newThumb: FloatingThumb = {

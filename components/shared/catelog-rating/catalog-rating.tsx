@@ -56,6 +56,7 @@ interface CatalogRatingProps {
   isLoading?: boolean;
   isUpcoming?: boolean;
   onSaveSuccess?: () => void;
+  isProfile?: boolean;
 }
 
 const defaultRating: GameRating = {
@@ -113,6 +114,7 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
   isLoading = false,
   isUpcoming = false,
   onSaveSuccess,
+  isProfile = false,
 }) => {
   const config = sizeConfig[size];
   const mergedRating = { ...defaultRating, ...rating };
@@ -150,21 +152,23 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
 
   return (
     <div className={`${config.container} ${className} relative`}>
-      <CatalogRatingDialog
-        maxRating={maxRating}
-        gameId={gameId}
-        onSaveSuccess={onSaveSuccess}
-        trigger={
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute -top-7 -right-7 z-20 size-auto border-dashed bg-neutral-700 p-1 text-white opacity-90 transition-colors duration-200 hover:bg-neutral-700 hover:text-white hover:opacity-100"
-            title="Edit ratings"
-          >
-            <SquarePen className="!h-5 !w-5" />
-          </Button>
-        }
-      />
+      {!isProfile && (
+        <CatalogRatingDialog
+          maxRating={maxRating}
+          gameId={gameId}
+          onSaveSuccess={onSaveSuccess}
+          trigger={
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute -top-7 -right-7 z-20 size-auto border-dashed bg-neutral-700 p-1 text-white opacity-90 transition-colors duration-200 hover:bg-neutral-700 hover:text-white hover:opacity-100"
+              title="Edit ratings"
+            >
+              <SquarePen className="!h-5 !w-5" />
+            </Button>
+          }
+        />
+      )}
 
       {Object.entries(mergedRating).map(([category, categoryRating]) => (
         <div key={category} className="group relative flex items-center">
