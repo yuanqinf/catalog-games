@@ -15,7 +15,16 @@ const GameDetailPage = async ({
     notFound();
   }
 
-  return <GameDetail game={game} />;
+  // Check if this game is in the dead games list
+  const allDeadGames = await gameService.getDeadGames();
+  const deadGame = allDeadGames?.find(
+    (dg) =>
+      (dg.games as any).id === game.id || (dg.games as any).slug === game.slug,
+  );
+
+  return (
+    <GameDetail game={game} deadGame={deadGame ? (deadGame as any) : null} />
+  );
 };
 
 export default GameDetailPage;

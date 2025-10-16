@@ -8,6 +8,8 @@ import {
   Gamepad2,
   Calendar,
   Users,
+  Ghost,
+  MonitorX,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,6 +40,10 @@ interface GameDetailHeadlineProps {
   gameCoverUrl?: string;
   gameReleaseDate?: number;
   dislikeCount: number;
+  isDeadGame?: boolean;
+  deadDate?: string;
+  deadStatus?: 'Shutdown' | 'Abandoned';
+  ghostCount?: number;
 }
 
 const GameDetailHeadline = ({
@@ -46,6 +52,10 @@ const GameDetailHeadline = ({
   gameCoverUrl,
   gameReleaseDate,
   dislikeCount,
+  isDeadGame = false,
+  deadDate,
+  deadStatus,
+  ghostCount = 0,
 }: GameDetailHeadlineProps) => {
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,7 +63,7 @@ const GameDetailHeadline = ({
   const [dislikedUsersCount, setDislikedUsersCount] = useState<number>(0);
   const [isLoadingUsersCount, setIsLoadingUsersCount] = useState(true);
 
-  const getRankingColor = (rank: number | null) => {
+  const getRankingColor = (rank: number | null | undefined) => {
     if (!rank) return 'yellow';
     if (rank <= 5) return 'red';
     if (rank <= 15) return 'orange';
@@ -71,6 +81,13 @@ const GameDetailHeadline = ({
   };
 
   useEffect(() => {
+    // Skip fetching ranking data for dead games
+    if (isDeadGame) {
+      setIsLoading(false);
+      setIsLoadingUsersCount(false);
+      return;
+    }
+
     async function fetchRankingData() {
       try {
         setIsLoading(true);
@@ -95,9 +112,15 @@ const GameDetailHeadline = ({
     }
 
     fetchRankingData();
-  }, [gameId]);
+  }, [gameId, isDeadGame]);
 
   useEffect(() => {
+    // Skip fetching user counts for dead games
+    if (isDeadGame) {
+      setIsLoadingUsersCount(false);
+      return;
+    }
+
     async function fetchDislikedUsersCount() {
       try {
         setIsLoadingUsersCount(true);
@@ -117,7 +140,7 @@ const GameDetailHeadline = ({
     }
 
     fetchDislikedUsersCount();
-  }, [gameId]);
+  }, [gameId, isDeadGame]);
 
   if (isLoading) {
     return (
@@ -145,7 +168,8 @@ const GameDetailHeadline = ({
     );
   }
 
-  if (error || !rankingData) {
+  // For dead games, skip error check for ranking data
+  if (!isDeadGame && (error || !rankingData)) {
     return (
       <section className="mb-8">
         <div className="p-6">
@@ -156,6 +180,14 @@ const GameDetailHeadline = ({
       </section>
     );
   }
+
+  // Format dead date
+  const formattedDeadDate = deadDate
+    ? (() => {
+        const date = new Date(deadDate);
+        return `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}/${date.getFullYear()}`;
+      })()
+    : '';
 
   return (
     <section className="mb-8">
@@ -189,79 +221,127 @@ const GameDetailHeadline = ({
             <div className="flex flex-col gap-1">
               <h1 className="mb-1 text-2xl font-bold text-white">{gameName}</h1>
               <div className="flex items-center gap-4">
-                {/* Ranking Display */}
-                {rankingData.currentGame.rank ? (
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      className={`text-sm font-bold text-white bg-${getRankingColor(rankingData.currentGame.rank)}-600 hover:bg-${getRankingColor(rankingData.currentGame.rank)}-600`}
-                    >
-                      #{rankingData.currentGame.rank}
-                    </Badge>
-                    <span className="text-sm text-gray-400">
-                      {'of top 100 most disliked'}
-                    </span>
-                  </div>
-                ) : (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex cursor-help items-center gap-2">
-                          <Badge className="bg-green-600 text-sm font-bold text-white hover:bg-green-600">
-                            Outside Top 100
-                          </Badge>
+                {isDeadGame ? (
+                  <>
+                    {/* Release Date */}
+                    {gameReleaseDate && (
+                      <>
+                        <div className="h-4 w-px bg-gray-700/50" />
+                        <div className="flex items-center gap-2">
+                          <Calendar
+                            className={`h-4 w-4 ${isDeadGame ? 'text-grey-400' : 'text-blue-400'}`}
+                          />
                           <span className="text-sm text-gray-400">
-                            This game is not that bad
+                            {(() => {
+                              const releaseDate = new Date(gameReleaseDate);
+                              const now = new Date();
+                              const isFuture = releaseDate > now;
+                              return isFuture
+                                ? `Expected ${releaseDate.toLocaleDateString()}`
+                                : `Released ${releaseDate.toLocaleDateString()}`;
+                            })()}
                           </span>
                         </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          This game is not among the 100 most disliked games
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
+                      </>
+                    )}
 
-                <div className="h-4 w-px bg-red-700/50" />
+                    <div className="h-4 w-px bg-gray-700/50" />
 
-                {/* Dislike Count */}
-                <div className="flex items-center gap-2">
-                  <ThumbsDown className="h-4 w-4 text-red-400" />
-                  <span className="text-lg font-bold text-red-400">
-                    <NumberFlow value={dislikeCount || 0} />
-                  </span>
-                </div>
-
-                {/* Disliked User Count */}
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-yellow-500" />
-                  {isLoadingUsersCount ? (
-                    <Loader2 className="inline h-3 w-3 animate-spin" />
-                  ) : (
-                    <p className="text-sm font-bold text-yellow-500">
-                      {dislikedUsersCount}
-                    </p>
-                  )}
-                </div>
-
-                {/* Release Date */}
-                {gameReleaseDate && (
-                  <>
-                    <div className="h-4 w-px bg-red-700/50" />
+                    {/* Dead Game Info */}
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-blue-400" />
-                      <span className="text-sm text-gray-400">
-                        {(() => {
-                          const releaseDate = new Date(gameReleaseDate);
-                          const now = new Date();
-                          const isFuture = releaseDate > now;
-                          return isFuture
-                            ? `Expected ${releaseDate.toLocaleDateString()}`
-                            : `Released ${releaseDate.toLocaleDateString()}`;
-                        })()}
+                      <MonitorX className="h-5 w-5 text-gray-400" />
+                      <span className="text-sm font-medium text-gray-400">
+                        {deadStatus} {formattedDeadDate}
                       </span>
                     </div>
+
+                    <div className="h-4 w-px bg-gray-700/50" />
+
+                    {/* Ghost Count */}
+                    <div className="flex items-center gap-2">
+                      <Ghost className="h-4 w-4 text-zinc-300" />
+                      <span className="text-lg font-bold text-zinc-300">
+                        <NumberFlow value={ghostCount} />
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Normal Game Info - Ranking Display */}
+                    {rankingData?.currentGame.rank ? (
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          className={`text-sm font-bold text-white bg-${getRankingColor(rankingData.currentGame.rank)}-600 hover:bg-${getRankingColor(rankingData.currentGame.rank)}-600`}
+                        >
+                          #{rankingData.currentGame.rank}
+                        </Badge>
+                        <span className="text-sm text-gray-400">
+                          {'of top 100 most disliked'}
+                        </span>
+                      </div>
+                    ) : (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex cursor-help items-center gap-2">
+                              <Badge className="bg-green-600 text-sm font-bold text-white hover:bg-green-600">
+                                Outside Top 100
+                              </Badge>
+                              <span className="text-sm text-gray-400">
+                                This game is not that bad
+                              </span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>
+                              This game is not among the 100 most disliked games
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+
+                    <div className="h-4 w-px bg-red-700/50" />
+
+                    {/* Dislike Count */}
+                    <div className="flex items-center gap-2">
+                      <ThumbsDown className="h-4 w-4 text-red-400" />
+                      <span className="text-lg font-bold text-red-400">
+                        <NumberFlow value={dislikeCount || 0} />
+                      </span>
+                    </div>
+
+                    {/* Disliked User Count */}
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-yellow-500" />
+                      {isLoadingUsersCount ? (
+                        <Loader2 className="inline h-3 w-3 animate-spin" />
+                      ) : (
+                        <p className="text-sm font-bold text-yellow-500">
+                          {dislikedUsersCount}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Release Date */}
+                    {gameReleaseDate && (
+                      <>
+                        <div className="h-4 w-px bg-red-700/50" />
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-blue-400" />
+                          <span className="text-sm text-gray-400">
+                            {(() => {
+                              const releaseDate = new Date(gameReleaseDate);
+                              const now = new Date();
+                              const isFuture = releaseDate > now;
+                              return isFuture
+                                ? `Expected ${releaseDate.toLocaleDateString()}`
+                                : `Released ${releaseDate.toLocaleDateString()}`;
+                            })()}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
               </div>

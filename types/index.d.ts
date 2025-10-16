@@ -22,6 +22,8 @@ export interface GameDbData {
   igdb_user_rating?: number | null;
   steam_popular_tags?: string[] | null;
   dislike_count?: number | null;
+  is_dead?: boolean; // Flag to indicate if game is dead
+  ghost_count?: number | null; // Ghost reaction count for dead games
 }
 
 // Type for IGDB game data from API

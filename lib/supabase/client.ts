@@ -422,6 +422,17 @@ export class GameService {
           const gameIds = multiFieldResults.map(
             (game: { id: number }) => game.id,
           );
+
+          // Get dead games data
+          const { data: deadGames } = await this.supabase
+            .from('dead_games')
+            .select('game_id, user_reaction_count')
+            .in('game_id', gameIds);
+
+          const deadGamesMap = new Map(
+            deadGames?.map((dg) => [dg.game_id, dg.user_reaction_count]) || [],
+          );
+
           const { data: enrichedResults } = await this.supabase
             .from('games')
             .select(
@@ -430,13 +441,20 @@ export class GameService {
             .in('id', gameIds);
 
           if (enrichedResults) {
-            // Maintain the original order from RPC results
+            // Maintain the original order from RPC results and add dead game info
             const enrichedMap = new Map(
               enrichedResults.map((game) => [game.id, game]),
             );
             const orderedResults = multiFieldResults.map(
-              (originalGame: { id: number }) =>
-                enrichedMap.get(originalGame.id) || originalGame,
+              (originalGame: { id: number }) => {
+                const game = enrichedMap.get(originalGame.id) || originalGame;
+                const ghostCount = deadGamesMap.get(originalGame.id);
+                return {
+                  ...game,
+                  is_dead: ghostCount !== undefined,
+                  ghost_count: ghostCount || null,
+                };
+              },
             );
             return orderedResults;
           }
@@ -457,7 +475,25 @@ export class GameService {
         .limit(limit);
 
       if (!nameError && nameResults && nameResults.length > 0) {
-        return nameResults;
+        // Add dead game info to name results
+        const gameIds = nameResults.map((game) => game.id);
+        const { data: deadGames } = await this.supabase
+          .from('dead_games')
+          .select('game_id, user_reaction_count')
+          .in('game_id', gameIds);
+
+        const deadGamesMap = new Map(
+          deadGames?.map((dg) => [dg.game_id, dg.user_reaction_count]) || [],
+        );
+
+        return nameResults.map((game) => {
+          const ghostCount = deadGamesMap.get(game.id);
+          return {
+            ...game,
+            is_dead: ghostCount !== undefined,
+            ghost_count: ghostCount || null,
+          };
+        });
       }
 
       // Fallback: ILIKE search on name and developers
@@ -475,6 +511,28 @@ export class GameService {
 
       if (fallbackError) {
         throw new Error(fallbackError.message || 'Failed to search games');
+      }
+
+      if (fallbackResults && fallbackResults.length > 0) {
+        // Add dead game info to fallback results
+        const gameIds = fallbackResults.map((game) => game.id);
+        const { data: deadGames } = await this.supabase
+          .from('dead_games')
+          .select('game_id, user_reaction_count')
+          .in('game_id', gameIds);
+
+        const deadGamesMap = new Map(
+          deadGames?.map((dg) => [dg.game_id, dg.user_reaction_count]) || [],
+        );
+
+        return fallbackResults.map((game) => {
+          const ghostCount = deadGamesMap.get(game.id);
+          return {
+            ...game,
+            is_dead: ghostCount !== undefined,
+            ghost_count: ghostCount || null,
+          };
+        });
       }
 
       return fallbackResults || [];

@@ -18,6 +18,7 @@ import {
   ThumbsDown,
   Joystick,
   SmilePlus,
+  Ghost,
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -61,7 +62,7 @@ import GameDetailHeadline from './game-detail-headline';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 import NumberFlow from '@number-flow/react';
 
-import { GameDbData } from '@/types';
+import { GameDbData, DeadGameFromAPI } from '@/types';
 import {
   fetchSalesData,
   formatSalesValue,
@@ -115,8 +116,15 @@ interface DislikeResponse {
   error?: string;
 }
 
-const GameDetail = ({ game }: { game: GameDbData }) => {
+const GameDetail = ({
+  game,
+  deadGame = null,
+}: {
+  game: GameDbData;
+  deadGame?: DeadGameFromAPI | null;
+}) => {
   const { isSignedIn } = useUser();
+  const isDeadGame = !!deadGame;
 
   // Floating thumbs animation state
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
@@ -194,6 +202,70 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
   const dislikeCount = dislikeData?.dislikeCount ?? game.dislike_count ?? 0;
   const userDislikeCount = dislikeData?.userDislikeCount ?? 0;
   const isLoadingUserDislike = !dislikeData;
+
+  // Floating ghosts animation state for dead games
+  const [floatingGhosts, setFloatingGhosts] = useState<
+    Array<{
+      id: string;
+      timestamp: number;
+      startX: number;
+      startY: number;
+    }>
+  >([]);
+
+  // Fetch ghost reaction count for dead games with SWR polling
+  const { data: ghostData, mutate: mutateGhost } = useSWR<{
+    ghostCount: number;
+  }>(
+    isDeadGame && deadGame?.id ? ['dead-game-ghost', deadGame.id] : null,
+    async ([, deadGameId]: [string, string]) => {
+      const response = await fetch(`/api/dead-games`);
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error('Failed to fetch ghost count');
+      }
+
+      const currentDeadGame = result.data.find(
+        (dg: DeadGameFromAPI) => dg.id === deadGameId,
+      );
+      return {
+        ghostCount: currentDeadGame?.user_reaction_count ?? 0,
+      };
+    },
+    {
+      revalidateOnFocus: false,
+      refreshInterval: isDeadGame ? 5000 : 0,
+      dedupingInterval: 2000,
+      revalidateOnReconnect: false,
+      onSuccess: (newData, key, config) => {
+        // Trigger ghost animations when count increases from polling
+        if (
+          ghostData &&
+          newData.ghostCount > ghostData.ghostCount &&
+          deadGame?.id
+        ) {
+          triggerCountIncreaseAnimations(
+            deadGame.id,
+            ghostData.ghostCount,
+            newData.ghostCount,
+            setFloatingGhosts,
+            (itemId, animationId) => ({
+              id: animationId,
+              timestamp: Date.now(),
+              startX: Math.random() * 70 + 15,
+              startY: Math.random() * 30 + 60,
+            }),
+            'ghost-polling',
+          );
+        }
+      },
+    },
+  );
+
+  const ghostCount =
+    ghostData?.ghostCount ?? deadGame?.user_reaction_count ?? 0;
+
   const [salesData, setSalesData] = useState<SalesData>({
     value: null,
     source: null,
@@ -641,6 +713,70 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     }, 300);
   };
 
+  // Handle ghost click for dead games
+  const handleGhostClick = async () => {
+    if (!deadGame?.id) return;
+
+    // Play ghost sound effect
+    const audio = new Audio('/sounds/ghost_sound.wav');
+    audio.volume = 0.1;
+    audio.play().catch((error) => console.error('Error playing sound:', error));
+
+    // Add button click animation
+    setClickingButton(true);
+    setTimeout(() => setClickingButton(false), 200);
+
+    // Create floating ghost animation
+    const newGhost = {
+      id: `ghost-${Date.now()}-${Math.random()}`,
+      timestamp: Date.now(),
+      startX: Math.random() * 70 + 15,
+      startY: Math.random() * 30 + 60,
+    };
+
+    setFloatingGhosts((prev) => [...prev, newGhost]);
+
+    // Optimistically update SWR cache immediately
+    mutateGhost(
+      (current) =>
+        current
+          ? {
+              ghostCount: current.ghostCount + 1,
+            }
+          : current,
+      { revalidate: false },
+    );
+
+    // Call backend API to update the database
+    try {
+      const response = await fetch('/api/dead-games/react', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          deadGameId: deadGame.id,
+          incrementBy: 1,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        console.error('Failed to update ghost count:', result.error);
+        // Revert optimistic update on error
+        mutateGhost();
+      } else {
+        // Success - refresh from server
+        mutateGhost();
+      }
+    } catch (error) {
+      console.error('Error calling ghost reaction API:', error);
+      // Revert optimistic update on error
+      mutateGhost();
+    }
+  };
+
   // Reset power mode after 3 seconds of inactivity
   useEffect(() => {
     if (userVoteState.isPowerMode) {
@@ -761,7 +897,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
           <Link href="/explore">
             <Button variant="ghost" className="text-gray-300 hover:text-white">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Top 100
+              {isDeadGame ? 'Back to game graveyard' : 'Back to Top 100'}
             </Button>
           </Link>
         </div>
@@ -777,6 +913,10 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
               : undefined
           }
           dislikeCount={dislikeCount}
+          isDeadGame={isDeadGame}
+          deadDate={deadGame?.dead_date}
+          deadStatus={deadGame?.dead_status}
+          ghostCount={ghostCount}
         />
 
         {/* Game Detail Main Section */}
@@ -791,7 +931,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                   alt={`${game.name} banner`}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 67vw, 50vw"
-                  className="object-cover"
+                  className={`object-cover ${isDeadGame ? 'opacity-90 saturate-50' : ''}`}
                   priority
                 />
 
@@ -892,6 +1032,49 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                     </motion.div>
                   ))}
                 </AnimatePresence>
+
+                {/* Floating Ghost Animations for Dead Games */}
+                {isDeadGame && (
+                  <AnimatePresence>
+                    {floatingGhosts.map((ghost) => (
+                      <motion.div
+                        key={ghost.id}
+                        className="pointer-events-none absolute z-50"
+                        style={{
+                          left: `${ghost.startX}%`,
+                          top: `${ghost.startY}%`,
+                        }}
+                        initial={{
+                          opacity: 0,
+                          scale: 0.2,
+                          y: 0,
+                        }}
+                        animate={{
+                          opacity: [0, 1, 1, 0],
+                          scale: [0.2, 1.5, 1.3, 0.9],
+                          y: [0, -40, -120, -250],
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.6,
+                          y: -300,
+                        }}
+                        transition={{
+                          duration: 2.5,
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                          times: [0, 0.15, 0.6, 1],
+                        }}
+                        onAnimationComplete={() => {
+                          setFloatingGhosts((prev) =>
+                            prev.filter((g) => g.id !== ghost.id),
+                          );
+                        }}
+                      >
+                        <Ghost className="h-8 w-8 text-zinc-300 drop-shadow-2xl" />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                )}
               </div>
             )}
 
@@ -1025,6 +1208,9 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
             onDislikeVote={handleDislikeVote}
             statistics={highlightStatistics}
             isLoadingStatistics={showStatisticsLoading}
+            isDeadGame={isDeadGame}
+            ghostCount={ghostCount}
+            onGhostClick={handleGhostClick}
           />
         </section>
       </main>

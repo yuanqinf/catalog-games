@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Gamepad2, ThumbsDown } from 'lucide-react';
+import { Gamepad2, ThumbsDown, Ghost } from 'lucide-react';
 import { CommandItem } from '@/components/ui/command';
 import {
   GameDbData,
@@ -38,12 +38,24 @@ const extractDislikeCount = (game: GameDbData | IgdbGame): number | null => {
     : null;
 };
 
+const extractGhostCount = (game: GameDbData | IgdbGame): number | null => {
+  return 'ghost_count' in game && game.ghost_count && game.ghost_count > 0
+    ? game.ghost_count
+    : null;
+};
+
+const isDeadGame = (game: GameDbData | IgdbGame): boolean => {
+  return 'is_dead' in game && game.is_dead === true;
+};
+
 const getGameDetails = (game: GameDbData | IgdbGame) => {
   const isIgdbGame = !('cover_url' in game);
   const developer = extractDeveloper(game);
   const dislikeCount = extractDislikeCount(game);
+  const ghostCount = extractGhostCount(game);
+  const isDead = isDeadGame(game);
 
-  return { isIgdbGame, developer, dislikeCount };
+  return { isIgdbGame, developer, dislikeCount, ghostCount, isDead };
 };
 
 export const SuggestionItem = ({
@@ -53,7 +65,8 @@ export const SuggestionItem = ({
 }: SuggestionItemProps) => {
   if (isGame) {
     const game = item as GameDbData | IgdbGame;
-    const { developer, dislikeCount } = getGameDetails(game);
+    const { developer, dislikeCount, ghostCount, isDead } =
+      getGameDetails(game);
 
     return (
       <CommandItem
@@ -83,8 +96,20 @@ export const SuggestionItem = ({
               </span>
             )}
           </div>
-          {/* Dislike count or dislike button */}
-          {dislikeCount ? (
+          {/* Show ghost count for dead games, dislike count for normal games */}
+          {isDead ? (
+            ghostCount ? (
+              <div className="flex items-center gap-1 text-xs text-zinc-300">
+                <Ghost className="h-3 w-3 text-zinc-300" fill="currentColor" />
+                <NumberFlow value={ghostCount} />
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-xs text-zinc-400">
+                <Ghost className="h-3 w-3" />
+                <span>RIP</span>
+              </div>
+            )
+          ) : dislikeCount ? (
             <div className="flex items-center gap-1 text-xs text-red-400">
               <ThumbsDown
                 className="drop-shadow-2xl' h-3 w-3 text-red-500"
