@@ -228,3 +228,118 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+// DELETE endpoint to remove all user's emoji reactions for a game
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const gameId = searchParams.get('gameId');
+
+    if (!gameId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Game ID is required',
+        },
+        { status: 400 },
+      );
+    }
+
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'User not authenticated',
+        },
+        { status: 401 },
+      );
+    }
+
+    const supabase = createClerkSupabaseClient(null);
+
+    // Get the user's internal ID from the users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('clerk_id', clerkUser.id)
+      .single();
+
+    if (userError || !userData) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'User not found',
+        },
+        { status: 404 },
+      );
+    }
+
+    // Use PostgreSQL function for atomic operation
+    const { data: result, error: rpcError } = await supabase.rpc(
+      'remove_user_emoji_reactions',
+      {
+        p_user_id: userData.id,
+        p_game_id: parseInt(gameId),
+      },
+    );
+
+    if (rpcError) {
+      console.error('Failed to remove emoji reactions via RPC:', rpcError);
+
+      // Fallback to manual deletion if RPC function doesn't exist
+      const { error: deleteError } = await supabase
+        .from('game_emoji_reactions')
+        .delete()
+        .eq('user_id', userData.id)
+        .eq('game_id', parseInt(gameId));
+
+      if (deleteError) {
+        console.error('Failed to delete emoji reactions:', deleteError);
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Failed to remove emoji reactions',
+          },
+          { status: 500 },
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          gameId: parseInt(gameId),
+          removed_count: 0, // We don't know the exact count in fallback
+        },
+      });
+    }
+
+    // Check if the RPC function returned an error
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: result.error,
+        },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        gameId: parseInt(gameId),
+        removedCount: result.removed_count,
+      },
+    });
+  } catch (error) {
+    console.error('Failed to remove emoji reactions:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 },
+    );
+  }
+}

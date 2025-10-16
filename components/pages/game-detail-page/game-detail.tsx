@@ -869,7 +869,9 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                           className="!h-5 !w-5 text-yellow-400"
                         />
                         <span className="text-md font-bold text-white">
-                          <NumberFlow value={emojiReactions[emoji.name] as number} />
+                          <NumberFlow
+                            value={emojiReactions[emoji.name] as number}
+                          />
                         </span>
                       </Button>
                     ))}

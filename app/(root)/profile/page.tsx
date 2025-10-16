@@ -24,6 +24,9 @@ const UserProfilePage = () => {
   const [isLoadingDislikes, setIsLoadingDislikes] = useState(true);
   const [dislikedGames, setDislikedGames] = useState<DislikedGame[]>([]);
   const [isLoadingGames, setIsLoadingGames] = useState(true);
+  const [gameEmojiCounts, setGameEmojiCounts] = useState<
+    Record<number, number>
+  >({});
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -35,6 +38,7 @@ const UserProfilePage = () => {
     if (isLoaded && isSignedIn) {
       fetchUserDislikeCount();
       fetchDislikedGames();
+      fetchUserEmojiReactions();
     }
   }, [isLoaded, isSignedIn]);
 
@@ -67,6 +71,19 @@ const UserProfilePage = () => {
       console.error('Failed to fetch disliked games:', error);
     } finally {
       setIsLoadingGames(false);
+    }
+  };
+
+  const fetchUserEmojiReactions = async () => {
+    try {
+      const response = await fetch('/api/users/emoji-reactions');
+      const result = await response.json();
+
+      if (result.success) {
+        setGameEmojiCounts(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch emoji reactions:', error);
     }
   };
 
@@ -132,7 +149,8 @@ const UserProfilePage = () => {
               <ProfileGameCard
                 key={game.id}
                 game={game}
-                userDislikeCount={game.user_dislike_count}
+                userGameDislikeCount={game.user_dislike_count}
+                userGameEmojiCount={game.id ? gameEmojiCounts[game.id] || 0 : 0}
               />
             ))}
           </div>

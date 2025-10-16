@@ -12,6 +12,7 @@ import {
   ThumbsDown,
   Hammer,
   CircleX,
+  SmilePlus,
 } from 'lucide-react';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 import { useGameRating } from '@/hooks/useGameRating';
@@ -29,7 +30,8 @@ import {
 
 interface ProfileGameCardProps {
   game: GameDbData;
-  userDislikeCount: number;
+  userGameDislikeCount: number;
+  userGameEmojiCount?: number;
 }
 
 interface RankingData {
@@ -44,7 +46,8 @@ interface RankingData {
 
 export default function ProfileGameCard({
   game,
-  userDislikeCount,
+  userGameDislikeCount,
+  userGameEmojiCount,
 }: ProfileGameCardProps) {
   const {
     rating,
@@ -89,24 +92,48 @@ export default function ProfileGameCard({
 
     setIsRemoving(true);
     try {
-      const response = await fetch(`/api/games/dislike?gameId=${game.id}`, {
-        method: 'DELETE',
-      });
+      // Remove both dislikes and emoji reactions in parallel
+      const [dislikeResponse, emojiResponse] = await Promise.all([
+        fetch(`/api/games/dislike?gameId=${game.id}`, {
+          method: 'DELETE',
+        }),
+        fetch(`/api/games/emoji-reaction?gameId=${game.id}`, {
+          method: 'DELETE',
+        }),
+      ]);
 
-      const result = await response.json();
+      const dislikeResult = await dislikeResponse.json();
+      const emojiResult = await emojiResponse.json();
 
-      if (result.success) {
-        toast.success(`Successfully removed all dislikes for ${game.name}`);
+      // Check if both operations succeeded
+      const dislikeSuccess = dislikeResult.success;
+      const emojiSuccess = emojiResult.success;
+
+      if (dislikeSuccess && emojiSuccess) {
+        toast.success(
+          `Successfully removed all dislikes and emoji reactions for ${game.name}`,
+        );
         setIsDialogOpen(false);
-
         // Refresh the page to update the UI
         window.location.reload();
+      } else if (dislikeSuccess && !emojiSuccess) {
+        toast.success(
+          `Removed dislikes for ${game.name}. ${emojiResult.error || 'No emoji reactions to remove'}`,
+        );
+        setIsDialogOpen(false);
+        window.location.reload();
+      } else if (!dislikeSuccess && emojiSuccess) {
+        toast.success(
+          `Removed emoji reactions for ${game.name}. ${dislikeResult.error || 'No dislikes to remove'}`,
+        );
+        setIsDialogOpen(false);
+        window.location.reload();
       } else {
-        toast.error(result.error || 'Failed to remove dislikes');
+        toast.error('Failed to remove dislikes and emoji reactions');
       }
     } catch (error) {
-      console.error('Error removing dislikes:', error);
-      toast.error('An error occurred while removing dislikes');
+      console.error('Error removing dislikes and emoji reactions:', error);
+      toast.error('An error occurred while removing data');
     } finally {
       setIsRemoving(false);
     }
@@ -135,27 +162,37 @@ export default function ProfileGameCard({
               {game.name}
             </h2>
           </div>
-          {userDislikeCount !== undefined ? (
-            <div className="ml-2 flex flex-shrink-0 items-center text-red-500">
-              <ThumbsDown size={18} className="mr-1 fill-current" />
-              <span className="text-md font-bold">
-                <NumberFlow value={userDislikeCount} />
-              </span>
-            </div>
-          ) : (
-            <div className="ml-2 flex flex-shrink-0 items-center text-yellow-400">
-              <Star size={18} className="mr-1 fill-current" />
-              <span className="text-md font-bold">
-                {isLoadingRating ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (overallAverage || 0) > 0 ? (
-                  overallAverage || 0
-                ) : (
-                  'N/A'
-                )}
-              </span>
-            </div>
-          )}
+          <div className="ml-2 flex flex-shrink-0 items-center gap-3">
+            {userGameDislikeCount !== undefined ? (
+              <div className="flex items-center text-red-500">
+                <ThumbsDown size={18} className="mr-1 fill-current" />
+                <span className="text-md font-bold">
+                  <NumberFlow value={userGameDislikeCount} />
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center text-yellow-400">
+                <Star size={18} className="mr-1 fill-current" />
+                <span className="text-md font-bold">
+                  {isLoadingRating ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (overallAverage || 0) > 0 ? (
+                    overallAverage || 0
+                  ) : (
+                    'N/A'
+                  )}
+                </span>
+              </div>
+            )}
+            {userGameEmojiCount !== undefined && userGameEmojiCount > 0 && (
+              <div className="flex items-center text-yellow-400">
+                <SmilePlus size={18} className="mr-1" />
+                <span className="text-md font-bold">
+                  <NumberFlow value={userGameEmojiCount} />
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Subtext Row */}
@@ -246,9 +283,10 @@ export default function ProfileGameCard({
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Remove Dislikes</DialogTitle>
+              <DialogTitle>Remove All Interactions</DialogTitle>
               <DialogDescription>
-                Are you sure you want to remove all your dislikes for{' '}
+                Are you sure you want to remove all your dislikes and emoji
+                reactions for{' '}
                 <span className="font-semibold text-white">{game.name}</span>?
                 This action cannot be undone.
               </DialogDescription>
@@ -272,7 +310,7 @@ export default function ProfileGameCard({
                     Removing...
                   </>
                 ) : (
-                  'Remove Dislikes'
+                  'Remove All'
                 )}
               </Button>
             </DialogFooter>
