@@ -375,30 +375,44 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
 
   // Fetch sales data with fallback logic
   useEffect(() => {
+    let isMounted = true;
+    let salesTimeoutId: NodeJS.Timeout | null = null;
+    let twitchController: AbortController | null = null;
+    let twitchTimeoutId: NodeJS.Timeout | null = null;
+    let steamController: AbortController | null = null;
+    let steamTimeoutId: NodeJS.Timeout | null = null;
+
     const loadSalesData = async () => {
       setIsLoadingSales(true);
 
       try {
         // 8 second timeout for sales data
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(
+        const timeoutPromise = new Promise((_, reject) => {
+          salesTimeoutId = setTimeout(
             () => reject(new Error('Sales data request timeout')),
             8000,
-          ),
-        );
+          );
+        });
         const data = await Promise.race([
           fetchSalesData(game.slug, game.name),
           timeoutPromise,
         ]);
-        setSalesData(data as SalesData);
+        if (isMounted) {
+          setSalesData(data as SalesData);
+        }
       } catch (error) {
         // Only log non-timeout errors to reduce noise
         if (error instanceof Error && !error.message.includes('timeout')) {
           console.error('Failed to fetch sales data:', error);
         }
-        setSalesData({ value: null, source: null });
+        if (isMounted) {
+          setSalesData({ value: null, source: null });
+        }
       } finally {
-        setIsLoadingSales(false);
+        if (salesTimeoutId) clearTimeout(salesTimeoutId);
+        if (isMounted) {
+          setIsLoadingSales(false);
+        }
       }
     };
 
@@ -408,24 +422,29 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
       setIsLoadingTwitch(true);
       try {
         // 5 second timeout for Twitch
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        twitchController = new AbortController();
+        twitchTimeoutId = setTimeout(() => twitchController?.abort(), 5000);
 
         const response = await fetch(
           `/api/twitch?name=${encodeURIComponent(game.name)}`,
-          { signal: controller.signal },
+          { signal: twitchController.signal },
         );
-        clearTimeout(timeoutId);
+        if (twitchTimeoutId) clearTimeout(twitchTimeoutId);
 
-        if (response.ok) {
+        if (response.ok && isMounted) {
           const result = await response.json();
           setTwitchLiveViewers(result.data?.liveViewers || null);
         }
       } catch (error) {
-        console.error('Failed to fetch Twitch data:', error);
-        setTwitchLiveViewers(null);
+        if (isMounted && (error as Error).name !== 'AbortError') {
+          console.error('Failed to fetch Twitch data:', error);
+          setTwitchLiveViewers(null);
+        }
       } finally {
-        setIsLoadingTwitch(false);
+        if (twitchTimeoutId) clearTimeout(twitchTimeoutId);
+        if (isMounted) {
+          setIsLoadingTwitch(false);
+        }
       }
     };
 
@@ -438,26 +457,31 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
       setIsLoadingSteamPlayers(true);
       try {
         // 3 second timeout for Steam players (should be fast)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        steamController = new AbortController();
+        steamTimeoutId = setTimeout(() => steamController?.abort(), 3000);
 
         const response = await fetch(
           `/api/steam/current-players?appId=${game.steam_app_id}`,
-          { signal: controller.signal },
+          { signal: steamController.signal },
         );
-        clearTimeout(timeoutId);
+        if (steamTimeoutId) clearTimeout(steamTimeoutId);
 
-        if (response.ok) {
+        if (response.ok && isMounted) {
           const result = await response.json();
           setSteamCurrentPlayers(result.playerCount || null);
-        } else {
+        } else if (isMounted) {
           setSteamCurrentPlayers(null);
         }
       } catch (error) {
-        console.error('Failed to fetch Steam current players:', error);
-        setSteamCurrentPlayers(null);
+        if (isMounted && (error as Error).name !== 'AbortError') {
+          console.error('Failed to fetch Steam current players:', error);
+          setSteamCurrentPlayers(null);
+        }
       } finally {
-        setIsLoadingSteamPlayers(false);
+        if (steamTimeoutId) clearTimeout(steamTimeoutId);
+        if (isMounted) {
+          setIsLoadingSteamPlayers(false);
+        }
       }
     };
 
@@ -466,12 +490,18 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
       setIsLoadingSteamSpy(true);
       try {
         const data = await fetchSteamSalesDataFromSteamSpy(game.name);
-        setSteamSpyData(data);
+        if (isMounted) {
+          setSteamSpyData(data);
+        }
       } catch (error) {
         console.error('Failed to fetch Steam Spy data:', error);
-        setSteamSpyData(null);
+        if (isMounted) {
+          setSteamSpyData(null);
+        }
       } finally {
-        setIsLoadingSteamSpy(false);
+        if (isMounted) {
+          setIsLoadingSteamSpy(false);
+        }
       }
     };
 
@@ -480,12 +510,18 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
       setIsLoadingPlaytracker(true);
       try {
         const data = await getPlaytrackerData(game.name);
-        setPlaytrackerData(data);
+        if (isMounted) {
+          setPlaytrackerData(data);
+        }
       } catch (error) {
         console.error('Failed to fetch Playtracker data:', error);
-        setPlaytrackerData(null);
+        if (isMounted) {
+          setPlaytrackerData(null);
+        }
       } finally {
-        setIsLoadingPlaytracker(false);
+        if (isMounted) {
+          setIsLoadingPlaytracker(false);
+        }
       }
     };
 
@@ -494,6 +530,16 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     loadSteamCurrentPlayers();
     loadSteamSpyData();
     loadPlaytrackerData();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      if (salesTimeoutId) clearTimeout(salesTimeoutId);
+      if (twitchController) twitchController.abort();
+      if (twitchTimeoutId) clearTimeout(twitchTimeoutId);
+      if (steamController) steamController.abort();
+      if (steamTimeoutId) clearTimeout(steamTimeoutId);
+    };
   }, [game.slug, game.name, game.steam_app_id]);
 
   // Handle dislike vote with floating animation
@@ -609,6 +655,15 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
       return () => clearTimeout(timer);
     }
   }, [userVoteState.lastClickTime, userVoteState.isPowerMode]);
+
+  // Cleanup pending vote timer on unmount
+  useEffect(() => {
+    return () => {
+      if (voteTimerRef.current) {
+        clearTimeout(voteTimerRef.current);
+      }
+    };
+  }, []);
 
   // Filter sections with data
   const detailsSections = [
