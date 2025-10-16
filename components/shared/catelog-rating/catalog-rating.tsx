@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { MessageSquarePlus, Calendar } from 'lucide-react';
+import { Calendar, SquarePen } from 'lucide-react';
 import { RATING_BLOCK_COLORS, EMPTY_BLOCK_COLOR } from '@/constants/colors';
 import { ratingCategories } from '@/constants/rating-categories';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,7 @@ interface CatalogRatingProps {
   gameId?: string;
   isLoading?: boolean;
   isUpcoming?: boolean;
+  onSaveSuccess?: () => void;
 }
 
 const defaultRating: GameRating = {
@@ -111,6 +112,7 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
   gameId,
   isLoading = false,
   isUpcoming = false,
+  onSaveSuccess,
 }) => {
   const config = sizeConfig[size];
   const mergedRating = { ...defaultRating, ...rating };
@@ -151,14 +153,15 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
       <CatalogRatingDialog
         maxRating={maxRating}
         gameId={gameId}
+        onSaveSuccess={onSaveSuccess}
         trigger={
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
-            className="absolute -top-6 -right-6 z-20 size-auto bg-neutral-800 p-1 text-neutral-400 opacity-70 transition-colors duration-200 hover:bg-neutral-700 hover:text-white hover:opacity-100"
+            className="absolute -top-7 -right-7 z-20 size-auto border-dashed bg-neutral-700 p-1 text-white opacity-90 transition-colors duration-200 hover:bg-neutral-700 hover:text-white hover:opacity-100"
             title="Edit ratings"
           >
-            <MessageSquarePlus size={16} />
+            <SquarePen className="!h-5 !w-5" />
           </Button>
         }
       />

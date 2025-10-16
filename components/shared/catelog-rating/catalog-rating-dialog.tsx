@@ -57,6 +57,7 @@ interface CatalogRatingDialogProps {
   gameId?: string;
   maxRating?: number;
   trigger?: React.ReactNode;
+  onSaveSuccess?: () => void;
 }
 
 const defaultRating: GameRating = {
@@ -87,6 +88,7 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
   maxRating = 5,
   trigger,
   gameId,
+  onSaveSuccess,
 }) => {
   const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
@@ -103,6 +105,10 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
 
   const handleRatingChange = (category: keyof GameRating, value: number) => {
     setCurrentRating((prev) => ({
+      ...prev,
+      [category]: value,
+    }));
+    setHoverRating((prev) => ({
       ...prev,
       [category]: value,
     }));
@@ -127,8 +133,15 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
         user.id,
         currentRating,
       );
-      // Revalidate the SWR cache
-      mutate();
+
+      // Force revalidate the SWR cache to fetch fresh data
+      await mutate();
+
+      // Notify parent component to refresh if callback provided
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      }
+
       toast.success('Rating saved successfully!');
       setIsOpen(false);
     } catch (error) {
@@ -185,29 +198,6 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
             </div>
 
             <div className="flex items-center gap-1.5">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  const currentValue = currentRating[key as keyof GameRating];
-                  handleRatingChange(
-                    key as keyof GameRating,
-                    currentValue === 0 ? 1 : 0,
-                  );
-                }}
-                onMouseEnter={() =>
-                  handleMouseEnter(key as keyof GameRating, 0)
-                }
-                onMouseLeave={() => handleMouseLeave(key as keyof GameRating)}
-                className={`h-6 w-6 p-0 transition-colors ${
-                  currentRating[key as keyof GameRating] === 0
-                    ? 'bg-red-100 text-red-500 hover:text-red-600'
-                    : 'text-neutral-500 hover:text-neutral-700'
-                }`}
-                title={`${currentRating[key as keyof GameRating] === 0 ? 'Unselect' : 'Reset'} ${label} to 0`}
-              >
-                <ThumbsDown size={14} />
-              </Button>
               {[...Array(maxRating)].map((_, i) => {
                 const ratingValue = i + 1;
                 const { fillColor, bgColor, fillPercent } = getBlockFillStyle(
@@ -234,6 +224,21 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
                   />
                 );
               })}
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const currentValue = currentRating[key as keyof GameRating];
+                  const nextValue =
+                    currentValue >= maxRating ? 0 : currentValue + 1;
+                  handleRatingChange(key as keyof GameRating, nextValue);
+                }}
+                className={`h-6 w-6 bg-red-100 p-0 text-red-500 transition-colors hover:text-red-600`}
+                title={`Click to increment rating (${currentRating[key as keyof GameRating]}/${maxRating})`}
+              >
+                <ThumbsDown size={14} />
+              </Button>
             </div>
           </div>
         ))}

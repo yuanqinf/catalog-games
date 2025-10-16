@@ -264,7 +264,9 @@ export default function ProfileGameCard({
             height={24}
             className="mr-1"
           />
-          <span className="mr-2 hidden sm:inline-block">Catalog Rating: </span>
+          <span className="mr-2 hidden sm:inline-block">
+            Catalog Dislike Rating:{' '}
+          </span>
           <span className="font-semibold text-neutral-200">
             {overallAverage ? overallAverage : 'N/A'}
           </span>

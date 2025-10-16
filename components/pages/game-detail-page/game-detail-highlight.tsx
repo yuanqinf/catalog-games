@@ -55,6 +55,7 @@ export default function GameDetailHighlight({
     rating,
     overallAverage,
     isLoading: isLoadingRating,
+    mutate: mutateRating,
   } = useGameRating(game.id);
 
   return (
@@ -197,6 +198,7 @@ export default function GameDetailHighlight({
               ? new Date(game.first_release_date) > new Date()
               : false
           }
+          onSaveSuccess={() => mutateRating()}
         />
       </div>
 
@@ -213,7 +215,9 @@ export default function GameDetailHighlight({
             height={24}
             className="mr-1"
           />
-          <span className="mr-2 hidden sm:inline-block">Catalog Rating: </span>
+          <span className="mr-2 hidden sm:inline-block">
+            Catalog Dislike Rating:{' '}
+          </span>
           <span className="font-semibold text-neutral-200">
             {overallAverage ? overallAverage : 'N/A'}
           </span>
