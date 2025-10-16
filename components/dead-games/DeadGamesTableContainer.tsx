@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Skull, Loader2 } from 'lucide-react';
+import { Ghost, Loader2 } from 'lucide-react';
 import { DeadGameFromAPI, DeadGame } from '@/types';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 import { DeadGamesTable } from './DeadGamesTable';
@@ -50,8 +50,8 @@ export const DeadGamesTableContainer: React.FC<
   >('none');
   const [sortByDate, setSortByDate] = useState<'none' | 'asc' | 'desc'>('desc');
 
-  // Floating Skull animations state
-  const [floatingSkulls, setFloatingSkulls] = useState<
+  // Floating Ghost animations state
+  const [floatingGhosts, setFloatingGhosts] = useState<
     Array<{
       id: string;
       gameId: string;
@@ -134,22 +134,25 @@ export const DeadGamesTableContainer: React.FC<
         // Check for reaction count increases and trigger animations
         deadGamesResponse.data.forEach((deadGame) => {
           const oldCount = prevCounts[deadGame.id] || 0;
-          const newCount = deadGame.user_reaction_count;
+          const newCount = deadGame.user_reaction_count / 10; // Divide by 10 to reduce the number of animations
 
+          // Create floating ghost animation centered on screen with random offset
+          const randomOffsetX = ((Math.random() - 0.5) * window.innerWidth) / 2;
+          const randomOffsetY = (Math.random() - 0.5) * 300; // ±150px vertical
           // Use the utility function to trigger animations
           triggerCountIncreaseAnimations(
             deadGame.id,
             oldCount,
             newCount,
-            setFloatingSkulls,
+            setFloatingGhosts,
             (itemId, animationId) => ({
               id: animationId,
               gameId: itemId,
               timestamp: Date.now(),
-              startX: Math.random() * window.innerWidth * 0.8,
-              startY: Math.random() * 200 + 300,
+              startX: window.innerWidth / 2 + randomOffsetX,
+              startY: window.innerHeight / 2 + randomOffsetY,
             }),
-            'skull-polling',
+            'ghost-polling',
           );
         });
 
@@ -164,19 +167,19 @@ export const DeadGamesTableContainer: React.FC<
     audio.volume = 0.1;
     audio.play().catch((error) => console.error('Error playing sound:', error));
 
-    // Create floating skull animation centered on screen with random offset
-    const randomOffsetX = (Math.random() - 0.5) * 400; // ±200px horizontal
+    // Create floating ghost animation centered on screen with random offset
+    const randomOffsetX = ((Math.random() - 0.5) * window.innerWidth) / 2;
     const randomOffsetY = (Math.random() - 0.5) * 300; // ±150px vertical
 
-    const newSkull = {
-      id: `Skull-${Date.now()}-${Math.random()}`,
+    const newGhost = {
+      id: `Ghost-${Date.now()}-${Math.random()}`,
       gameId: deadGameId,
       timestamp: Date.now(),
       startX: window.innerWidth / 2 + randomOffsetX,
       startY: window.innerHeight / 2 + randomOffsetY,
     };
 
-    setFloatingSkulls((prev) => [...prev, newSkull]);
+    setFloatingGhosts((prev) => [...prev, newGhost]);
 
     // Add button click animation
     setClickingButtons((prev) => new Set([...prev, deadGameId]));
@@ -285,7 +288,7 @@ export const DeadGamesTableContainer: React.FC<
     return (
       <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-zinc-400">
         <div className="text-center">
-          <Skull size={48} className="mx-auto mb-4 opacity-50" />
+          <Ghost size={48} className="mx-auto mb-4 opacity-50" />
           <p className="mb-2">The graveyard is empty</p>
           <p className="text-sm opacity-75">
             No dead games have been added yet
@@ -297,15 +300,15 @@ export const DeadGamesTableContainer: React.FC<
 
   return (
     <div className="relative">
-      {/* Floating Skull Animations */}
+      {/* Floating Ghost Animations */}
       <AnimatePresence>
-        {floatingSkulls.map((skull) => (
+        {floatingGhosts.map((ghost) => (
           <motion.div
-            key={skull.id}
+            key={ghost.id}
             className="pointer-events-none absolute z-50"
             style={{
-              left: skull.startX,
-              top: skull.startY,
+              left: ghost.startX,
+              top: ghost.startY,
             }}
             initial={{
               opacity: 0,
@@ -329,12 +332,12 @@ export const DeadGamesTableContainer: React.FC<
             }}
             onAnimationComplete={() => {
               // Auto-remove when animation completes
-              setFloatingSkulls((prev) =>
-                prev.filter((s) => s.id !== skull.id),
+              setFloatingGhosts((prev) =>
+                prev.filter((s) => s.id !== ghost.id),
               );
             }}
           >
-            <Skull className="h-8 w-8 text-zinc-300 drop-shadow-2xl" />
+            <Ghost className="h-8 w-8 text-zinc-300 drop-shadow-2xl" />
           </motion.div>
         ))}
       </AnimatePresence>

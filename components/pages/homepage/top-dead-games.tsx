@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Skull } from 'lucide-react';
+import { Ghost } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DeadGamesTableContainer } from '@/components/dead-games/DeadGamesTableContainer';
 
@@ -10,9 +10,9 @@ const TopDeadGames = () => {
       {/* Header */}
       <div className="mb-12 text-center">
         <div className="mb-6 flex items-center justify-center gap-4">
-          <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
+          <Ghost className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
           <h2 className="text-2xl font-bold text-white">Game Graveyard</h2>
-          <Skull className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
+          <Ghost className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
         </div>
       </div>
 

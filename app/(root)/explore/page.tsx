@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowBigLeftDash,
   ArrowBigRightDash,
-  Skull,
+  Ghost,
   ThumbsDown,
 } from 'lucide-react';
 import MiniGameCard from '@/components/shared/cards/mini-game-card';
@@ -160,7 +160,7 @@ const GameExplorePage = () => {
             onClick={() => switchView('graveyard')}
             className="absolute top-0 right-0 flex items-center gap-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300"
           >
-            <Skull className="!h-5 !w-5" />
+            <Ghost className="!h-5 !w-5" />
             <span className="text-lg font-bold">Game Graveyard</span>
             <ArrowBigRightDash className="!h-8 !w-8" />
           </Button>

@@ -2,7 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import {
   Gamepad2,
-  Skull,
+  Ghost,
   ChevronUp,
   ChevronDown,
   ArrowUpDown,
@@ -89,7 +89,7 @@ export const DeadGamesTable: React.FC<DeadGamesTableProps> = ({
                       onClick={onSortByReactions}
                       className="mx-auto flex items-center gap-1 px-2 py-1 text-zinc-400 hover:text-zinc-200"
                     >
-                      <Skull className="h-4 w-4" />
+                      <Ghost className="h-4 w-4" />
                       {sortByReactions === 'none' && (
                         <ArrowUpDown className="h-3 w-3" />
                       )}
@@ -102,7 +102,7 @@ export const DeadGamesTable: React.FC<DeadGamesTableProps> = ({
                     </Button>
                   ) : (
                     <div className="flex items-center justify-center gap-1">
-                      <Skull className="h-4 w-4" />
+                      <Ghost className="h-4 w-4" />
                     </div>
                   )}
                 </TableHead>
@@ -172,7 +172,7 @@ export const DeadGamesTable: React.FC<DeadGamesTableProps> = ({
                         onReaction(game.id, e);
                       }}
                     >
-                      <Skull className="mr-2 h-4 w-4 text-zinc-400 transition-colors group-hover:text-white" />
+                      <Ghost className="mr-2 h-4 w-4 text-zinc-400 transition-colors group-hover:text-white" />
                       <span className="font-medium text-zinc-300 group-hover:text-white">
                         <NumberFlow value={reactionCounts[game.id] || 0} />
                       </span>

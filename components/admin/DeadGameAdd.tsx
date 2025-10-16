@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Skull, Search, Calendar, AlertTriangle, Gamepad2 } from 'lucide-react';
+import { Ghost, Search, Calendar, AlertTriangle, Gamepad2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Types for dead game form
@@ -211,7 +211,7 @@ const DeadGameAdd: React.FC = () => {
       {/* Dead Game Information Form */}
       <Card className="border-zinc-700 bg-zinc-900/50 p-6">
         <div className="mb-4 flex items-center gap-2">
-          <Skull className="h-5 w-5 text-red-400" />
+          <Ghost className="h-5 w-5 text-red-400" />
           <h3 className="text-lg font-semibold">Dead Game Information</h3>
         </div>
 
