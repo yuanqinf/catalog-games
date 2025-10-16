@@ -45,6 +45,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
 import GameDetailSection from '@/components/pages/game-detail-page/game-detail-section';
 
 import GameDetailHighlight, { StatisticItem } from './game-detail-highlight';
@@ -633,46 +634,58 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-4" align="start">
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-5 gap-2">
-                          {[
-                            { icon: faFaceAngry, name: 'angry' },
-                            { icon: faFaceFrown, name: 'frown' },
-                            { icon: faFaceTired, name: 'tired' },
-                            { icon: faFaceDizzy, name: 'dizzy' },
-                            { icon: faFaceSurprise, name: 'surprised' },
-
-                            {
-                              icon: faFaceGrinBeamSweat,
-                              name: 'grin-beam-sweat',
-                            },
-                            { icon: faFaceSadTear, name: 'sad-tear' },
-                            { icon: faFaceRollingEyes, name: 'rolling-eyes' },
-                            { icon: faFaceMeh, name: 'meh' },
-                            { icon: faFaceGrimace, name: 'grimace' },
-                            { icon: faFaceFlushed, name: 'flushed' },
-                            { icon: faFaceGrinTongue, name: 'grin-tongue' },
-                            { icon: faHeartCrack, name: 'heart-crack' },
-                            { icon: faBug, name: 'bug' },
-                            { icon: faPoop, name: 'poop' },
-                          ].map((item) => (
-                            <Button
-                              key={item.name}
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                handleEmojiClick(item.icon, item.name)
-                              }
-                              className="h-12 w-12 transition-transform hover:scale-125"
-                            >
-                              <FontAwesomeIcon
-                                icon={item.icon}
-                                className="!h-6 !w-6 text-yellow-400"
-                              />
-                            </Button>
-                          ))}
+                      <SignedIn>
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-5 gap-2">
+                            {[
+                              { icon: faFaceAngry, name: 'angry' },
+                              { icon: faFaceFrown, name: 'frown' },
+                              { icon: faFaceTired, name: 'tired' },
+                              { icon: faFaceDizzy, name: 'dizzy' },
+                              { icon: faFaceSurprise, name: 'surprised' },
+                              {
+                                icon: faFaceGrinBeamSweat,
+                                name: 'grin-beam-sweat',
+                              },
+                              { icon: faFaceSadTear, name: 'sad-tear' },
+                              { icon: faFaceRollingEyes, name: 'rolling-eyes' },
+                              { icon: faFaceMeh, name: 'meh' },
+                              { icon: faFaceGrimace, name: 'grimace' },
+                              { icon: faFaceFlushed, name: 'flushed' },
+                              { icon: faFaceGrinTongue, name: 'grin-tongue' },
+                              { icon: faHeartCrack, name: 'heart-crack' },
+                              { icon: faBug, name: 'bug' },
+                              { icon: faPoop, name: 'poop' },
+                            ].map((item) => (
+                              <Button
+                                key={item.name}
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  handleEmojiClick(item.icon, item.name)
+                                }
+                                className="h-12 w-12 transition-transform hover:scale-125"
+                              >
+                                <FontAwesomeIcon
+                                  icon={item.icon}
+                                  className="!h-6 !w-6 text-yellow-400"
+                                />
+                              </Button>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      </SignedIn>
+
+                      <SignedOut>
+                        <div className="space-y-4 py-6 text-center">
+                          <h3 className="text-base font-medium text-white">
+                            Sign in to react
+                          </h3>
+                          <SignInButton>
+                            <Button>Sign In</Button>
+                          </SignInButton>
+                        </div>
+                      </SignedOut>
                     </PopoverContent>
                   </Popover>
                 </div>
