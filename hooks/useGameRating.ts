@@ -46,10 +46,19 @@ const fetchAverageRating = async (
 // Fetch specific user's rating
 const fetchUserRating = async (
   gameId: number,
-  userId: string,
+  clerkUserId: string,
 ): Promise<GameRating> => {
   const gameService = new GameService();
-  const userRating = await gameService.getUserRating(gameId, userId);
+
+  // Convert Clerk ID to Supabase UUID
+  const supabaseUserId =
+    await gameService.getSupabaseUserIdFromClerkId(clerkUserId);
+
+  if (!supabaseUserId) {
+    return defaultRating;
+  }
+
+  const userRating = await gameService.getUserRating(gameId, supabaseUserId);
 
   if (!userRating) {
     return defaultRating;

@@ -92,47 +92,52 @@ export default function ProfileGameCard({
 
     setIsRemoving(true);
     try {
-      // Remove both dislikes and emoji reactions in parallel
-      const [dislikeResponse, emojiResponse] = await Promise.all([
-        fetch(`/api/games/dislike?gameId=${game.id}`, {
-          method: 'DELETE',
-        }),
-        fetch(`/api/games/emoji-reaction?gameId=${game.id}`, {
-          method: 'DELETE',
-        }),
-      ]);
+      // Remove dislikes, emoji reactions, and ratings in parallel
+      const [dislikeResponse, emojiResponse, ratingResponse] =
+        await Promise.all([
+          fetch(`/api/games/dislike?gameId=${game.id}`, {
+            method: 'DELETE',
+          }),
+          fetch(`/api/games/emoji-reaction?gameId=${game.id}`, {
+            method: 'DELETE',
+          }),
+          fetch(`/api/games/rating?gameId=${game.id}`, {
+            method: 'DELETE',
+          }),
+        ]);
 
       const dislikeResult = await dislikeResponse.json();
       const emojiResult = await emojiResponse.json();
+      const ratingResult = await ratingResponse.json();
 
-      // Check if both operations succeeded
+      // Check which operations succeeded
       const dislikeSuccess = dislikeResult.success;
       const emojiSuccess = emojiResult.success;
+      const ratingSuccess = ratingResult.success;
 
-      if (dislikeSuccess && emojiSuccess) {
-        toast.success(
-          `Successfully removed all dislikes and emoji reactions for ${game.name}`,
-        );
-        setIsDialogOpen(false);
-        // Refresh the page to update the UI
-        window.location.reload();
-      } else if (dislikeSuccess && !emojiSuccess) {
-        toast.success(
-          `Removed dislikes for ${game.name}. ${emojiResult.error || 'No emoji reactions to remove'}`,
-        );
+      // Count successful operations
+      const successCount = [dislikeSuccess, emojiSuccess, ratingSuccess].filter(
+        Boolean,
+      ).length;
+
+      if (successCount === 3) {
+        toast.success(`Successfully removed all interactions for ${game.name}`);
         setIsDialogOpen(false);
         window.location.reload();
-      } else if (!dislikeSuccess && emojiSuccess) {
-        toast.success(
-          `Removed emoji reactions for ${game.name}. ${dislikeResult.error || 'No dislikes to remove'}`,
-        );
+      } else if (successCount > 0) {
+        const successMessages = [];
+        if (dislikeSuccess) successMessages.push('dislikes');
+        if (emojiSuccess) successMessages.push('emoji reactions');
+        if (ratingSuccess) successMessages.push('ratings');
+
+        toast.success(`Removed ${successMessages.join(', ')} for ${game.name}`);
         setIsDialogOpen(false);
         window.location.reload();
       } else {
-        toast.error('Failed to remove dislikes and emoji reactions');
+        toast.error('No interactions found to remove');
       }
     } catch (error) {
-      console.error('Error removing dislikes and emoji reactions:', error);
+      console.error('Error removing interactions:', error);
       toast.error('An error occurred while removing data');
     } finally {
       setIsRemoving(false);

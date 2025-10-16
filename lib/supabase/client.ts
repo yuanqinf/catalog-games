@@ -273,14 +273,36 @@ export class GameService {
   }
 
   /**
-   * Get user rating for a specific game
+   * Convert Clerk user ID to Supabase user UUID
    */
-  async getUserRating(gameId: number, userId: string) {
+  async getSupabaseUserIdFromClerkId(
+    clerkUserId: string,
+  ): Promise<string | null> {
+    const { data, error } = await this.supabase
+      .from('users')
+      .select('id')
+      .eq('clerk_id', clerkUserId)
+      .single();
+
+    if (error || !data) {
+      console.error('Failed to get Supabase user ID:', error);
+      return null;
+    }
+
+    return data.id;
+  }
+
+  /**
+   * Get user rating for a specific game
+   * @param gameId - The game ID
+   * @param supabaseUserId - The Supabase user UUID (not Clerk ID)
+   */
+  async getUserRating(gameId: number, supabaseUserId: string) {
     const { data, error } = await this.supabase
       .from('game_ratings')
       .select('*')
       .eq('game_id', gameId)
-      .eq('user_id', userId)
+      .eq('user_id', supabaseUserId)
       .maybeSingle();
 
     if (error) {
@@ -292,10 +314,13 @@ export class GameService {
 
   /**
    * Save or update user rating for a game
+   * @param gameId - The game ID
+   * @param clerkUserId - The Clerk user ID (will be converted to Supabase UUID)
+   * @param rating - The rating object
    */
   async saveUserRating(
     gameId: number,
-    userId: string,
+    clerkUserId: string,
     rating: {
       story: number;
       music: number;
@@ -304,8 +329,21 @@ export class GameService {
       longevity: number;
     },
   ) {
+    // Convert Clerk ID to Supabase user UUID
+    const { data: userData, error: userError } = await this.supabase
+      .from('users')
+      .select('id')
+      .eq('clerk_id', clerkUserId)
+      .single();
+
+    if (userError || !userData) {
+      throw new Error('User not found in database');
+    }
+
+    const supabaseUserId = userData.id;
+
     // Check if rating already exists
-    const existingRating = await this.getUserRating(gameId, userId);
+    const existingRating = await this.getUserRating(gameId, supabaseUserId);
 
     if (existingRating) {
       // Update existing rating
@@ -320,7 +358,7 @@ export class GameService {
           updated_at: new Date().toISOString(),
         })
         .eq('game_id', gameId)
-        .eq('user_id', userId)
+        .eq('user_id', supabaseUserId)
         .select()
         .single();
 
@@ -335,7 +373,7 @@ export class GameService {
         .from('game_ratings')
         .insert({
           game_id: gameId,
-          user_id: userId,
+          user_id: supabaseUserId,
           story: rating.story,
           music: rating.music,
           graphics: rating.graphics,
