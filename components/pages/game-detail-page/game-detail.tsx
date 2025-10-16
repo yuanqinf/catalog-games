@@ -39,6 +39,7 @@ import {
   faBug,
   faPoop,
 } from '@fortawesome/free-solid-svg-icons';
+import { dark } from '@clerk/themes';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -1211,6 +1212,7 @@ const GameDetail = ({
             isDeadGame={isDeadGame}
             ghostCount={ghostCount}
             onGhostClick={handleGhostClick}
+            isSignedIn={isSignedIn}
           />
         </section>
       </main>
@@ -1221,12 +1223,18 @@ const GameDetail = ({
           <DialogHeader>
             <DialogTitle>Sign in to react</DialogTitle>
             <DialogDescription>
-              You need to be signed in to add emoji reactions to games.
+              Please sign in to add emoji reactions to games.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center py-4">
-            <SignInButton>
-              <Button>Login</Button>
+            <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
+              <Button
+                onClick={() => {
+                  setShowSignInDialog(false);
+                }}
+              >
+                Login
+              </Button>
             </SignInButton>
           </div>
         </DialogContent>

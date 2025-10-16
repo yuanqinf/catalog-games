@@ -9,8 +9,11 @@ import {
   LucideIcon,
   Info,
   Ghost,
+  LogIn,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SignInButton } from '@clerk/nextjs';
+import { dark } from '@clerk/themes';
 import DynamicTrendChart from '@/components/shared/cards/dynamic-trend-chart';
 import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
 import NumberFlow from '@number-flow/react';
@@ -48,6 +51,7 @@ interface GameDetailHighlightProps {
   isDeadGame?: boolean;
   ghostCount?: number;
   onGhostClick?: () => void;
+  isSignedIn?: boolean;
 }
 
 export default function GameDetailHighlight({
@@ -63,6 +67,7 @@ export default function GameDetailHighlight({
   isDeadGame = false,
   ghostCount = 0,
   onGhostClick,
+  isSignedIn = false,
 }: GameDetailHighlightProps) {
   const {
     rating,
@@ -71,99 +76,112 @@ export default function GameDetailHighlight({
     mutate: mutateRating,
   } = useGameRating(game.id);
 
+  const renderReactionPanel = () => {
+    // Dead game panel - show ghost
+    if (isDeadGame) {
+      return (
+        <>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Ghost className="h-5 w-5 text-zinc-300" />
+              <span className="text-2xl font-bold text-white">
+                <NumberFlow value={ghostCount} />
+              </span>
+            </div>
+          </div>
+
+          <motion.div
+            animate={clickingButton ? { scale: [1, 0.8, 1.1, 1] } : {}}
+            transition={{ duration: 0.2 }}
+          >
+            <Button
+              onClick={onGhostClick}
+              className="h-12 w-12 bg-zinc-700 p-0 text-white hover:bg-zinc-600"
+              size="sm"
+            >
+              <Ghost className="!h-5 !w-5" />
+            </Button>
+          </motion.div>
+        </>
+      );
+    }
+
+    // Normal game panel - dislike button with counts
+    return (
+      <>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <ThumbsDown className="h-5 w-5 text-red-400" />
+            <span className="text-2xl font-bold text-white">
+              <NumberFlow value={dislikeCount} />
+            </span>
+          </div>
+
+          <div className="h-8 w-px bg-zinc-700" />
+
+          {isSignedIn ? (
+            <div className="flex items-center gap-2">
+              <Angry className="h-4 w-4 text-orange-400" />
+              {isLoadingUserDislike ? (
+                <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
+              ) : (
+                <span className="text-lg font-semibold text-orange-400">
+                  <NumberFlow value={userDislikeCount} />
+                </span>
+              )}
+              <span className="text-xs text-zinc-500">yours</span>
+            </div>
+          ) : (
+            <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
+              <Button
+                variant="outline"
+                className="flex cursor-pointer items-center gap-1 text-sm text-zinc-400 transition-colors hover:text-zinc-300"
+              >
+                <LogIn className="h-3 w-3" />
+                <span>Sign in to track yours</span>
+              </Button>
+            </SignInButton>
+          )}
+        </div>
+
+        <motion.div
+          animate={clickingButton ? { scale: [1, 0.8, 1.1, 1] } : {}}
+          transition={{ duration: 0.2 }}
+        >
+          <Button
+            onClick={onDislikeVote}
+            className={`h-12 w-12 bg-red-600 p-0 text-white hover:bg-red-700 ${
+              userVoteState.isPowerMode ? 'shadow-lg shadow-red-500/50' : ''
+            }`}
+            size="sm"
+          >
+            <ThumbsDown className="!h-5 !w-5" />
+            {userVoteState.isPowerMode && (
+              <motion.div
+                className="absolute -inset-1 -z-10 rounded bg-red-500/30"
+                animate={{
+                  scale: [0.9, 1.1, 0.9],
+                  opacity: [0.5, 0.8, 0.5],
+                }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
+            )}
+          </Button>
+        </motion.div>
+      </>
+    );
+  };
+
   return (
     <div className="space-y-6 lg:col-span-1">
       {/* Reaction Panel */}
       <div className="rounded-lg border border-zinc-700 bg-zinc-900/50 p-4">
         <div className="flex items-center justify-between">
-          {isDeadGame ? (
-            <>
-              {/* Left side: Ghost count for dead games */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <Ghost className="h-5 w-5 text-zinc-300" />
-                  <span className="text-2xl font-bold text-white">
-                    <NumberFlow value={ghostCount} />
-                  </span>
-                </div>
-              </div>
-
-              {/* Right side: Ghost button */}
-              <motion.div
-                animate={clickingButton ? { scale: [1, 0.8, 1.1, 1] } : {}}
-                transition={{ duration: 0.2 }}
-              >
-                <Button
-                  onClick={onGhostClick}
-                  className="h-12 w-12 bg-zinc-700 p-0 text-white hover:bg-zinc-600"
-                  size="sm"
-                >
-                  <Ghost className="!h-5 !w-5" />
-                </Button>
-              </motion.div>
-            </>
-          ) : (
-            <>
-              {/* Left side: Dislike counts in one line */}
-              <div className="flex items-center gap-3">
-                {/* Total Dislike Count */}
-                <div className="flex items-center gap-2">
-                  <ThumbsDown className="h-5 w-5 text-red-400" />
-                  <span className="text-2xl font-bold text-white">
-                    <NumberFlow value={dislikeCount} />
-                  </span>
-                </div>
-
-                {/* Divider */}
-                <div className="h-8 w-px bg-zinc-700" />
-
-                {/* User's Dislike Count */}
-                <div className="flex items-center gap-2">
-                  <Angry className="h-4 w-4 text-orange-400" />
-                  {isLoadingUserDislike ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
-                  ) : (
-                    <span className="text-lg font-semibold text-orange-400">
-                      <NumberFlow value={userDislikeCount} />
-                    </span>
-                  )}
-                  <span className="text-xs text-zinc-500">yours</span>
-                </div>
-              </div>
-
-              {/* Right side: Square dislike button */}
-              <motion.div
-                animate={clickingButton ? { scale: [1, 0.8, 1.1, 1] } : {}}
-                transition={{ duration: 0.2 }}
-              >
-                <Button
-                  onClick={onDislikeVote}
-                  className={`h-12 w-12 bg-red-600 p-0 text-white hover:bg-red-700 ${
-                    userVoteState.isPowerMode
-                      ? 'shadow-lg shadow-red-500/50'
-                      : ''
-                  }`}
-                  size="sm"
-                >
-                  <ThumbsDown className="!h-5 !w-5" />
-                  {userVoteState.isPowerMode && (
-                    <motion.div
-                      className="absolute -inset-1 -z-10 rounded bg-red-500/30"
-                      animate={{
-                        scale: [0.9, 1.1, 0.9],
-                        opacity: [0.5, 0.8, 0.5],
-                      }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                      }}
-                    />
-                  )}
-                </Button>
-              </motion.div>
-            </>
-          )}
+          {renderReactionPanel()}
         </div>
       </div>
 

@@ -21,6 +21,7 @@ import { GameService } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { RatingSkeleton } from './rating-skeleton';
 import { useGameRating } from '@/hooks/useGameRating';
+import { dark } from '@clerk/themes';
 
 const RatingBlock = styled.div<{
   $fillColor: string;
@@ -291,7 +292,7 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
         <DialogHeader>
           <DialogTitle>My ratings for this game</DialogTitle>
           <DialogDescription>
-            Rate this game to help others find the best games.
+            Rate this game to help others know how bad it is :D
           </DialogDescription>
         </DialogHeader>
 
@@ -308,8 +309,14 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
             <h3 className="text-base font-medium text-white">
               Sign in to rate this game
             </h3>
-            <SignInButton>
-              <Button>Sign In</Button>
+            <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
+              <Button
+                onClick={() => {
+                  setIsOpen(false);
+                }}
+              >
+                Sign In
+              </Button>
             </SignInButton>
           </div>
         </SignedOut>

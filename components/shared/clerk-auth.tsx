@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUserSync } from '@/hooks/useUserSync';
+import { dark } from '@clerk/themes';
 
 const ClerkAuth = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -97,7 +98,7 @@ const ClerkAuth = () => {
             transition={{ duration: 0.4, ease: 'easeOut', delay: 0.1 }}
           >
             <SignedOut>
-              <SignInButton>
+              <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
                 <Button>Login</Button>
               </SignInButton>
             </SignedOut>
