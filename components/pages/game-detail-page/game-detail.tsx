@@ -332,6 +332,47 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
     return emojiMap[name];
   };
 
+  // Available emoji reactions
+  const availableEmojis = [
+    { icon: faFaceAngry, name: 'angry' },
+    { icon: faFaceFrown, name: 'frown' },
+    { icon: faFaceTired, name: 'tired' },
+    { icon: faFaceDizzy, name: 'dizzy' },
+    { icon: faFaceSurprise, name: 'surprised' },
+    { icon: faFaceGrinBeamSweat, name: 'grin-beam-sweat' },
+    { icon: faFaceSadTear, name: 'sad-tear' },
+    { icon: faFaceRollingEyes, name: 'rolling-eyes' },
+    { icon: faFaceMeh, name: 'meh' },
+    { icon: faFaceGrimace, name: 'grimace' },
+    { icon: faFaceFlushed, name: 'flushed' },
+    { icon: faFaceGrinTongue, name: 'grin-tongue' },
+    { icon: faHeartCrack, name: 'heart-crack' },
+    { icon: faBug, name: 'bug' },
+    { icon: faPoop, name: 'poop' },
+  ];
+
+  // Render emoji picker popover content
+  const renderEmojiPickerContent = () => (
+    <PopoverContent className="w-80 p-4" align="start">
+      <div className="grid grid-cols-5 gap-2">
+        {availableEmojis.map((item) => (
+          <Button
+            key={item.name}
+            variant="ghost"
+            size="icon"
+            onClick={() => handleEmojiClick(item.icon, item.name)}
+            className="h-12 w-12 transition-transform hover:scale-125"
+          >
+            <FontAwesomeIcon
+              icon={item.icon}
+              className="!h-6 !w-6 text-yellow-400"
+            />
+          </Button>
+        ))}
+      </div>
+    </PopoverContent>
+  );
+
   // Fetch sales data with fallback logic
   useEffect(() => {
     const loadSalesData = async () => {
@@ -811,30 +852,24 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
               ) : hasEmojiReactions ? (
                 // Emoji reactions with adder button (Slack style)
                 <div className="flex flex-wrap items-center gap-2">
-                  {Object.entries(emojiReactions)
-                    .sort(
-                      ([, countA], [, countB]) =>
-                        (countB as number) - (countA as number),
-                    )
-                    .map(([name, count]) => (
+                  {availableEmojis
+                    .filter((emoji) => emojiReactions[emoji.name])
+                    .map((emoji) => (
                       <Button
-                        key={name}
+                        key={emoji.name}
                         variant="outline"
                         size="lg"
                         onClick={() => {
-                          const icon = getEmojiIcon(name);
-                          if (icon) {
-                            handleEmojiClick(icon, name);
-                          }
+                          handleEmojiClick(emoji.icon, emoji.name);
                         }}
                         className="flex items-center gap-2 bg-zinc-900/50 px-3 py-1 transition-all hover:scale-105 hover:bg-zinc-800"
                       >
                         <FontAwesomeIcon
-                          icon={getEmojiIcon(name)}
+                          icon={emoji.icon}
                           className="!h-5 !w-5 text-yellow-400"
                         />
                         <span className="text-md font-bold text-white">
-                          <NumberFlow value={count as number} />
+                          <NumberFlow value={emojiReactions[emoji.name] as number} />
                         </span>
                       </Button>
                     ))}
@@ -854,47 +889,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                         <SmilePlus className="!h-5 !w-5" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80 p-4" align="start">
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-5 gap-2">
-                          {[
-                            { icon: faFaceAngry, name: 'angry' },
-                            { icon: faFaceFrown, name: 'frown' },
-                            { icon: faFaceTired, name: 'tired' },
-                            { icon: faFaceDizzy, name: 'dizzy' },
-                            { icon: faFaceSurprise, name: 'surprised' },
-                            {
-                              icon: faFaceGrinBeamSweat,
-                              name: 'grin-beam-sweat',
-                            },
-                            { icon: faFaceSadTear, name: 'sad-tear' },
-                            { icon: faFaceRollingEyes, name: 'rolling-eyes' },
-                            { icon: faFaceMeh, name: 'meh' },
-                            { icon: faFaceGrimace, name: 'grimace' },
-                            { icon: faFaceFlushed, name: 'flushed' },
-                            { icon: faFaceGrinTongue, name: 'grin-tongue' },
-                            { icon: faHeartCrack, name: 'heart-crack' },
-                            { icon: faBug, name: 'bug' },
-                            { icon: faPoop, name: 'poop' },
-                          ].map((item) => (
-                            <Button
-                              key={item.name}
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                handleEmojiClick(item.icon, item.name)
-                              }
-                              className="h-12 w-12 transition-transform hover:scale-125"
-                            >
-                              <FontAwesomeIcon
-                                icon={item.icon}
-                                className="!h-6 !w-6 text-yellow-400"
-                              />
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    </PopoverContent>
+                    {renderEmojiPickerContent()}
                   </Popover>
                 </div>
               ) : (
@@ -923,47 +918,7 @@ const GameDetail = ({ game }: { game: GameDbData }) => {
                         Add Reaction
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80 p-4" align="start">
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-5 gap-2">
-                          {[
-                            { icon: faFaceAngry, name: 'angry' },
-                            { icon: faFaceFrown, name: 'frown' },
-                            { icon: faFaceTired, name: 'tired' },
-                            { icon: faFaceDizzy, name: 'dizzy' },
-                            { icon: faFaceSurprise, name: 'surprised' },
-                            {
-                              icon: faFaceGrinBeamSweat,
-                              name: 'grin-beam-sweat',
-                            },
-                            { icon: faFaceSadTear, name: 'sad-tear' },
-                            { icon: faFaceRollingEyes, name: 'rolling-eyes' },
-                            { icon: faFaceMeh, name: 'meh' },
-                            { icon: faFaceGrimace, name: 'grimace' },
-                            { icon: faFaceFlushed, name: 'flushed' },
-                            { icon: faFaceGrinTongue, name: 'grin-tongue' },
-                            { icon: faHeartCrack, name: 'heart-crack' },
-                            { icon: faBug, name: 'bug' },
-                            { icon: faPoop, name: 'poop' },
-                          ].map((item) => (
-                            <Button
-                              key={item.name}
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                handleEmojiClick(item.icon, item.name)
-                              }
-                              className="h-12 w-12 transition-transform hover:scale-125"
-                            >
-                              <FontAwesomeIcon
-                                icon={item.icon}
-                                className="!h-6 !w-6 text-yellow-400"
-                              />
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    </PopoverContent>
+                    {renderEmojiPickerContent()}
                   </Popover>
                 </div>
               )}
