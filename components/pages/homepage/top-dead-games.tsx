@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -25,7 +24,7 @@ import {
 import { DeadGameFromAPI, DeadGame } from '@/types';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 
-const DeadGames = () => {
+const TopDeadGames = () => {
   // Fetch dead games data from Supabase with short polling for real-time updates
   const {
     data: deadGamesResponse,
@@ -454,61 +453,49 @@ const DeadGames = () => {
                 <TableRow
                   key={game.id}
                   className="group cursor-pointer transition-all duration-300 hover:bg-zinc-800/30 hover:shadow-lg hover:shadow-zinc-900/20"
+                  onClick={() => {
+                    window.location.href = `/detail/${game.slug}`;
+                  }}
                 >
                   <TableCell className="w-20 px-6 py-6">
-                    <Link href={`/detail/${game.slug}`} className="block">
-                      <div className="flex h-16 w-12 items-center justify-center overflow-hidden rounded-lg bg-zinc-800 shadow-md transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl">
-                        {game.coverUrl ? (
-                          <Image
-                            src={game.coverUrl}
-                            alt={`${game.name} cover`}
-                            width={48}
-                            height={64}
-                            className="h-full w-full object-cover grayscale transition-all duration-300 group-hover:grayscale-0"
-                          />
-                        ) : (
-                          <Gamepad2 className="h-6 w-6 text-zinc-500" />
-                        )}
-                      </div>
-                    </Link>
+                    <div className="flex h-16 w-12 items-center justify-center overflow-hidden rounded-lg bg-zinc-800 shadow-md transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl">
+                      {game.coverUrl ? (
+                        <Image
+                          src={game.coverUrl}
+                          alt={`${game.name} cover`}
+                          width={48}
+                          height={64}
+                          className="h-full w-full object-cover grayscale transition-all duration-300 group-hover:grayscale-0"
+                        />
+                      ) : (
+                        <Gamepad2 className="h-6 w-6 text-zinc-500" />
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="px-6 py-6 font-semibold">
-                    <Link href={`/detail/${game.slug}`} className="block">
-                      <div className="text-base text-white transition-all duration-300 group-hover:scale-105 group-hover:text-zinc-100 sm:text-lg">
-                        {game.name}
-                      </div>
-                    </Link>
+                    <div className="text-base text-white transition-all duration-300 group-hover:scale-105 group-hover:text-zinc-100 sm:text-lg">
+                      {game.name}
+                    </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground hidden px-6 py-6 sm:table-cell">
-                    <Link href={`/detail/${game.slug}`} className="block">
-                      {game.deadDate}
-                    </Link>
+                    {game.deadDate}
                   </TableCell>
                   <TableCell className="px-6 py-6">
-                    <Link
-                      href={`/detail/${game.slug}`}
-                      className="inline-block"
+                    <span
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold transition-all duration-300 group-hover:scale-105 ${
+                        game.status === 'Shutdown'
+                          ? 'border border-red-700/50 bg-red-900/40 text-red-300 group-hover:border-red-700/70 group-hover:bg-red-900/60'
+                          : 'border border-orange-700/50 bg-orange-900/40 text-orange-300 group-hover:border-orange-700/70 group-hover:bg-orange-900/60'
+                      }`}
                     >
-                      <span
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold transition-all duration-300 group-hover:scale-105 ${
-                          game.status === 'Shutdown'
-                            ? 'border border-red-700/50 bg-red-900/40 text-red-300 group-hover:border-red-700/70 group-hover:bg-red-900/60'
-                            : 'border border-orange-700/50 bg-orange-900/40 text-orange-300 group-hover:border-orange-700/70 group-hover:bg-orange-900/60'
-                        }`}
-                      >
-                        {game.status}
-                      </span>
-                    </Link>
+                      {game.status}
+                    </span>
                   </TableCell>
                   <TableCell className="text-muted-foreground hidden px-6 py-6 lg:table-cell">
-                    <Link href={`/detail/${game.slug}`} className="block">
-                      {game.developer}
-                    </Link>
+                    {game.developer}
                   </TableCell>
                   <TableCell className="text-muted-foreground hidden px-6 py-6 xl:table-cell">
-                    <Link href={`/detail/${game.slug}`} className="block">
-                      {game.publisher}
-                    </Link>
+                    {game.publisher}
                   </TableCell>
                   <TableCell className="px-6 py-6 text-center">
                     <Button
@@ -553,4 +540,4 @@ const DeadGames = () => {
   );
 };
 
-export default DeadGames;
+export default TopDeadGames;
