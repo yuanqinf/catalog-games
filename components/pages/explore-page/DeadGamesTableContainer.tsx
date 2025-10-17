@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Ghost, Loader2 } from 'lucide-react';

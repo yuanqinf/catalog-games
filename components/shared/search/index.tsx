@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Search, Loader2, Gamepad2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

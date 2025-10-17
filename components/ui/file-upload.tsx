@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef } from 'react';
+import { ChangeEvent, useCallback, useRef, useState } from 'react';
 import { cn } from '@/utils/cn';
 import {
   validateImageFile,

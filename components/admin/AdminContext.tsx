@@ -1,8 +1,7 @@
 'use client';
-import React, { createContext, useContext, ReactNode } from 'react';
+import { ReactNode, createContext, useContext, useMemo } from 'react';
 import { useSession } from '@clerk/nextjs';
 import { GameService } from '@/lib/supabase/client';
-import { useMemo } from 'react';
 
 // Shared types
 export interface GameResult {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { FC, ReactNode, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';

@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Gamepad2, ThumbsDown, Ghost } from 'lucide-react';
 import { CommandItem } from '@/components/ui/command';
 import {

@@ -1,9 +1,11 @@
-import React, {
-  useState,
-  useMemo,
+import {
+  FC,
+  ReactNode,
   useCallback,
-  useRef,
   useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from 'react';
 import { motion } from 'framer-motion';
 

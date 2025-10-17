@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileUpload } from '@/components/ui/file-upload';
 import { Badge } from '@/components/ui/badge';
