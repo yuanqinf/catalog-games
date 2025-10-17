@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="my-6 h-px w-full bg-zinc-700" />
         {/* Copyright and Legal */}
         <div className="flex flex-col items-center justify-between text-sm text-zinc-400 md:flex-row">
-          <p>© 2025 Catalog.Games All rights reserved.</p>
+          <p>© 2025 Dissgame.click All rights reserved.</p>
           <div className="mt-4 flex gap-6 md:mt-0">
             <Link
               href="/privacy"

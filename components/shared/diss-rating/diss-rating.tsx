@@ -5,7 +5,7 @@ import { RATING_BLOCK_COLORS, EMPTY_BLOCK_COLOR } from '@/constants/colors';
 import { ratingCategories } from '@/constants/rating-categories';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import CatalogRatingDialog from './catalog-rating-dialog';
+import DissRatingDialog from './diss-rating-dialog';
 
 const RatingBlock = styled.div<{
   $fillColor: string;
@@ -45,7 +45,7 @@ interface GameRating {
   longevity: number;
 }
 
-interface CatalogRatingProps {
+interface DissRatingProps {
   rating?: Partial<GameRating>;
   maxRating?: number;
   className?: string;
@@ -104,7 +104,7 @@ const getBlockFillStyle = (blockIndex: number, categoryRating: number) => {
   return { fillColor, bgColor, fillPercent };
 };
 
-const CatalogRating: React.FC<CatalogRatingProps> = ({
+const DissRating: React.FC<DissRatingProps> = ({
   rating = defaultRating,
   maxRating = 5,
   className = '',
@@ -153,7 +153,7 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
   return (
     <div className={`${config.container} ${className} relative`}>
       {!isProfile && (
-        <CatalogRatingDialog
+        <DissRatingDialog
           maxRating={maxRating}
           gameId={gameId}
           onSaveSuccess={onSaveSuccess}
@@ -224,4 +224,4 @@ const CatalogRating: React.FC<CatalogRatingProps> = ({
   );
 };
 
-export default CatalogRating;
+export default DissRating;

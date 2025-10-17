@@ -14,7 +14,7 @@ import {
   CircleX,
   SmilePlus,
 } from 'lucide-react';
-import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
+import DissRating from '@/components/shared/diss-rating/diss-rating';
 import { useGameRating } from '@/hooks/useGameRating';
 import NumberFlow from '@number-flow/react';
 import { Button } from '@/components/ui/button';
@@ -240,9 +240,9 @@ export default function ProfileGameCard({
           </div>
         )}
 
-        {/* Catalog Rating Section */}
+        {/* Diss Rating Section */}
         <div className="highlight-card-section mb-4">
-          <CatalogRating
+          <DissRating
             rating={rating}
             gameId={game.id?.toString()}
             isLoading={isLoadingRating}
@@ -258,20 +258,20 @@ export default function ProfileGameCard({
 
       {/* Footer Row */}
       <div className="highlight-card-footer">
-        {/* Catalog User Rating */}
+        {/* Diss Rating */}
         <div
-          title={`Catalog User Rating: ${overallAverage}`}
+          title={`Overall Diss Rating: ${overallAverage}`}
           className="flex items-center"
         >
           <Image
             src="/images/logo.png"
-            alt="Catalog Logo"
+            alt="Logo"
             width={24}
             height={24}
             className="mr-1"
           />
           <span className="mr-2 hidden sm:inline-block">
-            Catalog Dislike Rating:{' '}
+            Overall Diss Rating:{' '}
           </span>
           <span className="font-semibold text-neutral-200">
             {overallAverage ? overallAverage : 'N/A'}

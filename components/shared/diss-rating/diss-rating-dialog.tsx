@@ -54,7 +54,7 @@ interface GameRating {
   longevity: number;
 }
 
-interface CatalogRatingDialogProps {
+interface DissRatingDialogProps {
   className?: string;
   gameId?: string;
   maxRating?: number;
@@ -86,7 +86,7 @@ const getBlockFillStyle = (blockIndex: number, categoryRating: number) => {
   return { fillColor, bgColor, fillPercent };
 };
 
-const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
+const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
   maxRating = 5,
   trigger,
   gameId,
@@ -325,4 +325,4 @@ const CatalogRatingDialog: React.FC<CatalogRatingDialogProps> = ({
   );
 };
 
-export default CatalogRatingDialog;
+export default DissRatingDialog;

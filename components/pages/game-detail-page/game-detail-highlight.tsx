@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { SignInButton } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import DynamicTrendChart from '@/components/shared/cards/dynamic-trend-chart';
-import CatalogRating from '@/components/shared/catelog-rating/catalog-rating';
+import DissRating from '@/components/shared/diss-rating/diss-rating';
 import NumberFlow from '@number-flow/react';
 
 import { useGameRating } from '@/hooks/useGameRating';
@@ -254,7 +254,7 @@ export default function GameDetailHighlight({
       {!isDeadGame && (
         <>
           <div className="highlight-card-section">
-            <CatalogRating
+            <DissRating
               rating={rating}
               gameId={game.id?.toString()}
               isLoading={isLoadingRating}
@@ -268,20 +268,20 @@ export default function GameDetailHighlight({
           </div>
 
           <div className="highlight-card-footer">
-            {/* Catalog User Rating */}
+            {/* Diss Rating */}
             <div
-              title={`Catalog User Rating: ${overallAverage}`}
+              title={`User Rating: ${overallAverage}`}
               className="flex items-center"
             >
               <Image
                 src="/images/logo.png"
-                alt="Catalog Logo"
+                alt="Logo"
                 width={24}
                 height={24}
                 className="mr-1"
               />
               <span className="mr-2 hidden sm:inline-block">
-                Catalog Dislike Rating:{' '}
+                Overall Diss Rating:{' '}
               </span>
               <span className="font-semibold text-neutral-200">
                 {overallAverage ? overallAverage : 'N/A'}

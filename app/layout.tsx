@@ -10,9 +10,9 @@ const bricolage = Bricolage_Grotesque({
 });
 
 export const metadata: Metadata = {
-  title: 'Catalog.Games | Discover, Track & Compare Video Games',
+  title: 'Dissgame.click | Dislike the games you hate',
   description:
-    'Catalog.Games is your trusted hub for video game discovery and comparison. Explore trending titles, get accurate insights, and see 100% authentic ratings from real players.',
+    'Dissgame.click is the ultimate anti-award for gamers. Click to DISS buggy releases, overhyped flops, and design disasters — and see which games get roasted the hardest.',
 };
 
 export default function RootLayout({
