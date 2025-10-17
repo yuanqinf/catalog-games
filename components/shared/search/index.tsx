@@ -84,11 +84,6 @@ const SearchBar = () => {
   };
 
   const handleDislikeConfirm = async (dislikeCount = 1) => {
-    if (!isSignedIn || !user) {
-      toast.error('Please sign in to dislike games');
-      return;
-    }
-
     if (!props.selectedIgdbGame) {
       toast.error('No game selected');
       return;

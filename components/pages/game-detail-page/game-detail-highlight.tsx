@@ -138,7 +138,7 @@ export default function GameDetailHighlight({
                 className="flex cursor-pointer items-center gap-1 text-sm text-zinc-400 transition-colors hover:text-zinc-300"
               >
                 <LogIn className="h-3 w-3" />
-                <span>Sign in to track yours</span>
+                <span>Sign in to track your dislikes</span>
               </Button>
             </SignInButton>
           )}
