@@ -19,11 +19,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate igdbGameId type and format
+    if (
+      typeof igdbGameId !== 'number' ||
+      !Number.isInteger(igdbGameId) ||
+      igdbGameId <= 0
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'IGDB Game ID must be a positive integer',
+        },
+        { status: 400 },
+      );
+    }
+
     if (!gameName) {
       return NextResponse.json(
         {
           success: false,
           error: 'Game name is required',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate gameName type and length
+    if (typeof gameName !== 'string') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Game name must be a string',
+        },
+        { status: 400 },
+      );
+    }
+
+    if (gameName.trim().length === 0 || gameName.length > 200) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Game name must be between 1 and 200 characters',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate initialDislikeCount
+    if (
+      typeof initialDislikeCount !== 'number' ||
+      !Number.isInteger(initialDislikeCount) ||
+      initialDislikeCount < 1 ||
+      initialDislikeCount > 100
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Initial dislike count must be an integer between 1 and 100',
         },
         { status: 400 },
       );
