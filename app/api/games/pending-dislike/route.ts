@@ -1,9 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClerkSupabaseClient } from '@/lib/supabase/client';
 import { auth } from '@clerk/nextjs/server';
+import { rateLimit } from '@/lib/api/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 20 requests per minute per IP/user (lower for game submissions)
+    const identifier =
+      request.headers.get('x-forwarded-for') ??
+      request.headers.get('x-real-ip') ??
+      'anonymous';
+    const { success, resetAt } = rateLimit(identifier, {
+      interval: 60000, // 1 minute
+      uniqueTokenPerInterval: 20,
+    });
+
+    if (!success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Too many requests. Please try again later.',
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': '20',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(resetAt).toISOString(),
+            'Retry-After': Math.ceil((resetAt - Date.now()) / 1000).toString(),
+          },
+        },
+      );
+    }
+
     const { userId: clerkUserId } = await auth();
 
     const body = await request.json();

@@ -2,9 +2,38 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GameService } from '@/lib/supabase/client';
 import { SteamIntegrationService } from '@/lib/steam/steam-integration-service';
 import { getAuthenticatedAdmin } from '@/lib/auth/helpers';
+import { rateLimit } from '@/lib/api/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 10 requests per minute (strict for admin operations)
+    const identifier =
+      request.headers.get('x-forwarded-for') ??
+      request.headers.get('x-real-ip') ??
+      'anonymous';
+    const { success, resetAt } = rateLimit(identifier, {
+      interval: 60000, // 1 minute
+      uniqueTokenPerInterval: 10,
+    });
+
+    if (!success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Too many requests. Please try again later.',
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(resetAt).toISOString(),
+            'Retry-After': Math.ceil((resetAt - Date.now()) / 1000).toString(),
+          },
+        },
+      );
+    }
+
     // Check if user is authenticated and is an admin
     const adminResult = await getAuthenticatedAdmin();
     if ('error' in adminResult) {

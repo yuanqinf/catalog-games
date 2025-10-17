@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GameService, createClerkSupabaseClient } from '@/lib/supabase/client';
 import { getAuthenticatedUser } from '@/lib/auth/helpers';
+import { rateLimit } from '@/lib/api/rate-limit';
 
 // GET endpoint to fetch current dislike count for a game
 export async function GET(request: NextRequest) {
@@ -69,6 +70,34 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 100 requests per minute per IP/user
+    const identifier =
+      request.headers.get('x-forwarded-for') ??
+      request.headers.get('x-real-ip') ??
+      'anonymous';
+    const { success, resetAt } = rateLimit(identifier, {
+      interval: 60000, // 1 minute
+      uniqueTokenPerInterval: 100,
+    });
+
+    if (!success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Too many requests. Please try again later.',
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': '100',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(resetAt).toISOString(),
+            'Retry-After': Math.ceil((resetAt - Date.now()) / 1000).toString(),
+          },
+        },
+      );
+    }
+
     const body = await request.json();
     const { igdbId, incrementBy = 1 } = body;
 

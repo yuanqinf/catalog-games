@@ -5,19 +5,41 @@ export async function GET() {
   try {
     const supabase = createClerkSupabaseClient(null);
 
-    // Use database aggregation to sum all dislike counts (efficient, scales well)
-    const { data, error: aggregateError } = await supabase
-      .from('games')
-      .select('dislike_count.sum()');
+    // Use PostgreSQL RPC function for efficient aggregation
+    const { data, error: rpcError } = await supabase.rpc('get_total_dislikes');
 
-    if (aggregateError) {
-      throw new Error(
-        aggregateError.message || 'Failed to fetch total dislikes',
+    if (rpcError) {
+      console.error('RPC function failed, using fallback method:', rpcError);
+
+      // Fallback: Fetch all dislike counts (less efficient but works)
+      const { data: games, error: gamesError } = await supabase
+        .from('games')
+        .select('dislike_count');
+
+      if (gamesError) {
+        throw new Error(gamesError.message || 'Failed to fetch game dislikes');
+      }
+
+      // Calculate total dislike count across all games
+      const totalDislikes =
+        games?.reduce((sum, game) => sum + (game.dislike_count || 0), 0) || 0;
+
+      return NextResponse.json(
+        {
+          success: true,
+          data: {
+            totalDislikes,
+          },
+        },
+        {
+          headers: {
+            'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=59',
+          },
+        },
       );
     }
 
-    // Extract the sum from the response
-    const totalDislikes = data?.[0]?.sum ?? 0;
+    const totalDislikes = data ?? 0;
 
     return NextResponse.json(
       {

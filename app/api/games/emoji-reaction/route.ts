@@ -1,10 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClerkSupabaseClient } from '@/lib/supabase/client';
 import { currentUser } from '@clerk/nextjs/server';
+import { rateLimit } from '@/lib/api/rate-limit';
 
 // POST endpoint to add/increment emoji reaction
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 100 requests per minute per IP/user
+    const identifier =
+      request.headers.get('x-forwarded-for') ??
+      request.headers.get('x-real-ip') ??
+      'anonymous';
+    const { success, resetAt } = rateLimit(identifier, {
+      interval: 60000, // 1 minute
+      uniqueTokenPerInterval: 100,
+    });
+
+    if (!success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Too many requests. Please try again later.',
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': '100',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(resetAt).toISOString(),
+            'Retry-After': Math.ceil((resetAt - Date.now()) / 1000).toString(),
+          },
+        },
+      );
+    }
+
     const body = await request.json();
     const { gameId, emojiName, incrementBy = 1 } = body;
 
