@@ -5,18 +5,19 @@ export async function GET() {
   try {
     const supabase = createClerkSupabaseClient(null);
 
-    // Get sum of all dislike counts from games table
-    const { data: games, error: gamesError } = await supabase
+    // Use database aggregation to sum all dislike counts (efficient, scales well)
+    const { data, error: aggregateError } = await supabase
       .from('games')
-      .select('dislike_count');
+      .select('dislike_count.sum()');
 
-    if (gamesError) {
-      throw new Error(gamesError.message || 'Failed to fetch game dislikes');
+    if (aggregateError) {
+      throw new Error(
+        aggregateError.message || 'Failed to fetch total dislikes',
+      );
     }
 
-    // Calculate total dislike count across all games
-    const totalDislikes =
-      games?.reduce((sum, game) => sum + (game.dislike_count || 0), 0) || 0;
+    // Extract the sum from the response
+    const totalDislikes = data?.[0]?.sum ?? 0;
 
     return NextResponse.json(
       {
