@@ -18,6 +18,69 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate emojiName type
+    if (typeof emojiName !== 'string') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Emoji name must be a string',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate emojiName length
+    if (emojiName.length === 0 || emojiName.length > 50) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Emoji name must be between 1 and 50 characters',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate emojiName format (alphanumeric, hyphens, underscores only)
+    const validEmojiNamePattern = /^[a-zA-Z0-9_-]+$/;
+    if (!validEmojiNamePattern.test(emojiName)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Emoji name can only contain letters, numbers, hyphens, and underscores',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Whitelist validation - only allow predefined emoji names
+    const allowedEmojis = [
+      'angry',
+      'frown',
+      'tired',
+      'dizzy',
+      'surprised',
+      'grin-beam-sweat',
+      'sad-tear',
+      'rolling-eyes',
+      'meh',
+      'grimace',
+      'flushed',
+      'grin-tongue',
+      'heart-crack',
+      'bug',
+      'poop',
+    ];
+    if (!allowedEmojis.includes(emojiName.toLowerCase())) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid emoji name',
+        },
+        { status: 400 },
+      );
+    }
+
     // Validate incrementBy parameter
     if (
       typeof incrementBy !== 'number' ||
