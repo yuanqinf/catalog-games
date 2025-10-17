@@ -99,31 +99,6 @@ export type SuggestionItem =
   | GameDbData
   | IgdbGame;
 
-// News-related types
-export interface NewsArticle {
-  title: string;
-  url: string;
-  thumbnail?: string;
-  publisher?: {
-    name: string;
-    url?: string;
-    favicon?: string;
-  };
-  date?: string;
-  publishedAt?: string;
-  published_at?: string;
-  publish_date?: string;
-  excerpt?: string;
-  authors?: string[];
-}
-
-export interface NewsResponse {
-  success: boolean;
-  data: NewsArticle[];
-  size?: number;
-  totalHits?: number;
-}
-
 // Dead games types
 export interface DeadGameFromAPI {
   id: string;

@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { GameService } from '@/lib/supabase/client';
-import { DeadGamesTableContainer } from '@/components/dead-games/DeadGamesTableContainer';
+import { DeadGamesTableContainer } from '@/components/pages/explore-page/DeadGamesTableContainer';
 import type { GameDbData } from '@/types';
 
 const GAMES_PER_PAGE = 15;
