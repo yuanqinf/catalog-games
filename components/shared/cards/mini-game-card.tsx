@@ -172,7 +172,7 @@ const MiniGameCard = ({
               <div className="flex h-full w-full items-center justify-center">
                 <Gamepad2
                   size={40}
-                  className="text-zinc-500 transition-all duration-300 group-hover:scale-110 group-hover:text-zinc-300"
+                  className="text-gray-500 transition-all duration-300 group-hover:scale-110 group-hover:text-gray-300"
                 />
               </div>
             )}
@@ -183,12 +183,12 @@ const MiniGameCard = ({
               {game.name}
             </h3>
             {game.developers && (
-              <h4 className="truncate text-sm text-zinc-300">
+              <h4 className="truncate text-sm text-gray-300">
                 {game.developers[0]}
               </h4>
             )}
             <div className="flex items-center justify-between gap-2">
-              <div className="mt-1 text-sm text-zinc-400">
+              <div className="mt-1 text-sm text-gray-400">
                 <span className="flex items-center">
                   <TooltipProvider>
                     <div className="flex items-center gap-1">
@@ -215,7 +215,7 @@ const MiniGameCard = ({
                             <div className="cursor-pointer">
                               <MoreHorizontal
                                 size={14}
-                                className="text-zinc-400 hover:text-zinc-200"
+                                className="text-gray-400 hover:text-gray-200"
                               />
                             </div>
                           </TooltipTrigger>

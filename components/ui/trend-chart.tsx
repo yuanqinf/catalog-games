@@ -65,7 +65,7 @@ export function TrendChart({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center">
-            <p className="mb-2 text-sm font-medium text-neutral-400">
+            <p className="mb-2 text-sm font-medium text-gray-400">
               Loading trend data...
             </p>
             {/* Animated placeholder mini chart */}
@@ -97,7 +97,7 @@ export function TrendChart({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center">
-            <p className="mb-1 text-sm font-medium text-neutral-400">
+            <p className="mb-1 text-sm font-medium text-gray-400">
               ⚠️ {errorMessage}
             </p>
             {/* Placeholder mini chart */}

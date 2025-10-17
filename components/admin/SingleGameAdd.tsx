@@ -253,7 +253,7 @@ export const SingleGameAdd = () => {
                   )}
                 </div>
 
-                <p className="mb-2 text-sm text-zinc-400">
+                <p className="mb-2 text-sm text-gray-400">
                   IGDB ID: {idSearchResult.igdbId}
                 </p>
 
@@ -346,10 +346,10 @@ export const SingleGameAdd = () => {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   {idSearchResult.igdbData.summary && (
                     <div className="col-span-2">
-                      <span className="font-medium text-zinc-300">
+                      <span className="font-medium text-gray-300">
                         Summary:
                       </span>
-                      <p className="mt-1 line-clamp-3 text-zinc-400">
+                      <p className="mt-1 line-clamp-3 text-gray-400">
                         {idSearchResult.igdbData.summary}
                       </p>
                     </div>
@@ -357,10 +357,10 @@ export const SingleGameAdd = () => {
 
                   {idSearchResult.igdbData.first_release_date && (
                     <div>
-                      <span className="font-medium text-zinc-300">
+                      <span className="font-medium text-gray-300">
                         Release Date:
                       </span>
-                      <p className="text-zinc-400">
+                      <p className="text-gray-400">
                         {new Date(
                           idSearchResult.igdbData.first_release_date * 1000,
                         ).getFullYear()}
@@ -370,10 +370,10 @@ export const SingleGameAdd = () => {
 
                   {idSearchResult.igdbData.total_rating && (
                     <div>
-                      <span className="font-medium text-zinc-300">
+                      <span className="font-medium text-gray-300">
                         IGDB Rating:
                       </span>
-                      <p className="text-zinc-400">
+                      <p className="text-gray-400">
                         {Math.round(idSearchResult.igdbData.total_rating)}/100
                       </p>
                     </div>

@@ -111,7 +111,7 @@ const UserProfilePage = () => {
             </div>
           </div>
           <blockquote className="text-muted-foreground hidden max-w-md border-l-2 border-gray-600 pl-4 italic lg:block">
-            <p className="text-md leading-relaxed">
+            <p className="text-base leading-relaxed">
               {`"Ultimately, the player's experience is the truth. If the game does not feel right to them, then it is not right."`}
             </p>
             <footer className="mt-3 text-sm font-medium text-gray-300">

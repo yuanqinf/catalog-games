@@ -27,7 +27,7 @@ export const SearchInput = ({
 }: SearchInputProps) => (
   <div className="search-input-wrapper">
     {isLoading ? (
-      <Loader2 className="search-icon animate-spin text-zinc-400" />
+      <Loader2 className="search-icon animate-spin text-gray-400" />
     ) : (
       <SearchIconLucide className="search-icon" />
     )}
@@ -40,7 +40,7 @@ export const SearchInput = ({
       placeholder="Search"
       hideDefaultIcon
       wrapperClassName={`${isActive ? 'w-full' : ''} border-0 p-0 h-full`}
-      className={`${isActive ? '' : 'cursor-pointer'} h-full rounded-md border-0 bg-transparent pr-9 pl-9 text-sm text-zinc-100 shadow-none placeholder:text-zinc-400 focus-visible:ring-0 focus-visible:ring-offset-0`}
+      className={`${isActive ? '' : 'cursor-pointer'} h-full rounded-md border-0 bg-transparent pr-9 pl-9 text-sm text-gray-100 shadow-none placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0`}
     />
     {value && <XIcon className="search-clear-icon" onClick={onClear} />}
   </div>

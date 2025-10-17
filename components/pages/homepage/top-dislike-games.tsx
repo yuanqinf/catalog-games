@@ -308,7 +308,7 @@ const TopDislikeGames = () => {
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 border-zinc-600 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white"
+              className="flex items-center gap-2 border-zinc-600 bg-zinc-800 text-gray-300 hover:bg-zinc-700 hover:text-white"
             >
               <ExternalLink className="h-4 w-4" />
               <span className="text-sm">Explore More</span>
@@ -328,7 +328,7 @@ const TopDislikeGames = () => {
           <div className="hidden h-full rounded-lg bg-zinc-800 p-4 lg:block">
             <div className="mb-4">
               <h3 className="mb-2 font-bold text-red-400">Attack Panel</h3>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-gray-400">
                 Cast your vote to increase the shame!
               </p>
             </div>
@@ -345,7 +345,7 @@ const TopDislikeGames = () => {
   if (!gameOverData || gameOverData.length === 0) {
     return (
       <section className="relative mb-12">
-        <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-zinc-400">
+        <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-gray-400">
           <div className="text-center">
             <ThumbsDown size={48} className="mx-auto mb-4 opacity-50" />
             <p className="mb-2">No disliked games yet</p>
@@ -476,7 +476,7 @@ const TopDislikeGames = () => {
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-zinc-800">
-                          <Gamepad2 size={60} className="text-zinc-500" />
+                          <Gamepad2 size={60} className="text-gray-500" />
                         </div>
                       )}
                     </div>
@@ -501,7 +501,7 @@ const TopDislikeGames = () => {
             <h3 className="mb-2 font-bold text-red-400">
               Top 5 Disliked Games
             </h3>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-gray-400">
               Cast your vote to increase the shame!
             </p>
           </div>
@@ -548,7 +548,7 @@ const TopDislikeGames = () => {
                         />
                       ) : (
                         <div className="flex h-16 w-12 items-center justify-center rounded bg-zinc-700">
-                          <Gamepad2 size={20} className="text-zinc-500" />
+                          <Gamepad2 size={20} className="text-gray-500" />
                         </div>
                       )}
                     </div>
@@ -604,7 +604,7 @@ const TopDislikeGames = () => {
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 border-zinc-600 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white"
+              className="flex items-center gap-2 border-zinc-600 bg-zinc-800 text-gray-300 hover:bg-zinc-700 hover:text-white"
             >
               <ExternalLink className="h-4 w-4" />
               <span className="text-sm">Explore More</span>

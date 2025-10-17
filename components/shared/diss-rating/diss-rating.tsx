@@ -110,7 +110,7 @@ const DissRating: React.FC<DissRatingProps> = ({
         <div className="space-y-2">
           {ratingCategories.map(({ key, label }) => (
             <div key={key} className="flex items-center">
-              <span className="w-20 flex-shrink-0 text-sm text-neutral-400 capitalize">
+              <span className="w-20 flex-shrink-0 text-sm text-gray-400 capitalize">
                 {label}
               </span>
               <div className="flex flex-grow gap-1.5">
@@ -149,7 +149,7 @@ const DissRating: React.FC<DissRatingProps> = ({
         <div key={category} className="group relative flex items-center">
           {showLabels && (
             <span
-              className={`${config.labelWidth} flex-shrink-0 text-neutral-400 capitalize`}
+              className={`${config.labelWidth} flex-shrink-0 text-gray-400 capitalize`}
               title={`${category}: ${categoryRating}/${maxRating}`}
             >
               {category}
@@ -189,7 +189,7 @@ const DissRating: React.FC<DissRatingProps> = ({
           </div>
 
           {!showLabels && (
-            <span className="ml-2 text-xs font-medium text-neutral-500">
+            <span className="ml-2 text-xs font-medium text-gray-500">
               {categoryRating}
             </span>
           )}

@@ -57,7 +57,7 @@ export const DeadGamesTable: React.FC<DeadGamesTableProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={onSortByDate}
-                      className="flex items-center gap-1 px-2 py-1 text-zinc-400 hover:text-zinc-200"
+                      className="flex items-center gap-1 px-2 py-1 text-gray-400 hover:text-gray-200"
                     >
                       Date
                       {sortByDate === 'none' && (
@@ -87,7 +87,7 @@ export const DeadGamesTable: React.FC<DeadGamesTableProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={onSortByReactions}
-                      className="mx-auto flex items-center gap-1 px-2 py-1 text-zinc-400 hover:text-zinc-200"
+                      className="mx-auto flex items-center gap-1 px-2 py-1 text-gray-400 hover:text-gray-200"
                     >
                       <Ghost className="h-4 w-4" />
                       {sortByReactions === 'none' && (
@@ -128,12 +128,12 @@ export const DeadGamesTable: React.FC<DeadGamesTableProps> = ({
                           className="h-full w-full object-cover grayscale transition-all duration-300 group-hover:grayscale-0"
                         />
                       ) : (
-                        <Gamepad2 className="h-6 w-6 text-zinc-500" />
+                        <Gamepad2 className="h-6 w-6 text-gray-500" />
                       )}
                     </div>
                   </TableCell>
                   <TableCell className="px-6 py-6 font-semibold">
-                    <div className="text-base text-white transition-all duration-300 group-hover:scale-105 group-hover:text-zinc-100 sm:text-lg">
+                    <div className="text-base text-white transition-all duration-300 group-hover:scale-105 group-hover:text-gray-100 sm:text-lg">
                       {game.name}
                     </div>
                   </TableCell>
@@ -172,8 +172,8 @@ export const DeadGamesTable: React.FC<DeadGamesTableProps> = ({
                         onReaction(game.id, e);
                       }}
                     >
-                      <Ghost className="mr-2 h-4 w-4 text-zinc-400 transition-colors group-hover:text-white" />
-                      <span className="font-medium text-zinc-300 group-hover:text-white">
+                      <Ghost className="mr-2 h-4 w-4 text-gray-400 transition-colors group-hover:text-white" />
+                      <span className="font-medium text-gray-300 group-hover:text-white">
                         <NumberFlow value={reactionCounts[game.id] || 0} />
                       </span>
                     </Button>

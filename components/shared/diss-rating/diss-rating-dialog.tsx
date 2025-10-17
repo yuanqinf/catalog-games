@@ -190,7 +190,7 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
     <Button
       variant="ghost"
       size="icon"
-      className="size-auto bg-neutral-800 p-1 text-neutral-400 opacity-70 transition-colors duration-200 hover:bg-neutral-700 hover:text-white hover:opacity-100"
+      className="size-auto bg-neutral-800 p-1 text-gray-400 opacity-70 transition-colors duration-200 hover:bg-neutral-700 hover:text-white hover:opacity-100"
       title="Edit ratings"
     >
       <MessageSquarePlus size={16} />
@@ -203,10 +203,10 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
         {ratingCategories.map(({ key, label }) => (
           <div key={key} className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-neutral-700 capitalize">
+              <span className="text-sm font-medium text-gray-700 capitalize">
                 {label}
               </span>
-              <span className="text-sm text-neutral-500">
+              <span className="text-sm text-gray-500">
                 {hoverRating[key as keyof GameRating]}/{maxRating}
               </span>
             </div>

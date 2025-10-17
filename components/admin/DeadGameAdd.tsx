@@ -181,7 +181,7 @@ const DeadGameAdd: React.FC = () => {
                   />
                 ) : (
                   <div className="flex h-20 w-16 items-center justify-center rounded bg-zinc-700">
-                    <Gamepad2 className="h-6 w-6 text-zinc-500" />
+                    <Gamepad2 className="h-6 w-6 text-gray-500" />
                   </div>
                 )}
               </div>
@@ -190,7 +190,7 @@ const DeadGameAdd: React.FC = () => {
                   {searchedGame.name}
                 </h4>
                 {searchedGame.first_release_date && (
-                  <p className="text-sm text-zinc-400">
+                  <p className="text-sm text-gray-400">
                     Released:{' '}
                     {new Date(
                       searchedGame.first_release_date * 1000,
@@ -198,7 +198,7 @@ const DeadGameAdd: React.FC = () => {
                   </p>
                 )}
                 {searchedGame.summary && (
-                  <p className="mt-1 line-clamp-2 text-sm text-zinc-400">
+                  <p className="mt-1 line-clamp-2 text-sm text-gray-400">
                     {searchedGame.summary}
                   </p>
                 )}
@@ -218,7 +218,7 @@ const DeadGameAdd: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Dead Date */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
+            <label className="mb-2 block text-sm font-medium text-gray-300">
               <Calendar className="mr-1 inline h-4 w-4" />
               Dead Date *
             </label>
@@ -233,7 +233,7 @@ const DeadGameAdd: React.FC = () => {
 
           {/* Dead Status */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
+            <label className="mb-2 block text-sm font-medium text-gray-300">
               <AlertTriangle className="mr-1 inline h-4 w-4" />
               Status *
             </label>
@@ -275,7 +275,7 @@ const DeadGameAdd: React.FC = () => {
 
           {/* Initial Reaction Count */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
+            <label className="mb-2 block text-sm font-medium text-gray-300">
               Initial Reaction Count (optional)
             </label>
             <Input
@@ -288,7 +288,7 @@ const DeadGameAdd: React.FC = () => {
               placeholder="0"
               className="border-zinc-600 bg-zinc-800"
             />
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-xs text-gray-500">
               Starting number of user reactions (defaults to 0)
             </p>
           </div>

@@ -83,7 +83,7 @@ export default function GameDetailHighlight({
         <>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <Ghost className="h-5 w-5 text-zinc-300" />
+              <Ghost className="h-5 w-5 text-gray-300" />
               <span className="text-2xl font-bold text-white">
                 <NumberFlow value={ghostCount} />
               </span>
@@ -123,19 +123,19 @@ export default function GameDetailHighlight({
             <div className="flex items-center gap-2">
               <Angry className="h-4 w-4 text-orange-400" />
               {isLoadingUserDislike ? (
-                <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
+                <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
               ) : (
                 <span className="text-lg font-semibold text-orange-400">
                   <NumberFlow value={userDislikeCount} />
                 </span>
               )}
-              <span className="text-xs text-zinc-500">yours</span>
+              <span className="text-xs text-gray-500">yours</span>
             </div>
           ) : (
             <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
               <Button
                 variant="outline"
-                className="flex cursor-pointer items-center gap-1 text-sm text-zinc-400 transition-colors hover:text-zinc-300"
+                className="flex cursor-pointer items-center gap-1 text-sm text-gray-400 transition-colors hover:text-gray-300"
               >
                 <LogIn className="h-3 w-3" />
                 <span>Sign in to track your dislikes</span>
@@ -194,7 +194,7 @@ export default function GameDetailHighlight({
         <div>
           {isLoadingStatistics ? (
             <div className="flex items-center justify-center py-6">
-              <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />
+              <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
             </div>
           ) : (
             <motion.div
@@ -220,9 +220,9 @@ export default function GameDetailHighlight({
                   >
                     <div className="flex items-center gap-3">
                       <div className="rounded-md bg-zinc-700/50 p-2">
-                        <Icon className="h-4 w-4 text-zinc-300" />
+                        <Icon className="h-4 w-4 text-gray-300" />
                       </div>
-                      <span className="text-sm text-zinc-400">
+                      <span className="text-sm text-gray-400">
                         {stat.title}
                       </span>
                     </div>
@@ -234,7 +234,7 @@ export default function GameDetailHighlight({
                         <TooltipProvider delayDuration={0}>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Info className="h-4 w-4 cursor-pointer text-zinc-500 hover:text-zinc-300" />
+                              <Info className="h-4 w-4 cursor-pointer text-gray-500 hover:text-gray-300" />
                             </TooltipTrigger>
                             <TooltipContent>
                               {stat.tooltipContent}
@@ -278,7 +278,7 @@ export default function GameDetailHighlight({
               <span className="mr-2 hidden sm:inline-block">
                 Overall Diss Rating:{' '}
               </span>
-              <span className="font-semibold text-neutral-200">
+              <span className="font-semibold text-gray-200">
                 {overallAverage ? overallAverage : 'N/A'}
               </span>
             </div>

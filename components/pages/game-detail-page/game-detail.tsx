@@ -999,7 +999,7 @@ const GameDetail = ({
                           );
                         }}
                       >
-                        <Ghost className="h-8 w-8 text-zinc-300 drop-shadow-2xl" />
+                        <Ghost className="h-8 w-8 text-gray-300 drop-shadow-2xl" />
                       </motion.div>
                     ))}
                   </AnimatePresence>
@@ -1035,7 +1035,7 @@ const GameDetail = ({
                           icon={emoji.icon}
                           className="!h-5 !w-5 text-yellow-400"
                         />
-                        <span className="text-md font-bold text-white">
+                        <span className="text-base font-bold text-white">
                           <NumberFlow
                             value={emojiReactions[emoji.name] as number}
                           />
@@ -1065,10 +1065,10 @@ const GameDetail = ({
                 // Empty state - encourage first reaction
                 <div className="flex items-center gap-3 rounded-lg border-2 border-dashed border-zinc-700 bg-zinc-900/30 p-3">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-zinc-300">
+                    <p className="text-sm font-medium text-gray-300">
                       No reactions yet
                     </p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-gray-500">
                       Be the first to share how you feel about this game!
                     </p>
                   </div>

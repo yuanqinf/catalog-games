@@ -158,7 +158,7 @@ const GameExplorePage = () => {
           <Button
             variant="ghost"
             onClick={() => switchView('graveyard')}
-            className="absolute top-0 right-0 flex items-center gap-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300"
+            className="absolute top-0 right-0 flex items-center gap-2 text-gray-400 hover:bg-zinc-800 hover:text-gray-300"
           >
             <Ghost className="!h-5 !w-5" />
             <span className="text-lg font-bold">Game Graveyard</span>
@@ -173,7 +173,7 @@ const GameExplorePage = () => {
               <h1 className="bg-clip-text text-4xl font-bold text-gray-400">
                 Game Graveyard
               </h1>
-              <p className="text-md mt-2 text-zinc-400">
+              <p className="text-base mt-2 text-gray-400">
                 Games That Have Shut Down or Been Discontinued
               </p>
             </>
@@ -182,7 +182,7 @@ const GameExplorePage = () => {
               <h1 className="bg-clip-text text-4xl font-bold text-red-400">
                 Top 100 Most Disliked Games
               </h1>
-              <p className="text-md mt-2 text-zinc-400">
+              <p className="text-base mt-2 text-gray-400">
                 The Most Controversial Titles Ranked by Player Reactions
               </p>
             </>

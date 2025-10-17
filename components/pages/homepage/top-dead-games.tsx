@@ -31,7 +31,7 @@ const TopDeadGames = () => {
             variant="outline"
             className="group border-zinc-600 bg-zinc-800/50 px-8 py-6 text-base transition-all duration-200 hover:scale-105 hover:border-zinc-500 hover:bg-zinc-700"
           >
-            <span className="font-semibold text-zinc-300 group-hover:text-white">
+            <span className="font-semibold text-gray-300 group-hover:text-white">
               Explore More Dead Games
             </span>
           </Button>

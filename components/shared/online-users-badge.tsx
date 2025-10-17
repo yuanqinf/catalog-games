@@ -123,7 +123,7 @@ const OnlineUsersBadge = () => {
                   exit={{ opacity: 0, scale: 0 }}
                   transition={{ delay: 0.1, duration: 0.15 }}
                   onClick={handleClose}
-                  className="ml-1 rounded-full p-0.5 text-zinc-400 hover:bg-zinc-700 hover:text-white"
+                  className="ml-1 rounded-full p-0.5 text-gray-400 hover:bg-zinc-700 hover:text-white"
                 >
                   <X className="h-3.5 w-3.5" />
                 </motion.button>

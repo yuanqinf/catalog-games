@@ -256,8 +256,8 @@ export const DeadGamesTableContainer: React.FC<
     return (
       <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50">
         <div className="flex items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
-          <p className="text-zinc-400">Loading dead games...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          <p className="text-gray-400">Loading dead games...</p>
         </div>
       </div>
     );
@@ -266,7 +266,7 @@ export const DeadGamesTableContainer: React.FC<
   // Empty state
   if (!deadGames || deadGames.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-zinc-400">
+      <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-gray-400">
         <div className="text-center">
           <Ghost size={48} className="mx-auto mb-4 opacity-50" />
           <p className="mb-2">The graveyard is empty</p>
@@ -317,7 +317,7 @@ export const DeadGamesTableContainer: React.FC<
               );
             }}
           >
-            <Ghost className="h-8 w-8 text-zinc-300 drop-shadow-2xl" />
+            <Ghost className="h-8 w-8 text-gray-300 drop-shadow-2xl" />
           </motion.div>
         ))}
       </AnimatePresence>

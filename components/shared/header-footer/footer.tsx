@@ -8,24 +8,24 @@ const Footer = () => {
         {/* Divider */}
         <div className="my-6 h-px w-full bg-zinc-700" />
         {/* Copyright and Legal */}
-        <div className="flex flex-col items-center justify-between text-sm text-zinc-400 md:flex-row">
+        <div className="flex flex-col items-center justify-between text-sm text-gray-400 md:flex-row">
           <p>© 2025 Dissgame.click All rights reserved.</p>
           <div className="mt-4 flex gap-6 md:mt-0">
             <Link
               href="/privacy"
-              className="transition-colors hover:text-zinc-300"
+              className="transition-colors hover:text-gray-300"
             >
               Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className="transition-colors hover:text-zinc-300"
+              className="transition-colors hover:text-gray-300"
             >
               Terms of Use
             </Link>
             <Link
               href="/cookies"
-              className="transition-colors hover:text-zinc-300"
+              className="transition-colors hover:text-gray-300"
             >
               Cookie Preferences
             </Link>

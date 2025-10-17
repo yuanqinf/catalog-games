@@ -253,8 +253,8 @@ const GameDetailHeadline = ({
 
                     {/* Ghost Count */}
                     <div className="flex items-center gap-2">
-                      <Ghost className="h-4 w-4 text-zinc-300" />
-                      <span className="text-lg font-bold text-zinc-300">
+                      <Ghost className="h-4 w-4 text-gray-300" />
+                      <span className="text-lg font-bold text-gray-300">
                         <NumberFlow value={ghostCount} />
                       </span>
                     </div>

@@ -171,14 +171,14 @@ export default function ProfileGameCard({
             {userGameDislikeCount !== undefined ? (
               <div className="flex items-center text-red-500">
                 <ThumbsDown size={18} className="mr-1 fill-current" />
-                <span className="text-md font-bold">
+                <span className="text-base font-bold">
                   <NumberFlow value={userGameDislikeCount} />
                 </span>
               </div>
             ) : (
               <div className="flex items-center text-yellow-400">
                 <Star size={18} className="mr-1 fill-current" />
-                <span className="text-md font-bold">
+                <span className="text-base font-bold">
                   {isLoadingRating ? (
                     <Loader2 size={18} className="animate-spin" />
                   ) : (overallAverage || 0) > 0 ? (
@@ -192,7 +192,7 @@ export default function ProfileGameCard({
             {userGameEmojiCount !== undefined && userGameEmojiCount > 0 && (
               <div className="flex items-center text-yellow-400">
                 <SmilePlus size={18} className="mr-1" />
-                <span className="text-md font-bold">
+                <span className="text-base font-bold">
                   <NumberFlow value={userGameEmojiCount} />
                 </span>
               </div>
@@ -201,14 +201,14 @@ export default function ProfileGameCard({
         </div>
 
         {/* Subtext Row */}
-        <div className="mb-3 flex items-center space-x-2 truncate text-xs text-neutral-400">
+        <div className="mb-3 flex items-center space-x-2 truncate text-xs text-gray-400">
           <div className="flex min-w-0 items-center">
             <Hammer size={12} className="mr-1 flex-shrink-0" />
             <span className="truncate" title={game.developers?.[0] ?? ''}>
               {game.developers?.[0]}
             </span>
           </div>
-          <span className="text-neutral-500">•</span>
+          <span className="text-gray-500">•</span>
           <div className="flex min-w-0 items-center">
             <Gamepad2 size={12} className="mr-1 flex-shrink-0" />
             <span className="truncate">
@@ -268,7 +268,7 @@ export default function ProfileGameCard({
           <span className="mr-2 hidden sm:inline-block">
             Overall Diss Rating:{' '}
           </span>
-          <span className="font-semibold text-neutral-200">
+          <span className="font-semibold text-gray-200">
             {overallAverage ? overallAverage : 'N/A'}
           </span>
         </div>

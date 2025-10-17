@@ -14,10 +14,10 @@ export const DissRatingSkeleton: React.FC<DissRatingSkeletonProps> = ({
         {ratingCategories.map(({ key, label }) => (
           <div key={key} className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-neutral-700 capitalize">
+              <span className="text-sm font-medium text-gray-700 capitalize">
                 {label}
               </span>
-              <span className="text-sm text-neutral-500">0/{maxRating}</span>
+              <span className="text-sm text-gray-500">0/{maxRating}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Skeleton className="h-6 w-6" />

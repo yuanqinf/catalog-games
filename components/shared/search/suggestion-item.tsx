@@ -85,13 +85,13 @@ export const SuggestionItem = ({
             />
           ) : (
             <div className="flex h-10 w-8 items-center justify-center rounded bg-zinc-800">
-              <Gamepad2 className="h-4 w-4 text-zinc-400" />
+              <Gamepad2 className="h-4 w-4 text-gray-400" />
             </div>
           )}
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="truncate font-medium">{game.name}</span>
             {developer && (
-              <span className="truncate text-xs text-zinc-400">
+              <span className="truncate text-xs text-gray-400">
                 {developer}
               </span>
             )}
@@ -99,12 +99,12 @@ export const SuggestionItem = ({
           {/* Show ghost count for dead games, dislike count for normal games */}
           {isDead ? (
             ghostCount ? (
-              <div className="flex items-center gap-1 text-xs text-zinc-300">
-                <Ghost className="h-3 w-3 text-zinc-300" fill="currentColor" />
+              <div className="flex items-center gap-1 text-xs text-gray-300">
+                <Ghost className="h-3 w-3 text-gray-300" fill="currentColor" />
                 <NumberFlow value={ghostCount} />
               </div>
             ) : (
-              <div className="flex items-center gap-1 text-xs text-zinc-400">
+              <div className="flex items-center gap-1 text-xs text-gray-400">
                 <Ghost className="h-3 w-3" />
                 <span>RIP</span>
               </div>
@@ -118,7 +118,7 @@ export const SuggestionItem = ({
               <NumberFlow value={dislikeCount} />
             </div>
           ) : (
-            <div className="flex items-center gap-1 text-xs text-zinc-400">
+            <div className="flex items-center gap-1 text-xs text-gray-400">
               <ThumbsDown className="h-3 w-3" />
               <span>Be the first to dislike</span>
             </div>
@@ -136,7 +136,7 @@ export const SuggestionItem = ({
     >
       {simpleItem.text}
       {simpleItem.tag && (
-        <span className="ml-2 rounded-sm bg-zinc-600 px-1.5 py-0.5 text-xs text-zinc-300">
+        <span className="ml-2 rounded-sm bg-zinc-600 px-1.5 py-0.5 text-xs text-gray-300">
           {simpleItem.tag}
         </span>
       )}
