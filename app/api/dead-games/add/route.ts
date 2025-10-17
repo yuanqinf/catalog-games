@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GameService } from '@/lib/supabase/client';
+import { getAuthenticatedAdmin } from '@/lib/auth/helpers';
 
 interface AddDeadGameRequest {
   igdbGameData: {
@@ -18,6 +19,15 @@ interface AddDeadGameRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if user is authenticated and is an admin
+    const adminResult = await getAuthenticatedAdmin();
+    if ('error' in adminResult) {
+      return NextResponse.json(
+        { success: false, error: adminResult.error },
+        { status: adminResult.status },
+      );
+    }
+
     const body: AddDeadGameRequest = await request.json();
     const { igdbGameData, deadDate, deadStatus, userReactionCount = 0 } = body;
 

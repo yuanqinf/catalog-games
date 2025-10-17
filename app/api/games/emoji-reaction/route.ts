@@ -6,13 +6,30 @@ import { currentUser } from '@clerk/nextjs/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { gameId, emojiName } = body;
+    const { gameId, emojiName, incrementBy = 1 } = body;
 
     if (!gameId || !emojiName) {
       return NextResponse.json(
         {
           success: false,
           error: 'Game ID and emoji name are required',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate incrementBy parameter
+    if (
+      typeof incrementBy !== 'number' ||
+      incrementBy < 1 ||
+      incrementBy > 100 ||
+      !Number.isInteger(incrementBy)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Invalid increment value. Must be an integer between 1 and 100',
         },
         { status: 400 },
       );
@@ -55,7 +72,7 @@ export async function POST(request: NextRequest) {
         p_user_id: userData.id,
         p_game_id: gameId,
         p_emoji_name: emojiName,
-        p_increment: 1,
+        p_increment: incrementBy,
       },
     );
 
@@ -76,7 +93,7 @@ export async function POST(request: NextRequest) {
         const { data: updatedData, error: updateError } = await supabase
           .from('game_emoji_reactions')
           .update({
-            count: existingReaction.count + 1,
+            count: existingReaction.count + incrementBy,
             updated_at: new Date().toISOString(),
           })
           .eq('id', existingReaction.id)
@@ -110,7 +127,7 @@ export async function POST(request: NextRequest) {
             game_id: gameId,
             user_id: userData.id,
             emoji_name: emojiName,
-            count: 1,
+            count: incrementBy,
           })
           .select('count')
           .single();

@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GameService } from '@/lib/supabase/client';
 import { SteamIntegrationService } from '@/lib/steam/steam-integration-service';
+import { getAuthenticatedAdmin } from '@/lib/auth/helpers';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if user is authenticated and is an admin
+    const adminResult = await getAuthenticatedAdmin();
+    if ('error' in adminResult) {
+      return NextResponse.json(
+        { success: false, error: adminResult.error },
+        { status: adminResult.status },
+      );
+    }
+
     const { igdbData, bannerFile } = await request.json();
 
     if (!igdbData) {

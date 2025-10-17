@@ -24,6 +24,7 @@ import {
 import type { GameDbData } from '@/types';
 import { unifyPlatforms, type UnifiedPlatform } from '@/utils/platform-utils';
 import { Button } from '@/components/ui/button';
+import { useThrottledDislike } from '@/hooks/useThrottledDislike';
 
 type PlatformIconData =
   | {
@@ -84,8 +85,19 @@ const MiniGameCard = ({
     getPlatformIcon(platform, game),
   );
 
+  // Use throttled dislike hook for optimized API calls
+  const { sendDislike } = useThrottledDislike({
+    onOptimisticUpdate: (increment) => {
+      setLocalDislikeCount((prev) => prev + increment);
+    },
+    onError: (error, increment) => {
+      console.error('Failed to update dislike count:', error);
+      setLocalDislikeCount((prev) => prev - increment);
+    },
+  });
+
   // Handle dislike vote
-  const handleDislikeVote = async (e: React.MouseEvent) => {
+  const handleDislikeVote = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -98,34 +110,8 @@ const MiniGameCard = ({
     setIsClicking(true);
     setTimeout(() => setIsClicking(false), 200);
 
-    // Optimistically update the UI immediately
-    setLocalDislikeCount((prev) => prev + 1);
-
-    // Call backend API to update the database
-    try {
-      const response = await fetch('/api/games/dislike', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          igdbId: game.igdb_id,
-          incrementBy: 1,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        console.error('Failed to update dislike count:', result.error);
-        // Revert optimistic update on error
-        setLocalDislikeCount((prev) => prev - 1);
-      }
-    } catch (error) {
-      console.error('Error calling dislike API:', error);
-      // Revert optimistic update on error
-      setLocalDislikeCount((prev) => prev - 1);
-    }
+    // Send dislike with throttling (always increment by 1)
+    sendDislike(game.igdb_id, 1);
   };
 
   return (

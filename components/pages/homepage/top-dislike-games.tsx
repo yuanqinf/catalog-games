@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import PaginationDots from '@/components/shared/pagination-dots';
 import MiniGameCard from '@/components/shared/cards/mini-game-card';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
+import { useThrottledDislike } from '@/hooks/useThrottledDislike';
 
 // Types for Top Disliked Games data
 interface TopDislikedGame {
@@ -51,17 +52,6 @@ interface UserVoteState {
   continuousClicks: number;
   lastClickTime: number;
   isPowerMode: boolean;
-}
-
-interface DislikeResponse {
-  success: boolean;
-  data?: {
-    gameId: number;
-    igdbId: number;
-    newDislikeCount: number;
-    incrementBy: number;
-  };
-  error?: string;
 }
 
 const TopDislikeGames = () => {
@@ -102,6 +92,20 @@ const TopDislikeGames = () => {
 
   // Transform top disliked games to GameOver format
   const [gameOverData, setGameOverData] = useState<GameOverEntry[]>([]);
+
+  // Use throttled dislike hook for optimized API calls
+  const { sendDislike } = useThrottledDislike({
+    onOptimisticUpdate: (increment) => {
+      // Optimistic update is handled per-game in handleDislikeVote
+    },
+    onError: (error, increment) => {
+      console.error('Failed to update dislike count:', error);
+      // Error handling is done per-game in handleDislikeVote
+    },
+    onSuccess: () => {
+      mutate(); // Refresh data from server
+    },
+  });
 
   // Update gameOverData when top disliked games data changes and trigger animation on dislike increase
   useEffect(() => {
@@ -235,46 +239,8 @@ const TopDislikeGames = () => {
       ),
     );
 
-    // Call backend API to update the database
-    try {
-      const response = await fetch('/api/games/dislike', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          igdbId: parseInt(gameId),
-          incrementBy: increment,
-        }),
-      });
-
-      const result: DislikeResponse = await response.json();
-
-      if (!result.success) {
-        console.error('Failed to update dislike count:', result.error);
-        // Revert optimistic update on error
-        setGameOverData((prev) =>
-          prev.map((game) =>
-            game.id === gameId
-              ? { ...game, dislikeCount: game.dislikeCount - increment }
-              : game,
-          ),
-        );
-      } else {
-        // Success - immediately fetch fresh data from server
-        mutate();
-      }
-    } catch (error) {
-      console.error('Error calling dislike API:', error);
-      // Revert optimistic update on error
-      setGameOverData((prev) =>
-        prev.map((game) =>
-          game.id === gameId
-            ? { ...game, dislikeCount: game.dislikeCount - increment }
-            : game,
-        ),
-      );
-    }
+    // Use throttled hook to send API request
+    sendDislike(parseInt(gameId), increment);
   };
 
   // Reset power mode after 3 seconds of inactivity
@@ -318,7 +284,7 @@ const TopDislikeGames = () => {
   if (error) {
     return (
       <section className="relative mb-12">
-        <div className="flex h-64 items-center justify-center rounded-lg border border-red-800 bg-red-900/20 text-red-400">
+        <div className="flex h-64 items-center justify-center rounded-lg border bg-zinc-800/50">
           <div className="text-center">
             <p className="mb-2">Failed to load top disliked games</p>
             <p className="text-sm opacity-75">Please try again later</p>

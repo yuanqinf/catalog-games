@@ -82,6 +82,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate incrementBy to prevent malicious requests
+    // Allow users to accumulate clicks via throttling, but prevent extreme values
+    if (
+      typeof incrementBy !== 'number' ||
+      incrementBy < 1 ||
+      incrementBy > 100 ||
+      !Number.isInteger(incrementBy)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Invalid increment value. Must be an integer between 1 and 100',
+        },
+        { status: 400 },
+      );
+    }
+
     const gameService = new GameService();
 
     // Get the game by IGDB ID to get the internal ID

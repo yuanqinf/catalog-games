@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -62,6 +62,8 @@ import GameDetailHighlight, { StatisticItem } from './game-detail-highlight';
 import GameDetailHeadline from './game-detail-headline';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 import NumberFlow from '@number-flow/react';
+import { useThrottledDislike } from '@/hooks/useThrottledDislike';
+import { useThrottledEmojiReaction } from '@/hooks/useThrottledEmojiReaction';
 
 import { GameDbData, DeadGameFromAPI } from '@/types';
 import {
@@ -105,18 +107,6 @@ interface UserVoteState {
   isPowerMode: boolean;
 }
 
-// Interface for dislike response
-interface DislikeResponse {
-  success: boolean;
-  data?: {
-    gameId: number;
-    igdbId: number;
-    newDislikeCount: number;
-    incrementBy: number;
-  };
-  error?: string;
-}
-
 const GameDetail = ({
   game,
   deadGame = null,
@@ -141,9 +131,19 @@ const GameDetail = ({
     isPowerMode: false,
   });
 
-  // Track pending votes to batch API calls
-  const pendingVotesRef = useRef<number>(0);
-  const voteTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Use throttled dislike hook for optimized API calls
+  const { sendDislike } = useThrottledDislike({
+    onSuccess: () => {
+      mutateDislike(); // Refresh dislike data from server
+    },
+  });
+
+  // Use throttled emoji reaction hook for optimized API calls
+  const { sendEmojiReaction } = useThrottledEmojiReaction({
+    onSuccess: () => {
+      mutateEmojiReactions(); // Refresh emoji data from server
+    },
+  });
 
   // Fetch dislike count and user dislike count with SWR
   const { data: dislikeData, mutate: mutateDislike } = useSWR<{
@@ -355,31 +355,9 @@ const GameDetail = ({
       false, // Don't revalidate immediately
     );
 
-    // Save to database
-    try {
-      const response = await fetch('/api/games/emoji-reaction', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          gameId: game.id,
-          emojiName: name,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        console.error('Failed to save emoji reaction:', result.error);
-      } else {
-        // Success - immediately fetch fresh data from server
-        mutateEmojiReactions();
-      }
-    } catch (error) {
-      console.error('Error saving emoji reaction:', error);
-      // Revert optimistic update on error
-      mutateEmojiReactions();
+    // Use throttled hook to send API request
+    if (game.id) {
+      sendEmojiReaction(game.id, name);
     }
   };
 
@@ -669,49 +647,8 @@ const GameDetail = ({
       { revalidate: false },
     );
 
-    // Batch API calls - accumulate votes and send after a short delay
-    pendingVotesRef.current += increment;
-
-    // Clear existing timer if any
-    if (voteTimerRef.current) {
-      clearTimeout(voteTimerRef.current);
-    }
-
-    // Set new timer to batch votes (300ms delay)
-    voteTimerRef.current = setTimeout(async () => {
-      const totalIncrement = pendingVotesRef.current;
-      pendingVotesRef.current = 0;
-      voteTimerRef.current = null;
-
-      // Call backend API to update the database with batched votes
-      try {
-        const response = await fetch('/api/games/dislike', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            igdbId: game.igdb_id,
-            incrementBy: totalIncrement,
-          }),
-        });
-
-        const result: DislikeResponse = await response.json();
-
-        if (!result.success) {
-          console.error('Failed to update dislike count:', result.error);
-          // Revert optimistic update on error
-          mutateDislike();
-        } else {
-          // Success - refresh from server
-          mutateDislike();
-        }
-      } catch (error) {
-        console.error('Error calling dislike API:', error);
-        // Revert optimistic update on error
-        mutateDislike();
-      }
-    }, 300);
+    // Use throttled hook to send API request
+    sendDislike(game.igdb_id, increment);
   };
 
   // Handle ghost click for dead games
@@ -792,15 +729,6 @@ const GameDetail = ({
       return () => clearTimeout(timer);
     }
   }, [userVoteState.lastClickTime, userVoteState.isPowerMode]);
-
-  // Cleanup pending vote timer on unmount
-  useEffect(() => {
-    return () => {
-      if (voteTimerRef.current) {
-        clearTimeout(voteTimerRef.current);
-      }
-    };
-  }, []);
 
   // Filter sections with data
   const detailsSections = [

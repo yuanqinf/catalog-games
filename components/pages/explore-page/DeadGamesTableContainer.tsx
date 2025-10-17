@@ -7,6 +7,7 @@ import { Ghost, Loader2 } from 'lucide-react';
 import { DeadGameFromAPI, DeadGame } from '@/types';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 import { DeadGamesTable } from './DeadGamesTable';
+import { useThrottledReaction } from '@/hooks/useThrottledReaction';
 
 interface DeadGamesTableContainerProps {
   limit?: number; // undefined = show all games
@@ -49,6 +50,17 @@ export const DeadGamesTableContainer: React.FC<
     'none' | 'asc' | 'desc'
   >('none');
   const [sortByDate, setSortByDate] = useState<'none' | 'asc' | 'desc'>('desc');
+
+  // Use throttled reaction hook for optimized API calls
+  const { sendReaction } = useThrottledReaction({
+    onError: (error, increment) => {
+      console.error('Failed to update reaction count:', error);
+      // Note: Error handling per-game is done in handleReaction
+    },
+    onSuccess: () => {
+      mutate(); // Refresh data from server
+    },
+  });
 
   // Floating Ghost animations state
   const [floatingGhosts, setFloatingGhosts] = useState<
@@ -161,7 +173,7 @@ export const DeadGamesTableContainer: React.FC<
     }
   }, [deadGamesResponse?.data]);
 
-  const handleReaction = async (deadGameId: string) => {
+  const handleReaction = (deadGameId: string) => {
     // Play pop sound effect
     const audio = new Audio('/sounds/ghost_sound.wav');
     audio.volume = 0.1;
@@ -197,40 +209,8 @@ export const DeadGamesTableContainer: React.FC<
       [deadGameId]: (prev[deadGameId] || 0) + 1,
     }));
 
-    // Call backend API to update the database
-    try {
-      const response = await fetch('/api/dead-games/react', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          deadGameId,
-          incrementBy: 1,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        console.error('Failed to update reaction count:', result.error);
-        // Revert optimistic update on error
-        setReactionCounts((prev) => ({
-          ...prev,
-          [deadGameId]: Math.max((prev[deadGameId] || 0) - 1, 0),
-        }));
-      } else {
-        // Success - immediately fetch fresh data from server
-        mutate();
-      }
-    } catch (error) {
-      console.error('Error calling reaction API:', error);
-      // Revert optimistic update on error
-      setReactionCounts((prev) => ({
-        ...prev,
-        [deadGameId]: Math.max((prev[deadGameId] || 0) - 1, 0),
-      }));
-    }
+    // Use throttled hook to send API request
+    sendReaction(deadGameId, 1);
   };
 
   const handleSortByReactions = () => {
@@ -262,7 +242,7 @@ export const DeadGamesTableContainer: React.FC<
   // Error state
   if (error) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-lg border border-red-800 bg-red-900/20 text-red-400">
+      <div className="flex h-64 items-center justify-center rounded-lg bg-zinc-800/50">
         <div className="text-center">
           <p className="mb-2">Failed to load dead games</p>
           <p className="text-sm opacity-75">Please try again later</p>

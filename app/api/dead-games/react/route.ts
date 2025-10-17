@@ -16,6 +16,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Basic validation to prevent malicious requests
+    // Allow users to click rapidly for satisfaction, but prevent negative/invalid values
+    if (
+      typeof incrementBy !== 'number' ||
+      incrementBy < 1 ||
+      !Number.isInteger(incrementBy)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid increment value. Must be a positive integer',
+        },
+        { status: 400 },
+      );
+    }
+
     const gameService = new GameService();
     const newReactionCount = await gameService.incrementDeadGameReaction(
       deadGameId,
