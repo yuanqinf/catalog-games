@@ -246,11 +246,6 @@ export default function ProfileGameCard({
             rating={rating}
             gameId={game.id?.toString()}
             isLoading={isLoadingRating}
-            isUpcoming={
-              game.first_release_date
-                ? new Date(game.first_release_date) > new Date()
-                : false
-            }
             isProfile
           />
         </div>

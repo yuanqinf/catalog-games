@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Gamepad2, Calendar, ThumbsDown, MoreHorizontal } from 'lucide-react';
+import { Gamepad2, ThumbsDown, MoreHorizontal } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGamepad } from '@fortawesome/free-solid-svg-icons';
 import NumberFlow from '@number-flow/react';
@@ -189,57 +189,47 @@ const MiniGameCard = ({
             )}
             <div className="flex items-center justify-between gap-2">
               <div className="mt-1 text-sm text-zinc-400">
-                {game.first_release_date &&
-                new Date(game.first_release_date).getTime() > Date.now() ? (
-                  <span className="flex items-center">
-                    <Calendar size={14} className="mr-1.5 flex-shrink-0" />
-                    {new Date(game.first_release_date).toLocaleDateString(
-                      'en-CA',
-                    )}
-                  </span>
-                ) : (
-                  <span className="flex items-center">
-                    <TooltipProvider>
-                      <div className="flex items-center gap-1">
-                        {platformIconsData.map((iconData, index) =>
-                          iconData.type === 'fontawesome' ? (
-                            <FontAwesomeIcon
-                              key={index}
-                              icon={iconData.icon}
-                              className="text-sm"
-                            />
-                          ) : (
-                            <Badge
-                              key={index}
-                              variant="outline"
-                              className="h-fit px-1.5 py-0.5 text-xs"
-                            >
-                              {iconData.text}
-                            </Badge>
-                          ),
-                        )}
-                        {hasMorePlatforms && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="cursor-pointer">
-                                <MoreHorizontal
-                                  size={14}
-                                  className="text-zinc-400 hover:text-zinc-200"
-                                />
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <div className="text-xs">
-                                All platforms:{' '}
-                                {game.platforms?.join(', ') || 'Unknown'}
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                      </div>
-                    </TooltipProvider>
-                  </span>
-                )}
+                <span className="flex items-center">
+                  <TooltipProvider>
+                    <div className="flex items-center gap-1">
+                      {platformIconsData.map((iconData, index) =>
+                        iconData.type === 'fontawesome' ? (
+                          <FontAwesomeIcon
+                            key={index}
+                            icon={iconData.icon}
+                            className="text-sm"
+                          />
+                        ) : (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="h-fit px-1.5 py-0.5 text-xs"
+                          >
+                            {iconData.text}
+                          </Badge>
+                        ),
+                      )}
+                      {hasMorePlatforms && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="cursor-pointer">
+                              <MoreHorizontal
+                                size={14}
+                                className="text-zinc-400 hover:text-zinc-200"
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-xs">
+                              All platforms:{' '}
+                              {game.platforms?.join(', ') || 'Unknown'}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  </TooltipProvider>
+                </span>
               </div>
               <p className="flex items-center text-sm font-bold text-red-400 transition-colors duration-300 group-hover:text-red-300">
                 <ThumbsDown

@@ -232,14 +232,8 @@ const GameDetailHeadline = ({
                             className={`h-4 w-4 ${isDeadGame ? 'text-grey-400' : 'text-blue-400'}`}
                           />
                           <span className="text-sm text-gray-400">
-                            {(() => {
-                              const releaseDate = new Date(gameReleaseDate);
-                              const now = new Date();
-                              const isFuture = releaseDate > now;
-                              return isFuture
-                                ? `Expected ${releaseDate.toLocaleDateString()}`
-                                : `Released ${releaseDate.toLocaleDateString()}`;
-                            })()}
+                            Released{' '}
+                            {new Date(gameReleaseDate).toLocaleDateString()}
                           </span>
                         </div>
                       </>
@@ -330,14 +324,8 @@ const GameDetailHeadline = ({
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-blue-400" />
                           <span className="text-sm text-gray-400">
-                            {(() => {
-                              const releaseDate = new Date(gameReleaseDate);
-                              const now = new Date();
-                              const isFuture = releaseDate > now;
-                              return isFuture
-                                ? `Expected ${releaseDate.toLocaleDateString()}`
-                                : `Released ${releaseDate.toLocaleDateString()}`;
-                            })()}
+                            Released{' '}
+                            {new Date(gameReleaseDate).toLocaleDateString()}
                           </span>
                         </div>
                       </>

@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Calendar, SquarePen } from 'lucide-react';
+import { SquarePen } from 'lucide-react';
 import { RATING_BLOCK_COLORS, EMPTY_BLOCK_COLOR } from '@/constants/colors';
 import { ratingCategories } from '@/constants/rating-categories';
 import { Button } from '@/components/ui/button';
@@ -23,20 +23,6 @@ const RatingBlock = styled.div<{
   border-radius: 0.125rem;
 `;
 
-const ComingSoonState: React.FC<{
-  config: (typeof sizeConfig)[keyof typeof sizeConfig];
-}> = ({ config }) => (
-  <div
-    className={`${config.container} flex flex-col items-center justify-center rounded-lg border border-neutral-800 bg-neutral-900/50 p-8`}
-  >
-    <Calendar className="mb-3 h-8 w-8 text-neutral-500" />
-    <h3 className="mb-1 text-lg font-semibold text-neutral-300">Coming Soon</h3>
-    <p className="text-center text-sm text-neutral-500">
-      Ratings will be available after the game releases
-    </p>
-  </div>
-);
-
 interface GameRating {
   story: number;
   music: number;
@@ -54,7 +40,6 @@ interface DissRatingProps {
   showEditButton?: boolean;
   gameId?: string;
   isLoading?: boolean;
-  isUpcoming?: boolean;
   onSaveSuccess?: () => void;
   isProfile?: boolean;
 }
@@ -112,7 +97,6 @@ const DissRating: React.FC<DissRatingProps> = ({
   size = 'md',
   gameId,
   isLoading = false,
-  isUpcoming = false,
   onSaveSuccess,
   isProfile = false,
 }) => {
@@ -137,15 +121,6 @@ const DissRating: React.FC<DissRatingProps> = ({
             </div>
           ))}
         </div>
-      </div>
-    );
-  }
-
-  // Show coming soon state for upcoming games
-  if (isUpcoming) {
-    return (
-      <div className={className}>
-        <ComingSoonState config={config} />
       </div>
     );
   }
