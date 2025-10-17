@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
+import { cacheHeaders } from '@/lib/api/cache-headers';
 
 interface PlaytimeData {
   gameName: string;
@@ -129,7 +130,9 @@ export async function GET(request: NextRequest) {
 
     console.log(`✅ Playtracker result:`, result);
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: cacheHeaders.external(), // Playtime data changes slowly, cache for 24h
+    });
   } catch (error) {
     console.error('❌ Playtracker API error:', error);
     return NextResponse.json(

@@ -3,14 +3,20 @@ import { GameService } from '@/lib/supabase/client';
 import { SteamIntegrationService } from '@/lib/steam/steam-integration-service';
 import { getAuthenticatedAdmin } from '@/lib/auth/helpers';
 import { rateLimit } from '@/lib/api/rate-limit';
+import { getClientIP } from '@/lib/api/get-client-ip';
+import { validateBodySize, BODY_SIZE_LIMITS } from '@/lib/api/body-size-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate request body size (admin routes may include images)
+    const bodySizeError = validateBodySize(
+      request,
+      BODY_SIZE_LIMITS.ADMIN_WITH_IMAGES,
+    );
+    if (bodySizeError) return bodySizeError;
+
     // Rate limiting: 10 requests per minute (strict for admin operations)
-    const identifier =
-      request.headers.get('x-forwarded-for') ??
-      request.headers.get('x-real-ip') ??
-      'anonymous';
+    const identifier = getClientIP(request);
     const { success, resetAt } = rateLimit(identifier, {
       interval: 60000, // 1 minute
       uniqueTokenPerInterval: 10,

@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
     '@fortawesome/free-brands-svg-icons',
     '@fortawesome/react-fontawesome',
   ],
+  // Security: Request body size limits to prevent DOS attacks
+  experimental: {
+    // Maximum request body size (10MB for admin operations with images)
+    // Individual routes can implement stricter limits if needed
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
 };
 
 export default nextConfig;

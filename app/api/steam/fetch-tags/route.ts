@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SteamIntegrationService } from '@/lib/steam/steam-integration-service';
+import { cacheHeaders } from '@/lib/api/cache-headers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,7 +26,9 @@ export async function GET(request: NextRequest) {
 
     console.log(`🏷️ Steam tags result:`, result);
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: cacheHeaders.static(), // Steam tags rarely change
+    });
   } catch (error) {
     console.error('Steam tags fetch API error:', error);
 

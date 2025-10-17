@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GameService } from '@/lib/supabase/client';
 import { igdbClient } from '@/lib/igdb/client';
 import type { IgdbGame } from '@/types';
+import { cacheHeaders } from '@/lib/api/cache-headers';
 
 // Initialize clients
 const gameService = new GameService();
@@ -105,7 +106,9 @@ export async function GET(request: NextRequest) {
 
     console.log(`🎯 Total hybrid results: ${result.totalResults}`);
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: cacheHeaders.stable(), // Search results stable for short periods
+    });
   } catch (error) {
     console.error('Hybrid search API error:', error);
 

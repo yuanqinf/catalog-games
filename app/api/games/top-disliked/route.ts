@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GameService } from '@/lib/supabase/client';
+import { cacheHeaders } from '@/lib/api/cache-headers';
 
 export async function GET(request: Request) {
   try {
@@ -9,10 +10,15 @@ export async function GET(request: Request) {
     const gameService = new GameService();
     const topDislikedGames = await gameService.getTopDislikedGames(limit);
 
-    return NextResponse.json({
-      success: true,
-      data: topDislikedGames,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: topDislikedGames,
+      },
+      {
+        headers: cacheHeaders.dynamic(), // Rankings change frequently with user actions
+      },
+    );
   } catch (error) {
     console.error('Failed to fetch top disliked games:', error);
     return NextResponse.json(

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cacheHeaders } from '@/lib/api/cache-headers';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const googleTrends = require('google-trends-api');
 
@@ -113,7 +114,9 @@ export async function GET(request: NextRequest) {
       geo: geo || 'global',
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: cacheHeaders.custom(1800, 3600), // Cache for 30 min (Google Trends rate limits)
+    });
   } catch (error) {
     console.error('Trends API error:', error);
 

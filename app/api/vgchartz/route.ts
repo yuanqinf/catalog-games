@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { vgchartzClient } from '@/lib/vgchartz/client';
+import { cacheHeaders } from '@/lib/api/cache-headers';
 
 export async function GET(req: NextRequest) {
   const slug = req.nextUrl.searchParams.get('slug');
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, { headers: cacheHeaders.external() });
   } catch (error) {
     console.error('VGChartz error:', error);
 

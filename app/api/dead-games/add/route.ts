@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GameService } from '@/lib/supabase/client';
 import { getAuthenticatedAdmin } from '@/lib/auth/helpers';
 import { rateLimit } from '@/lib/api/rate-limit';
+import { getClientIP } from '@/lib/api/get-client-ip';
 
 interface AddDeadGameRequest {
   igdbGameData: {
@@ -21,10 +22,7 @@ interface AddDeadGameRequest {
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting: 10 requests per minute (strict for admin operations)
-    const identifier =
-      request.headers.get('x-forwarded-for') ??
-      request.headers.get('x-real-ip') ??
-      'anonymous';
+    const identifier = getClientIP(request);
     const { success, resetAt } = rateLimit(identifier, {
       interval: 60000, // 1 minute
       uniqueTokenPerInterval: 10,

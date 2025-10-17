@@ -1,6 +1,7 @@
 // app/api/igdb/search/route.ts
 import { NextResponse } from 'next/server';
 import { igdbClient } from '@/lib/igdb/client';
+import { cacheHeaders } from '@/lib/api/cache-headers';
 
 // Single game search (GET)
 export async function GET(request: Request) {
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
 
   try {
     const results = await igdbClient.searchGames(query);
-    return NextResponse.json(results);
+    return NextResponse.json(results, { headers: cacheHeaders.stable() });
   } catch (err) {
     console.error('IGDB search error:', err);
     return NextResponse.json(

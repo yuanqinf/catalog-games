@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GameService } from '@/lib/supabase/client';
 import { rateLimit } from '@/lib/api/rate-limit';
+import { getClientIP } from '@/lib/api/get-client-ip';
+import { validateBodySize, BODY_SIZE_LIMITS } from '@/lib/api/body-size-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate request body size
+    const bodySizeError = validateBodySize(request, BODY_SIZE_LIMITS.STANDARD);
+    if (bodySizeError) return bodySizeError;
+
     // Rate limiting: 100 requests per minute per IP/user
-    const identifier =
-      request.headers.get('x-forwarded-for') ??
-      request.headers.get('x-real-ip') ??
-      'anonymous';
+    const identifier = getClientIP(request);
     const { success, resetAt } = rateLimit(identifier, {
       interval: 60000, // 1 minute
       uniqueTokenPerInterval: 100,

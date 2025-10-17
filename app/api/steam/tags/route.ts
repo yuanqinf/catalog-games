@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SteamIntegrationService } from '@/lib/steam/steam-integration-service';
+import { cacheHeaders } from '@/lib/api/cache-headers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,15 +33,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      query,
-      result: {
-        steamAppId: result.data.steamAppId,
-        steamName: result.data.steamName,
-        steam_popular_tags: result.data.steam_popular_tags,
+    return NextResponse.json(
+      {
+        success: true,
+        query,
+        result: {
+          steamAppId: result.data.steamAppId,
+          steamName: result.data.steamName,
+          steam_popular_tags: result.data.steam_popular_tags,
+        },
       },
-    });
+      {
+        headers: cacheHeaders.static(), // Steam tags rarely change
+      },
+    );
   } catch (error) {
     console.error('Steam tags API error:', error);
 

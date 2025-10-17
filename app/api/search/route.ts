@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GameService } from '@/lib/supabase/client';
+import { cacheHeaders } from '@/lib/api/cache-headers';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -13,7 +14,9 @@ export async function GET(request: NextRequest) {
     const gameService = new GameService();
     const results = await gameService.searchGames(query.trim());
 
-    return NextResponse.json(results);
+    return NextResponse.json(results, {
+      headers: cacheHeaders.stable(), // Search results are relatively stable
+    });
   } catch (error) {
     console.error('Database search error:', error);
     return NextResponse.json(

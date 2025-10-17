@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { findBestSteamMatch } from '@/lib/steam/find-best-steam-match';
+import { cacheHeaders } from '@/lib/api/cache-headers';
 
 interface SteamSpyResponse {
   appid: number;
@@ -93,15 +94,18 @@ export async function GET(req: NextRequest) {
 
     const averagePlaytime = Math.round(steamSpyData.average_forever / 60);
 
-    return NextResponse.json({
-      source: 'SteamSpy',
-      steamAppId: steamSpyData.appid,
-      steamName: steamSpyData.name,
-      data: {
-        ownersLowerBound,
-        averagePlaytime,
+    return NextResponse.json(
+      {
+        source: 'SteamSpy',
+        steamAppId: steamSpyData.appid,
+        steamName: steamSpyData.name,
+        data: {
+          ownersLowerBound,
+          averagePlaytime,
+        },
       },
-    });
+      { headers: cacheHeaders.external() },
+    );
   } catch (error) {
     console.error('Steam sales API error:', error);
 

@@ -1,6 +1,7 @@
 // app/api/igdb/games/[id]/route.ts
 import { igdbClient } from '@/lib/igdb/client';
 import { NextResponse } from 'next/server';
+import { cacheHeaders } from '@/lib/api/cache-headers';
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Game not found' }, { status: 404 });
     }
 
-    return NextResponse.json(game);
+    return NextResponse.json(game, { headers: cacheHeaders.external() });
   } catch (error) {
     console.error(`Error fetching game with id ${id}:`, error);
     return NextResponse.json(

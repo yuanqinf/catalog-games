@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { igdbClient } from '@/lib/igdb/client';
+import { cacheHeaders } from '@/lib/api/cache-headers';
 
 export async function GET(req: NextRequest) {
   const gameName = req.nextUrl.searchParams.get('name');
@@ -37,15 +38,18 @@ export async function GET(req: NextRequest) {
     const totalLiveViewers =
       await igdbClient.getGameViewersFromTwitchByGameId(twitchGameId);
 
-    return NextResponse.json({
-      source: 'Twitch Helix API',
-      gameId: twitchGameId,
-      gameName: gameName,
-      data: {
-        liveViewers: totalLiveViewers,
-        totalViewers: totalLiveViewers,
+    return NextResponse.json(
+      {
+        source: 'Twitch Helix API',
+        gameId: twitchGameId,
+        gameName: gameName,
+        data: {
+          liveViewers: totalLiveViewers,
+          totalViewers: totalLiveViewers,
+        },
       },
-    });
+      { headers: cacheHeaders.gameStats() },
+    );
   } catch (error) {
     console.error('Twitch API error:', error);
 

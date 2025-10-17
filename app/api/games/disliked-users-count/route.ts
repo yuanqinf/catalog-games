@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClerkSupabaseClient } from '@/lib/supabase/client';
+import { cacheHeaders } from '@/lib/api/cache-headers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,12 +33,17 @@ export async function GET(request: NextRequest) {
     const uniqueUserIds = new Set(dislikedUsers?.map((d) => d.user_id) || []);
     const userCount = uniqueUserIds.size;
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        dislikedUsersCount: userCount,
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          dislikedUsersCount: userCount,
+        },
       },
-    });
+      {
+        headers: cacheHeaders.dynamic(), // User count changes with interactions
+      },
+    );
   } catch (error) {
     console.error('Failed to get disliked users count:', error);
     return NextResponse.json(
