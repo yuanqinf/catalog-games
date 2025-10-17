@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { MessageSquarePlus, ThumbsDown } from 'lucide-react';
 import { GameService } from '@/lib/supabase/client';
 import { toast } from 'sonner';
-import { RatingSkeleton } from './rating-skeleton';
+import { DissRatingSkeleton } from './diss-rating-skeleton';
 import { useGameRating } from '@/hooks/useGameRating';
 import { dark } from '@clerk/themes';
 
@@ -298,7 +298,7 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
 
         <SignedIn>
           {isLoading ? (
-            <RatingSkeleton maxRating={maxRating} />
+            <DissRatingSkeleton maxRating={maxRating} />
           ) : (
             renderRatingContent()
           )}

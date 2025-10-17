@@ -1,11 +1,11 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { ratingCategories } from '@/constants/rating-categories';
 
-interface RatingSkeletonProps {
+interface DissRatingSkeletonProps {
   maxRating?: number;
 }
 
-export const RatingSkeleton: React.FC<RatingSkeletonProps> = ({
+export const DissRatingSkeleton: React.FC<DissRatingSkeletonProps> = ({
   maxRating = 5,
 }) => {
   return (
