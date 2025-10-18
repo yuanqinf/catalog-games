@@ -1,169 +1,43 @@
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import useSWR from 'swr';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ThumbsDown, Gamepad2, Loader2, ExternalLink } from 'lucide-react';
-import NumberFlow from '@number-flow/react';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselApi,
-} from '@/components/ui/carousel';
+import { ThumbsDown, Loader2, ExternalLink } from 'lucide-react';
+import { CarouselApi } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
 import PaginationDots from '@/components/shared/pagination-dots';
 import MiniGameCard from '@/components/shared/cards/mini-game-card';
-import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 import { useThrottledDislike } from '@/hooks/useThrottledDislike';
-
-// Types for Top Disliked Games data
-interface TopDislikedGame {
-  id: number;
-  igdb_id: number;
-  name: string;
-  slug: string;
-  cover_url: string | null;
-  banner_url: string | null;
-  developers: string[] | null;
-  dislike_count: number;
-}
-
-interface TopDislikedGamesResponse {
-  success: boolean;
-  data: TopDislikedGame[];
-  error?: string;
-}
-
-interface GameOverEntry {
-  id: string;
-  title: string;
-  bannerUrl: string;
-  developer: string;
-  dislikeCount: number;
-  rank: number;
-  slug: string;
-}
-
-interface UserVoteState {
-  dailyCost: number;
-  maxDailyCost: number;
-  votesUsed: number;
-  continuousClicks: number;
-  lastClickTime: number;
-  isPowerMode: boolean;
-}
+import { useTopDislikedGames } from './hooks/use-top-disliked-games';
+import { useVoteState } from './hooks/use-vote-state';
+import { FloatingThumbs } from './components/floating-thumbs';
+import { GameCarousel } from './components/game-carousel';
+import { VoteSidebar } from './components/vote-sidebar';
 
 const TopDislikeGames = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const thumbnailRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Animation states - Zoom-style emoji reactions
-  const [floatingThumbs, setFloatingThumbs] = useState<
-    Array<{
-      id: string;
-      gameId: string;
-      timestamp: number;
-      startX: number; // Random start position (0-100%)
-      isPowerMode?: boolean;
-    }>
-  >([]);
-
-  // Fetch top disliked games data from Supabase with short polling for real-time updates
   const {
-    data: topDislikedGamesResponse,
+    gameOverData,
+    setGameOverData,
+    floatingThumbs,
+    setFloatingThumbs,
+    topDislikedGamesResponse,
     error,
     isLoading,
     mutate,
-  } = useSWR<TopDislikedGamesResponse>(
-    '/api/games/top-disliked?limit=10',
-    (url) =>
-      fetch(url).then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch top disliked games');
-        return res.json();
-      }),
-    {
-      revalidateOnFocus: false,
-      refreshInterval: 5000, // Poll every 5 seconds for real-time updates
-      dedupingInterval: 1000, // Reduce deduping to allow more frequent updates
-    },
-  );
+  } = useTopDislikedGames();
 
-  // Transform top disliked games to GameOver format
-  const [gameOverData, setGameOverData] = useState<GameOverEntry[]>([]);
+  const {
+    userVoteState,
+    setUserVoteState,
+    clickingButtons,
+    setClickingButtons,
+  } = useVoteState();
 
-  // Use throttled dislike hook for optimized API calls
   const { sendDislike } = useThrottledDislike({
-    onOptimisticUpdate: (increment) => {
-      // Optimistic update is handled per-game in handleDislikeVote
-    },
-    onError: (error, increment) => {
-      console.error('Failed to update dislike count:', error);
-      // Error handling is done per-game in handleDislikeVote
-    },
-    onSuccess: () => {
-      mutate(); // Refresh data from server
-    },
+    onSuccess: () => mutate(),
   });
-
-  // Update gameOverData when top disliked games data changes and trigger animation on dislike increase
-  useEffect(() => {
-    if (topDislikedGamesResponse?.data) {
-      setGameOverData((prevData) => {
-        const transformedData = topDislikedGamesResponse.data.map(
-          (game, index) => ({
-            id: game.igdb_id.toString(),
-            title: game.name,
-            bannerUrl: game.banner_url || game.cover_url || '',
-            developer: game.developers?.[0] || 'Unknown Developer',
-            dislikeCount: game.dislike_count,
-            rank: index + 1,
-            slug: game.slug,
-          }),
-        );
-
-        // Check for dislike count increases and trigger animation
-        transformedData.forEach((newGame) => {
-          const oldGame = prevData.find((g) => g.id === newGame.id);
-          if (oldGame && oldGame.dislikeCount < newGame.dislikeCount) {
-            // Use the utility function to trigger animations
-            triggerCountIncreaseAnimations(
-              newGame.id,
-              oldGame.dislikeCount,
-              newGame.dislikeCount,
-              setFloatingThumbs,
-              (itemId, animationId) => ({
-                id: animationId,
-                gameId: itemId,
-                timestamp: Date.now(),
-                startX: 20 + Math.random() * 60, // Random horizontal position (20-80%)
-                isPowerMode: false, // No power mode for polling updates
-              }),
-              'thumb-polling',
-            );
-          }
-        });
-
-        return transformedData;
-      });
-    }
-  }, [topDislikedGamesResponse?.data]);
-
-  // User voting state - simplified to just track votes
-  const [userVoteState, setUserVoteState] = useState<UserVoteState>({
-    dailyCost: 0, // Not used anymore
-    maxDailyCost: 0, // Not used anymore
-    votesUsed: 0,
-    continuousClicks: 0,
-    lastClickTime: 0,
-    isPowerMode: false,
-  });
-
-  // Button click animations state
-  const [clickingButtons, setClickingButtons] = useState<Set<string>>(
-    new Set(),
-  );
 
   // Handle dislike vote with Zoom-style reactions and backend API call
   const handleDislikeVote = async (gameId: string) => {
@@ -194,23 +68,20 @@ const TopDislikeGames = () => {
     }
 
     // Update continuous click tracking and power mode
-    let newUserVoteState: UserVoteState;
     setUserVoteState((prev) => {
       const timeSinceLastClick = currentTime - prev.lastClickTime;
-      const isConsecutive = timeSinceLastClick < 5000; // Within 5 seconds
+      const isConsecutive = timeSinceLastClick < 5000;
 
       const newContinuousClicks = isConsecutive ? prev.continuousClicks + 1 : 1;
       const newIsPowerMode = newContinuousClicks >= 10;
 
-      newUserVoteState = {
+      return {
         ...prev,
         votesUsed: prev.votesUsed + 1,
         continuousClicks: newContinuousClicks,
         lastClickTime: currentTime,
         isPowerMode: newIsPowerMode,
       };
-
-      return newUserVoteState;
     });
 
     // Create Zoom-style floating reaction (bigger if in power mode)
@@ -243,29 +114,9 @@ const TopDislikeGames = () => {
     sendDislike(parseInt(gameId), increment);
   };
 
-  // Reset power mode after 3 seconds of inactivity
-  useEffect(() => {
-    if (userVoteState.isPowerMode) {
-      const timer = setTimeout(() => {
-        setUserVoteState((prev) => ({
-          ...prev,
-          isPowerMode: false,
-          continuousClicks: 0,
-        }));
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [userVoteState.lastClickTime, userVoteState.isPowerMode]);
-
-  // Debounced sync with server after user stops clicking (to ensure data consistency)
   useEffect(() => {
     if (userVoteState.lastClickTime > 0) {
-      const syncTimer = setTimeout(() => {
-        // Only sync if it's been 2 seconds since last click
-        mutate();
-      }, 2000);
-
+      const syncTimer = setTimeout(() => mutate(), 2000);
       return () => clearTimeout(syncTimer);
     }
   }, [userVoteState.lastClickTime, mutate]);
@@ -371,120 +222,27 @@ const TopDislikeGames = () => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
         {/* Main Banner - Takes 3/4 of the width on large screens */}
         <div className="relative lg:col-span-3">
-          {/* Framer Motion Zoom-style Floating Reactions - Moved to Banner */}
-          <AnimatePresence>
-            {floatingThumbs
-              .filter((thumb) => thumb.gameId === gameOverData[activeIndex]?.id)
-              .map((thumb) => (
-                <motion.div
-                  key={thumb.id}
-                  className="pointer-events-none absolute z-50"
-                  style={{
-                    left: `${thumb.startX}%`,
-                    bottom: '10%',
-                  }}
-                  initial={{
-                    opacity: 0,
-                    scale: 0.2,
-                    y: 0,
-                  }}
-                  animate={{
-                    opacity: [0, 1, 1, 0],
-                    scale: thumb.isPowerMode
-                      ? [0.2, 2.2, 2.0, 1.3]
-                      : [0.2, 1.5, 1.3, 0.9],
-                    y: thumb.isPowerMode
-                      ? [0, -60, -180, -350]
-                      : [0, -40, -120, -250],
-                  }}
-                  exit={{
-                    opacity: 0,
-                    scale: thumb.isPowerMode ? 1.0 : 0.6,
-                    y: thumb.isPowerMode ? -400 : -300,
-                  }}
-                  transition={{
-                    duration: thumb.isPowerMode ? 3.5 : 2.5,
-                    ease: [0.25, 0.46, 0.45, 0.94],
-                    times: [0, 0.15, 0.6, 1],
-                  }}
-                  onAnimationComplete={() => {
-                    // Auto-remove when animation completes
-                    setFloatingThumbs((prev) =>
-                      prev.filter((t) => t.id !== thumb.id),
-                    );
-                  }}
-                >
-                  <ThumbsDown
-                    className={`drop-shadow-2xl ${
-                      thumb.isPowerMode
-                        ? 'h-12 w-12 text-red-500'
-                        : 'h-8 w-8 text-red-500'
-                    }`}
-                    fill="currentColor"
-                  />
-                </motion.div>
-              ))}
-          </AnimatePresence>
-
-          <Carousel
-            opts={{
-              loop: true,
-              align: 'start',
+          <FloatingThumbs
+            floatingThumbs={floatingThumbs}
+            activeGameId={gameOverData[activeIndex]?.id}
+            onAnimationComplete={(id) => {
+              setFloatingThumbs((prev) => prev.filter((t) => t.id !== id));
             }}
-            className="w-full"
-            setApi={(api) => {
+          />
+
+          <GameCarousel
+            games={gameOverData}
+            activeIndex={activeIndex}
+            onApiReady={(api) => {
               setCarouselApi(api);
               if (api) {
                 api.on('select', () => {
-                  if (api) {
-                    const selectedIndex = api.selectedScrollSnap();
-                    setActiveIndex(selectedIndex);
-                  }
+                  const selectedIndex = api?.selectedScrollSnap();
+                  setActiveIndex(selectedIndex);
                 });
               }
             }}
-          >
-            <CarouselContent>
-              {gameOverData.slice(0, 5).map((game) => (
-                <CarouselItem key={game.id}>
-                  <Link href={`/detail/${game.slug}`}>
-                    <div className="game-card relative aspect-[16/9] cursor-pointer overflow-hidden rounded-lg transition-transform hover:scale-[1.02]">
-                      {/* Dislike Count Overlay */}
-                      <div className="absolute top-4 left-4 z-20 rounded-lg bg-black/70 px-3 py-2">
-                        <div className="flex items-center gap-2">
-                          <ThumbsDown className="h-4 w-4 text-red-400" />
-                          <span className="font-bold text-white">
-                            <NumberFlow value={game.dislikeCount} />
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Rank Badge */}
-                      <div className="absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 font-bold text-white">
-                        #{game.rank}
-                      </div>
-
-                      {/* Banner Image */}
-                      {game.bannerUrl ? (
-                        <Image
-                          src={game.bannerUrl}
-                          alt={`Banner image for ${game.title}`}
-                          width={1920}
-                          height={1080}
-                          className="h-full w-full object-cover"
-                          priority={activeIndex === gameOverData.indexOf(game)}
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-zinc-800">
-                          <Gamepad2 size={60} className="text-gray-500" />
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
+          />
 
           {/* Mobile pagination dots */}
           <PaginationDots
@@ -495,106 +253,18 @@ const TopDislikeGames = () => {
           />
         </div>
 
-        {/* Right Sidebar - Vote/Attack Panel */}
-        <div className="relative hidden overflow-hidden rounded-lg bg-zinc-800 p-4 lg:block">
-          <div className="mb-4">
-            <h3 className="mb-2 font-bold text-red-400">
-              Top 5 Disliked Games
-            </h3>
-            <p className="text-xs text-gray-400">
-              Cast your vote to increase the shame!
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {gameOverData.slice(0, 5).map((game, index) => {
-              // Find the corresponding top disliked game data to get cover_url
-              const topDislikedGame = topDislikedGamesResponse?.data?.find(
-                (tdg) => tdg.igdb_id.toString() === game.id,
-              );
-              const coverUrl = topDislikedGame?.cover_url;
-
-              return (
-                <div
-                  key={`vote-${game.id}`}
-                  ref={(el) => {
-                    thumbnailRefs.current[index] = el;
-                  }}
-                  className={`group relative cursor-pointer rounded-md border-2 p-3 transition-all ${
-                    activeIndex === index
-                      ? 'border-red-500 bg-red-900/20'
-                      : 'border-zinc-700 hover:border-zinc-600 hover:bg-zinc-700/50'
-                  }`}
-                  onClick={() => {
-                    setActiveIndex(index);
-                    carouselApi?.scrollTo(index);
-                  }}
-                >
-                  {/* Rank */}
-                  <div className="absolute -top-2 -left-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
-                    #{game.rank}
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {/* Cover Image */}
-                    <div className="flex-shrink-0">
-                      {coverUrl ? (
-                        <Image
-                          src={coverUrl}
-                          alt={`${game.title} cover`}
-                          width={48}
-                          height={64}
-                          className="h-16 w-12 rounded object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-16 w-12 items-center justify-center rounded bg-zinc-700">
-                          <Gamepad2 size={20} className="text-gray-500" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Game Info */}
-                    <div className="min-w-0 flex-1">
-                      <h4 className="truncate text-sm font-medium">
-                        {game.title}
-                      </h4>
-                      <div className="mt-1 flex items-center gap-1 text-red-400">
-                        <ThumbsDown size={12} />
-                        <span className="text-xs font-bold">
-                          <NumberFlow value={game.dislikeCount} />
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Vote Button */}
-                    <motion.div
-                      animate={
-                        clickingButtons.has(game.id)
-                          ? {
-                              scale: [1, 0.8, 1.1, 1],
-                            }
-                          : {}
-                      }
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Button
-                        size="sm"
-                        // variant="destructive"
-                        className={`relative h-8 w-8 flex-shrink-0 bg-red-500 p-0 transition-all hover:scale-110 hover:bg-red-500`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDislikeVote(game.id);
-                        }}
-                      >
-                        <ThumbsDown className="text-white" />
-                      </Button>
-                    </motion.div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <VoteSidebar
+          games={gameOverData}
+          topDislikedGamesData={topDislikedGamesResponse?.data}
+          activeIndex={activeIndex}
+          clickingButtons={clickingButtons}
+          thumbnailRefs={thumbnailRefs}
+          onGameClick={(index) => {
+            setActiveIndex(index);
+            carouselApi?.scrollTo(index);
+          }}
+          onVote={handleDislikeVote}
+        />
       </div>
 
       {/* Top 6 - 10 Disliked Games */}
