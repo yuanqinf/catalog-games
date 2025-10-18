@@ -3,8 +3,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import useSWR from 'swr';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2,
   Hammer,
@@ -15,38 +13,14 @@ import {
   UsersRound,
   Trophy,
   ArrowLeft,
-  ThumbsDown,
   Joystick,
   SmilePlus,
-  Ghost,
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-import {
-  faFaceGrinTongue,
-  faFaceGrinBeamSweat,
-  faFaceSurprise,
-  faFaceSadTear,
-  faFaceRollingEyes,
-  faFaceMeh,
-  faFaceGrimace,
-  faFaceAngry,
-  faFaceDizzy,
-  faFaceFrown,
-  faFaceFlushed,
-  faFaceTired,
-  faHeartCrack,
-  faBug,
-  faPoop,
-} from '@fortawesome/free-solid-svg-icons';
 import { dark } from '@clerk/themes';
 
 import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverTrigger } from '@/components/ui/popover';
 import {
   Dialog,
   DialogContent,
@@ -55,57 +29,29 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';
+import { SignInButton, useUser } from '@clerk/nextjs';
 import GameDetailSection from '@/components/pages/game-detail-page/game-detail-section';
 
 import GameDetailHighlight, { StatisticItem } from './game-detail-highlight';
 import GameDetailHeadline from './game-detail-headline';
-import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 import NumberFlow from '@number-flow/react';
-import { useThrottledDislike } from '@/hooks/useThrottledDislike';
-import { useThrottledEmojiReaction } from '@/hooks/useThrottledEmojiReaction';
 
 import { GameDbData, DeadGameFromAPI } from '@/types';
 import {
-  fetchSalesData,
   formatSalesValue,
   getSalesLabel,
   getSourceName,
-  type SalesData,
 } from '@/lib/sales/get-sales-data';
+
 import {
-  fetchSteamSalesDataFromSteamSpy,
-  SteamSpyData,
-} from '@/lib/steam/steamspy';
-import {
-  getPlaytrackerData,
-  PlaytimeData,
-} from '@/lib/playernet/get-playernet-data';
-
-// Interface for floating thumbs animation
-interface FloatingThumb {
-  id: string;
-  timestamp: number;
-  startX: number;
-  startY: number;
-  isPowerMode?: boolean;
-}
-
-// Interface for floating emoji animation
-interface FloatingEmoji {
-  id: string;
-  icon: any;
-  timestamp: number;
-  startX: number;
-  startY: number;
-}
-
-// Interface for user vote state
-interface UserVoteState {
-  continuousClicks: number;
-  lastClickTime: number;
-  isPowerMode: boolean;
-}
+  useGameReactions,
+  type FloatingThumb,
+  type FloatingEmoji,
+} from './hooks/use-game-reactions';
+import { useGameStats } from './hooks/use-game-stats';
+import { useDeadGameReactions } from './hooks/use-dead-game-reactions';
+import { FloatingAnimations } from './components/floating-animations';
+import { EmojiPickerContent, availableEmojis } from './components/emoji-picker';
 
 const GameDetail = ({
   game,
@@ -117,204 +63,52 @@ const GameDetail = ({
   const { isSignedIn } = useUser();
   const isDeadGame = !!deadGame;
 
-  // Floating thumbs animation state
-  const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
-  const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
   const [clickingButton, setClickingButton] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [showSignInDialog, setShowSignInDialog] = useState(false);
 
-  // User voting state for power mode
-  const [userVoteState, setUserVoteState] = useState<UserVoteState>({
-    continuousClicks: 0,
-    lastClickTime: 0,
-    isPowerMode: false,
-  });
+  const reactions = useGameReactions(game.id, game.dislike_count ?? undefined);
+  const stats = useGameStats(game);
+  const deadReactions = useDeadGameReactions(deadGame, isDeadGame);
 
-  // Use throttled dislike hook for optimized API calls
-  const { sendDislike } = useThrottledDislike({
-    onSuccess: () => {
-      mutateDislike(); // Refresh dislike data from server
-    },
-  });
-
-  // Use throttled emoji reaction hook for optimized API calls
-  const { sendEmojiReaction } = useThrottledEmojiReaction({
-    onSuccess: () => {
-      mutateEmojiReactions(); // Refresh emoji data from server
-    },
-  });
-
-  // Fetch dislike count and user dislike count with SWR
-  const { data: dislikeData, mutate: mutateDislike } = useSWR<{
-    dislikeCount: number;
-    userDislikeCount: number;
-  }>(
-    game.id ? ['game-dislike', game.id] : null,
-    async ([, gameId]: [string, number]) => {
-      const [dislikeResponse, userDislikeResponse] = await Promise.all([
-        fetch(`/api/games/dislike?gameId=${gameId}`),
-        fetch(`/api/users/dislikes?gameId=${gameId}`),
-      ]);
-
-      const dislikeResult = await dislikeResponse.json();
-      const userDislikeResult = await userDislikeResponse.json();
-
-      return {
-        dislikeCount: dislikeResult.success
-          ? dislikeResult.data.dislikeCount
-          : 0,
-        userDislikeCount: userDislikeResult.success
-          ? userDislikeResult.data.userDislikeCount
-          : 0,
-      };
-    },
-    {
-      revalidateOnFocus: false,
-      refreshInterval: 5000,
-      dedupingInterval: 2000,
-      revalidateOnReconnect: false,
-      onSuccess: (newData, key, config) => {
-        // Trigger animations when count increases from polling
-        if (
-          dislikeData &&
-          newData.dislikeCount > dislikeData.dislikeCount &&
-          game.id
-        ) {
-          triggerCountIncreaseAnimations(
-            game.id.toString(),
-            dislikeData.dislikeCount,
-            newData.dislikeCount,
-            setFloatingThumbs,
-            (itemId, animationId) => ({
-              id: animationId,
-              timestamp: Date.now(),
-              startX: Math.random() * 70 + 15,
-              startY: Math.random() * 30 + 60,
-              isPowerMode: false,
-            }),
-            'thumb-polling',
-          );
-        }
-      },
-    },
-  );
-
-  const dislikeCount = dislikeData?.dislikeCount ?? game.dislike_count ?? 0;
-  const userDislikeCount = dislikeData?.userDislikeCount ?? 0;
-  const isLoadingUserDislike = !dislikeData;
-
-  // Floating ghosts animation state for dead games
-  const [floatingGhosts, setFloatingGhosts] = useState<
-    Array<{
-      id: string;
-      timestamp: number;
-      startX: number;
-      startY: number;
-    }>
-  >([]);
-
-  // Fetch ghost reaction count for dead games with SWR polling
-  const { data: ghostData, mutate: mutateGhost } = useSWR<{
-    ghostCount: number;
-  }>(
-    isDeadGame && deadGame?.id ? ['dead-game-ghost', deadGame.id] : null,
-    async ([, deadGameId]: [string, string]) => {
-      const response = await fetch(`/api/dead-games`);
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error('Failed to fetch ghost count');
-      }
-
-      const currentDeadGame = result.data.find(
-        (dg: DeadGameFromAPI) => dg.id === deadGameId,
-      );
-      return {
-        ghostCount: currentDeadGame?.user_reaction_count ?? 0,
-      };
-    },
-    {
-      revalidateOnFocus: false,
-      refreshInterval: isDeadGame ? 5000 : 0,
-      dedupingInterval: 2000,
-      revalidateOnReconnect: false,
-      onSuccess: (newData, key, config) => {
-        // Trigger ghost animations when count increases from polling
-        if (
-          ghostData &&
-          newData.ghostCount > ghostData.ghostCount &&
-          deadGame?.id
-        ) {
-          triggerCountIncreaseAnimations(
-            deadGame.id,
-            ghostData.ghostCount,
-            newData.ghostCount,
-            setFloatingGhosts,
-            (itemId, animationId) => ({
-              id: animationId,
-              timestamp: Date.now(),
-              startX: Math.random() * 70 + 15,
-              startY: Math.random() * 30 + 60,
-            }),
-            'ghost-polling',
-          );
-        }
-      },
-    },
-  );
-
-  const ghostCount =
-    ghostData?.ghostCount ?? deadGame?.user_reaction_count ?? 0;
-
-  const [salesData, setSalesData] = useState<SalesData>({
-    value: null,
-    source: null,
-  });
-  const [isLoadingSales, setIsLoadingSales] = useState(true);
-  const [twitchLiveViewers, setTwitchLiveViewers] = useState<number | null>(
-    null,
-  );
-  const [isLoadingTwitch, setIsLoadingTwitch] = useState(true);
-  const [steamCurrentPlayers, setSteamCurrentPlayers] = useState<number | null>(
-    null,
-  );
-  const [isLoadingSteamPlayers, setIsLoadingSteamPlayers] = useState(true);
-
-  const [steamSpyData, setSteamSpyData] = useState<SteamSpyData | null>(null);
-  const [isLoadingSteamSpy, setIsLoadingSteamSpy] = useState(true);
-
-  const [playtrackerData, setPlaytrackerData] = useState<PlaytimeData | null>(
-    null,
-  );
-  const [isLoadingPlaytracker, setIsLoadingPlaytracker] = useState(true);
-
-  // Fetch emoji reactions with real-time polling using SWR
   const {
-    data: emojiReactionsData,
-    mutate: mutateEmojiReactions,
-    isLoading: isLoadingEmojiReactions,
-  } = useSWR(
-    game.id ? `/api/games/emoji-reaction?gameId=${game.id}` : null,
-    (url) =>
-      fetch(url).then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch emoji reactions');
-        return res.json();
-      }),
-    {
-      revalidateOnFocus: false,
-      refreshInterval: 5000, // Poll every 5 seconds for real-time updates
-      dedupingInterval: 1000,
-    },
-  );
+    dislikeCount,
+    userDislikeCount,
+    emojiReactions,
+    floatingThumbs,
+    floatingEmojis,
+    userVoteState,
+    isLoadingEmojiReactions,
+    isLoadingUserDislike,
+    setFloatingThumbs,
+    setFloatingEmojis,
+    setUserVoteState,
+    sendDislike,
+    sendEmojiReaction,
+    mutateDislike,
+    mutateEmojiReactions,
+  } = reactions;
 
-  const emojiReactions = emojiReactionsData?.success
-    ? emojiReactionsData.data
-    : {};
+  const {
+    salesData,
+    isLoadingSales,
+    twitchLiveViewers,
+    isLoadingTwitch,
+    steamCurrentPlayers,
+    isLoadingSteamPlayers,
+    steamSpyData,
+    isLoadingSteamSpy,
+    playtrackerData,
+    isLoadingPlaytracker,
+  } = stats;
+
+  const { ghostCount, floatingGhosts, setFloatingGhosts, mutateGhost } =
+    deadReactions;
+
   const hasEmojiReactions = Object.keys(emojiReactions).length > 0;
 
   // Handle emoji reaction click
-  const handleEmojiClick = async (icon: any, name: string) => {
+  const handleEmojiClick = async (icon: unknown, name: string) => {
     // Check if user is signed in
     if (!isSignedIn) {
       setShowSignInDialog(true);
@@ -342,8 +136,12 @@ const GameDetail = ({
 
     // Optimistically update UI immediately using SWR's mutate
     mutateEmojiReactions(
-      (currentData: any) => {
-        if (!currentData?.success) return currentData;
+      (
+        currentData:
+          | { success?: boolean; data?: Record<string, number> }
+          | undefined,
+      ) => {
+        if (!currentData?.success || !currentData.data) return currentData;
         return {
           ...currentData,
           data: {
@@ -360,238 +158,6 @@ const GameDetail = ({
       sendEmojiReaction(game.id, name);
     }
   };
-
-  // Get emoji icon by name
-  const getEmojiIcon = (name: string) => {
-    const emojiMap: Record<string, any> = {
-      angry: faFaceAngry,
-      frown: faFaceFrown,
-      tired: faFaceTired,
-      dizzy: faFaceDizzy,
-      surprised: faFaceSurprise,
-      'grin-beam-sweat': faFaceGrinBeamSweat,
-      'sad-tear': faFaceSadTear,
-      'rolling-eyes': faFaceRollingEyes,
-      meh: faFaceMeh,
-      grimace: faFaceGrimace,
-      flushed: faFaceFlushed,
-      'grin-tongue': faFaceGrinTongue,
-      'heart-crack': faHeartCrack,
-      bug: faBug,
-      poop: faPoop,
-    };
-    return emojiMap[name];
-  };
-
-  // Available emoji reactions
-  const availableEmojis = [
-    { icon: faFaceAngry, name: 'angry' },
-    { icon: faFaceFrown, name: 'frown' },
-    { icon: faFaceTired, name: 'tired' },
-    { icon: faFaceDizzy, name: 'dizzy' },
-    { icon: faFaceSurprise, name: 'surprised' },
-    { icon: faFaceGrinBeamSweat, name: 'grin-beam-sweat' },
-    { icon: faFaceSadTear, name: 'sad-tear' },
-    { icon: faFaceRollingEyes, name: 'rolling-eyes' },
-    { icon: faFaceMeh, name: 'meh' },
-    { icon: faFaceGrimace, name: 'grimace' },
-    { icon: faFaceFlushed, name: 'flushed' },
-    { icon: faFaceGrinTongue, name: 'grin-tongue' },
-    { icon: faHeartCrack, name: 'heart-crack' },
-    { icon: faBug, name: 'bug' },
-    { icon: faPoop, name: 'poop' },
-  ];
-
-  // Render emoji picker popover content
-  const renderEmojiPickerContent = () => (
-    <PopoverContent className="w-80 p-4" align="start">
-      <div className="grid grid-cols-5 gap-2">
-        {availableEmojis.map((item) => (
-          <Button
-            key={item.name}
-            variant="ghost"
-            size="icon"
-            onClick={() => handleEmojiClick(item.icon, item.name)}
-            className="h-12 w-12 transition-transform hover:scale-125"
-          >
-            <FontAwesomeIcon
-              icon={item.icon}
-              className="!h-6 !w-6 text-yellow-400"
-            />
-          </Button>
-        ))}
-      </div>
-    </PopoverContent>
-  );
-
-  // Fetch sales data with fallback logic
-  useEffect(() => {
-    let isMounted = true;
-    let salesTimeoutId: NodeJS.Timeout | null = null;
-    let twitchController: AbortController | null = null;
-    let twitchTimeoutId: NodeJS.Timeout | null = null;
-    let steamController: AbortController | null = null;
-    let steamTimeoutId: NodeJS.Timeout | null = null;
-
-    const loadSalesData = async () => {
-      setIsLoadingSales(true);
-
-      try {
-        // 8 second timeout for sales data
-        const timeoutPromise = new Promise((_, reject) => {
-          salesTimeoutId = setTimeout(
-            () => reject(new Error('Sales data request timeout')),
-            8000,
-          );
-        });
-        const data = await Promise.race([
-          fetchSalesData(game.slug, game.name),
-          timeoutPromise,
-        ]);
-        if (isMounted) {
-          setSalesData(data as SalesData);
-        }
-      } catch (error) {
-        // Only log non-timeout errors to reduce noise
-        if (error instanceof Error && !error.message.includes('timeout')) {
-          console.error('Failed to fetch sales data:', error);
-        }
-        if (isMounted) {
-          setSalesData({ value: null, source: null });
-        }
-      } finally {
-        if (salesTimeoutId) clearTimeout(salesTimeoutId);
-        if (isMounted) {
-          setIsLoadingSales(false);
-        }
-      }
-    };
-
-    const loadTwitchData = async () => {
-      if (!game.name) return;
-
-      setIsLoadingTwitch(true);
-      try {
-        // 5 second timeout for Twitch
-        twitchController = new AbortController();
-        twitchTimeoutId = setTimeout(() => twitchController?.abort(), 5000);
-
-        const response = await fetch(
-          `/api/twitch?name=${encodeURIComponent(game.name)}`,
-          { signal: twitchController.signal },
-        );
-        if (twitchTimeoutId) clearTimeout(twitchTimeoutId);
-
-        if (response.ok && isMounted) {
-          const result = await response.json();
-          setTwitchLiveViewers(result.data?.liveViewers || null);
-        }
-      } catch (error) {
-        if (isMounted && (error as Error).name !== 'AbortError') {
-          console.error('Failed to fetch Twitch data:', error);
-          setTwitchLiveViewers(null);
-        }
-      } finally {
-        if (twitchTimeoutId) clearTimeout(twitchTimeoutId);
-        if (isMounted) {
-          setIsLoadingTwitch(false);
-        }
-      }
-    };
-
-    const loadSteamCurrentPlayers = async () => {
-      if (!game.steam_app_id) {
-        setIsLoadingSteamPlayers(false);
-        return;
-      }
-
-      setIsLoadingSteamPlayers(true);
-      try {
-        // 3 second timeout for Steam players (should be fast)
-        steamController = new AbortController();
-        steamTimeoutId = setTimeout(() => steamController?.abort(), 3000);
-
-        const response = await fetch(
-          `/api/steam/current-players?appId=${game.steam_app_id}`,
-          { signal: steamController.signal },
-        );
-        if (steamTimeoutId) clearTimeout(steamTimeoutId);
-
-        if (response.ok && isMounted) {
-          const result = await response.json();
-          setSteamCurrentPlayers(result.playerCount || null);
-        } else if (isMounted) {
-          setSteamCurrentPlayers(null);
-        }
-      } catch (error) {
-        if (isMounted && (error as Error).name !== 'AbortError') {
-          console.error('Failed to fetch Steam current players:', error);
-          setSteamCurrentPlayers(null);
-        }
-      } finally {
-        if (steamTimeoutId) clearTimeout(steamTimeoutId);
-        if (isMounted) {
-          setIsLoadingSteamPlayers(false);
-        }
-      }
-    };
-
-    const loadSteamSpyData = async () => {
-      if (!game.name) return;
-      setIsLoadingSteamSpy(true);
-      try {
-        const data = await fetchSteamSalesDataFromSteamSpy(game.name);
-        if (isMounted) {
-          setSteamSpyData(data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch Steam Spy data:', error);
-        if (isMounted) {
-          setSteamSpyData(null);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingSteamSpy(false);
-        }
-      }
-    };
-
-    const loadPlaytrackerData = async () => {
-      if (!game.name) return;
-      setIsLoadingPlaytracker(true);
-      try {
-        const data = await getPlaytrackerData(game.name);
-        if (isMounted) {
-          setPlaytrackerData(data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch Playtracker data:', error);
-        if (isMounted) {
-          setPlaytrackerData(null);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingPlaytracker(false);
-        }
-      }
-    };
-
-    loadSalesData();
-    loadTwitchData();
-    loadSteamCurrentPlayers();
-    loadSteamSpyData();
-    loadPlaytrackerData();
-
-    // Cleanup function
-    return () => {
-      isMounted = false;
-      if (salesTimeoutId) clearTimeout(salesTimeoutId);
-      if (twitchController) twitchController.abort();
-      if (twitchTimeoutId) clearTimeout(twitchTimeoutId);
-      if (steamController) steamController.abort();
-      if (steamTimeoutId) clearTimeout(steamTimeoutId);
-    };
-  }, [game.slug, game.name, game.steam_app_id]);
 
   // Handle dislike vote with floating animation
   const handleDislikeVote = async () => {
@@ -637,7 +203,9 @@ const GameDetail = ({
 
     // Optimistically update SWR cache immediately
     mutateDislike(
-      (current) =>
+      (
+        current: { dislikeCount: number; userDislikeCount: number } | undefined,
+      ) =>
         current
           ? {
               dislikeCount: current.dislikeCount + increment,
@@ -728,7 +296,11 @@ const GameDetail = ({
 
       return () => clearTimeout(timer);
     }
-  }, [userVoteState.lastClickTime, userVoteState.isPowerMode]);
+  }, [
+    userVoteState.lastClickTime,
+    userVoteState.isPowerMode,
+    setUserVoteState,
+  ]);
 
   // Filter sections with data
   const detailsSections = [
@@ -864,146 +436,15 @@ const GameDetail = ({
                   priority
                 />
 
-                {/* Floating Thumbs Down Animations */}
-                <AnimatePresence>
-                  {floatingThumbs.map((thumb) => (
-                    <motion.div
-                      key={thumb.id}
-                      className="pointer-events-none absolute z-50"
-                      style={{
-                        left: `${thumb.startX}%`,
-                        top: `${thumb.startY}%`,
-                      }}
-                      initial={{
-                        opacity: 0,
-                        scale: 0.2,
-                        y: 0,
-                      }}
-                      animate={{
-                        opacity: [0, 1, 1, 0],
-                        scale: thumb.isPowerMode
-                          ? [0.2, 2.2, 2.0, 1.3]
-                          : [0.2, 1.5, 1.3, 0.9],
-                        y: thumb.isPowerMode
-                          ? [0, -60, -180, -350]
-                          : [0, -40, -120, -250],
-                      }}
-                      exit={{
-                        opacity: 0,
-                        scale: thumb.isPowerMode ? 1.0 : 0.6,
-                        y: thumb.isPowerMode ? -400 : -300,
-                      }}
-                      transition={{
-                        duration: thumb.isPowerMode ? 3.5 : 2.5,
-                        ease: [0.25, 0.46, 0.45, 0.94],
-                        times: [0, 0.15, 0.6, 1],
-                      }}
-                      onAnimationComplete={() => {
-                        setFloatingThumbs((prev) =>
-                          prev.filter((t) => t.id !== thumb.id),
-                        );
-                      }}
-                    >
-                      <ThumbsDown
-                        className={`drop-shadow-2xl ${
-                          thumb.isPowerMode
-                            ? 'h-12 w-12 text-red-500'
-                            : 'h-8 w-8 text-red-500'
-                        }`}
-                        fill="currentColor"
-                      />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-
-                {/* Floating Emoji Animations */}
-                <AnimatePresence>
-                  {floatingEmojis.map((emoji) => (
-                    <motion.div
-                      key={emoji.id}
-                      className="pointer-events-none absolute z-50"
-                      style={{
-                        left: `${emoji.startX}%`,
-                        top: `${emoji.startY}%`,
-                      }}
-                      initial={{
-                        opacity: 0,
-                        scale: 0.2,
-                        y: 0,
-                        rotate: -20,
-                      }}
-                      animate={{
-                        opacity: [0, 1, 1, 0],
-                        scale: [0.2, 1.8, 1.5, 1.0],
-                        y: [0, -50, -150, -280],
-                        rotate: [0, 10, -10, 0],
-                      }}
-                      exit={{
-                        opacity: 0,
-                        scale: 0.8,
-                        y: -320,
-                      }}
-                      transition={{
-                        duration: 2.5,
-                        ease: [0.25, 0.46, 0.45, 0.94],
-                        times: [0, 0.15, 0.6, 1],
-                      }}
-                      onAnimationComplete={() => {
-                        setFloatingEmojis((prev) =>
-                          prev.filter((e) => e.id !== emoji.id),
-                        );
-                      }}
-                    >
-                      <FontAwesomeIcon
-                        icon={emoji.icon}
-                        className="h-10 w-10 text-yellow-400 drop-shadow-2xl"
-                      />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-
-                {/* Floating Ghost Animations for Dead Games */}
-                {isDeadGame && (
-                  <AnimatePresence>
-                    {floatingGhosts.map((ghost) => (
-                      <motion.div
-                        key={ghost.id}
-                        className="pointer-events-none absolute z-50"
-                        style={{
-                          left: `${ghost.startX}%`,
-                          top: `${ghost.startY}%`,
-                        }}
-                        initial={{
-                          opacity: 0,
-                          scale: 0.2,
-                          y: 0,
-                        }}
-                        animate={{
-                          opacity: [0, 1, 1, 0],
-                          scale: [0.2, 1.5, 1.3, 0.9],
-                          y: [0, -40, -120, -250],
-                        }}
-                        exit={{
-                          opacity: 0,
-                          scale: 0.6,
-                          y: -300,
-                        }}
-                        transition={{
-                          duration: 2.5,
-                          ease: [0.25, 0.46, 0.45, 0.94],
-                          times: [0, 0.15, 0.6, 1],
-                        }}
-                        onAnimationComplete={() => {
-                          setFloatingGhosts((prev) =>
-                            prev.filter((g) => g.id !== ghost.id),
-                          );
-                        }}
-                      >
-                        <Ghost className="h-8 w-8 text-gray-300 drop-shadow-2xl" />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                )}
+                <FloatingAnimations
+                  floatingThumbs={floatingThumbs}
+                  floatingEmojis={floatingEmojis}
+                  floatingGhosts={floatingGhosts}
+                  isDeadGame={isDeadGame}
+                  setFloatingThumbs={setFloatingThumbs}
+                  setFloatingEmojis={setFloatingEmojis}
+                  setFloatingGhosts={setFloatingGhosts}
+                />
               </div>
             )}
 
@@ -1058,7 +499,7 @@ const GameDetail = ({
                         <SmilePlus className="!h-5 !w-5" />
                       </Button>
                     </PopoverTrigger>
-                    {renderEmojiPickerContent()}
+                    <EmojiPickerContent onEmojiClick={handleEmojiClick} />
                   </Popover>
                 </div>
               ) : (
@@ -1087,7 +528,7 @@ const GameDetail = ({
                         Add Reaction
                       </Button>
                     </PopoverTrigger>
-                    {renderEmojiPickerContent()}
+                    <EmojiPickerContent onEmojiClick={handleEmojiClick} />
                   </Popover>
                 </div>
               )}
