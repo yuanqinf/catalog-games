@@ -11,6 +11,7 @@ import { SearchInput } from './search-input';
 import { SearchSuggestions } from './search-suggestions';
 import { CreateDislikeGameModal } from '../create-dislike-game-modal';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n/client';
 
 // Animation variants for smooth transitions
 const iconVariants = {
@@ -60,6 +61,7 @@ const textVariants = {
 };
 
 const SearchBar = () => {
+  const { t } = useTranslation();
   const searchProps = useSearchBar();
   const { isInputActive, ...props } = searchProps;
   const pathname = usePathname();
@@ -83,13 +85,13 @@ const SearchBar = () => {
 
   const handleDislikeConfirm = async (dislikeCount = 1) => {
     if (!props.selectedIgdbGame) {
-      toast.error('No game selected');
+      toast.error(t('search_no_game_selected'));
       return;
     }
 
     if (!props.selectedIgdbGame.name) {
       console.error('Selected IGDB game:', props.selectedIgdbGame);
-      toast.error('Game name is missing');
+      toast.error(t('search_game_name_missing'));
       return;
     }
 
@@ -116,22 +118,22 @@ const SearchBar = () => {
         // Handle specific case where user already submitted dislike
         if (result.error === 'ALREADY_SUBMITTED') {
           props.setShowDislikeModal(false);
-          toast.error('You have already submitted a dislike for this game');
+          toast.error(t('search_already_submitted'));
           return;
         }
-        throw new Error(result.error || 'Failed to submit dislike');
+        throw new Error(result.error || t('search_failed_to_submit_dislike'));
       }
 
       if (result.success) {
         props.setShowDislikeModal(false);
-        toast.success('Dislike submitted successfully!');
+        toast.success(t('search_dislike_submitted_success'));
       } else {
-        throw new Error(result.error || 'Unknown error occurred');
+        throw new Error(result.error || t('error_unknown'));
       }
     } catch (error) {
       console.error('Failed to submit dislike:', error);
       toast.error(
-        error instanceof Error ? error.message : 'Failed to submit dislike',
+        error instanceof Error ? error.message : t('search_failed_to_submit_dislike'),
       );
     } finally {
       setIsSubmittingDislike(false);
@@ -213,7 +215,7 @@ const SearchBar = () => {
               animate="visible"
               exit="exit"
             >
-              {isInputActive || isExplorePage ? 'Search' : 'Explore'}
+              {isInputActive || isExplorePage ? t('search_button') : t('search_explore_button')}
             </motion.p>
           </AnimatePresence>
         </Button>

@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { DissRatingSkeleton } from './diss-rating-skeleton';
 import { useGameRating } from '@/hooks/useGameRating';
 import { dark } from '@clerk/themes';
+import { useTranslation } from '@/lib/i18n/client';
 
 const RatingBlock = styled.div<{
   $fillColor: string;
@@ -92,6 +93,7 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
   gameId,
   onSaveSuccess,
 }) => {
+  const { t } = useTranslation();
   const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [currentRating, setCurrentRating] = useState<GameRating>(defaultRating);
@@ -156,11 +158,11 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
         onSaveSuccess();
       }
 
-      toast.success('Rating saved successfully!');
+      toast.success(t('diss_rating_saved_success'));
       setIsOpen(false);
     } catch (error) {
       console.error('Failed to save rating:', error);
-      toast.error('Failed to save rating. Please try again.');
+      toast.error(t('diss_rating_save_failed'));
     } finally {
       setIsSaving(false);
     }
@@ -273,13 +275,13 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
           className="text-xs"
           disabled={isSaving}
         >
-          Reset All
+          {t('diss_rating_reset_all')}
         </Button>
         <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
-          Cancel
+          {t('diss_rating_cancel')}
         </Button>
         <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save Ratings'}
+          {isSaving ? t('diss_rating_saving') : t('diss_rating_save')}
         </Button>
       </DialogFooter>
     </>
@@ -290,9 +292,9 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
       <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Celebrate the Badness!</DialogTitle>
+          <DialogTitle>{t('diss_rating_dialog_title')}</DialogTitle>
           <DialogDescription>
-            The higher your score, the worse the game is!
+            {t('diss_rating_dialog_description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -307,7 +309,7 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
         <SignedOut>
           <div className="space-y-4 py-6 text-center">
             <h3 className="text-base font-medium text-white">
-              Sign in to rate this game
+              {t('diss_rating_sign_in_to_rate')}
             </h3>
             <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
               <Button
@@ -315,7 +317,7 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
                   setIsOpen(false);
                 }}
               >
-                Sign In
+                {t('auth_login')}
               </Button>
             </SignInButton>
           </div>

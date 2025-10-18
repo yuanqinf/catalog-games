@@ -12,12 +12,14 @@ import {
 import { ThumbsDown, Loader2 } from 'lucide-react';
 import ProfileGameCard from '@/components/shared/cards/profile-game-card';
 import type { GameDbData } from '@/types';
+import { useTranslation } from '@/lib/i18n/client';
 
 interface DislikedGame extends GameDbData {
   user_dislike_count: number;
 }
 
 const UserProfilePage = () => {
+  const { t } = useTranslation();
   const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
   const [totalDislikes, setTotalDislikes] = useState<number>(0);
@@ -112,10 +114,10 @@ const UserProfilePage = () => {
           </div>
           <blockquote className="text-muted-foreground hidden max-w-md border-l-2 border-gray-600 pl-4 italic lg:block">
             <p className="text-base leading-relaxed">
-              {`"Ultimately, the player's experience is the truth. If the game does not feel right to them, then it is not right."`}
+              {t('profile_quote')}
             </p>
             <footer className="mt-3 text-sm font-medium text-gray-300">
-              — Jesse Schell, The Art of Game Design
+              {t('profile_quote_author')}
             </footer>
           </blockquote>
           <div className="flex items-center space-x-8">
@@ -129,7 +131,7 @@ const UserProfilePage = () => {
                     totalDislikes
                   )}
                 </p>
-                <p className="text-muted-foreground text-sm">total dislikes</p>
+                <p className="text-muted-foreground text-sm">{t('profile_total_dislikes')}</p>
               </div>
             </div>
           </div>
@@ -138,7 +140,7 @@ const UserProfilePage = () => {
       <hr className="my-8 border-zinc-700" />
 
       <section>
-        <h2 className="mb-6 text-2xl font-bold">My Disliked Games</h2>
+        <h2 className="mb-6 text-2xl font-bold">{t('profile_my_disliked_games')}</h2>
         {isLoadingGames ? (
           <div className="flex justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin" />
@@ -156,7 +158,7 @@ const UserProfilePage = () => {
           </div>
         ) : (
           <p className="text-muted-foreground py-12 text-center">
-            You haven&apos;t disliked any games yet.
+            {t('profile_no_disliked_games')}
           </p>
         )}
       </section>

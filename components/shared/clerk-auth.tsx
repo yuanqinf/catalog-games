@@ -13,8 +13,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useTranslation } from '@/lib/i18n/client';
 
 const ClerkAuth = () => {
+  const { t } = useTranslation();
   const [isMounted, setIsMounted] = useState(false);
 
   // Auto-sync user data when signed in
@@ -92,7 +94,7 @@ const ClerkAuth = () => {
           >
             <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
             {isSyncing && (
-              <span className="text-xs text-gray-400">Syncing...</span>
+              <span className="text-xs text-gray-400">{t('auth_syncing')}</span>
             )}
           </motion.div>
         ) : (
@@ -110,7 +112,7 @@ const ClerkAuth = () => {
                     <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
                       <Button>
                         <LogIn className="h-3 w-3" />
-                        <p> Login </p>
+                        <p>{t('auth_login')}</p>
                       </Button>
                     </SignInButton>
                   </TooltipTrigger>
@@ -123,7 +125,7 @@ const ClerkAuth = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, ease: 'easeOut' }}
                     >
-                      Ready to start your dislike journey? Sign in!
+                      {t('auth_ready_to_start')}
                     </motion.p>
                   </TooltipContent>
                 </Tooltip>
@@ -131,7 +133,7 @@ const ClerkAuth = () => {
             </SignedOut>
             <SignedIn>
               <Link href={'/profile'}>
-                <Button>Profile</Button>
+                <Button>{t('auth_profile')}</Button>
               </Link>
               <UserButton
                 appearance={{

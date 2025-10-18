@@ -4,8 +4,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import SearchBar from '@/components/shared/search';
 import ClerkAuth from '@/components/shared/clerk-auth';
+import { useTranslation } from '@/lib/i18n/client';
 
 const Header = () => {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -42,7 +44,7 @@ const Header = () => {
     >
       <Link href="/" className="justify-self-start">
         <div className="header-logo">
-          <Image src="/images/logo.png" alt="Logo" width={56} height={56} />
+          <Image src="/images/logo.png" alt={t('header_logo_alt')} width={56} height={56} />
         </div>
       </Link>
       <div

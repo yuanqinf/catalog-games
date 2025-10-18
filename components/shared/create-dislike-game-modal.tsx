@@ -15,6 +15,7 @@ import {
   CardDescription,
   CardAction,
 } from '@/components/ui/card';
+import { useTranslation } from '@/lib/i18n/client';
 
 interface CreateDislikeGameModalProps {
   isOpen: boolean;
@@ -45,6 +46,7 @@ export const CreateDislikeGameModal = ({
   game,
   isSubmitting = false,
 }: CreateDislikeGameModalProps) => {
+  const { t } = useTranslation();
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
   const [dislikeCount, setDislikeCount] = useState(0);
 
@@ -120,10 +122,9 @@ export const CreateDislikeGameModal = ({
               <X className="h-4 w-4" />
             </Button>
           </CardAction>
-          <CardTitle>Dislike this game?</CardTitle>
+          <CardTitle>{t('dislike_modal_title')}</CardTitle>
           <CardDescription>
-            This will add your dislike to help other players discover better
-            games.
+            {t('dislike_modal_description')}
           </CardDescription>
         </CardHeader>
 
@@ -183,7 +184,7 @@ export const CreateDislikeGameModal = ({
                 className="border-destructive/30 bg-destructive/10 hover:bg-destructive/20 text-destructive transition-all"
               >
                 <ThumbsDown className="h-4 w-4" />
-                Dislike
+                {t('dislike_modal_dislike_button')}
               </Button>
             </div>
           </div>
@@ -196,7 +197,7 @@ export const CreateDislikeGameModal = ({
             className="flex-1"
             disabled={isSubmitting}
           >
-            Cancel
+            {t('dislike_modal_cancel_button')}
           </Button>
           <Button
             onClick={() => onConfirm(dislikeCount || 1)}
@@ -207,10 +208,10 @@ export const CreateDislikeGameModal = ({
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Submitting...
+                {t('dislike_modal_submitting')}
               </>
             ) : (
-              'Confirm Dislike'
+              t('dislike_modal_confirm_button')
             )}
           </Button>
         </CardFooter>

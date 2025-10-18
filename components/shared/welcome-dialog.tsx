@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { useTranslation } from '@/lib/i18n/client';
 
 const WELCOME_DIALOG_KEY = 'dissgame-welcome-shown';
 
@@ -27,35 +28,38 @@ interface Feature {
   color: string;
 }
 
-const features: Feature[] = [
-  {
-    icon: ThumbsDown,
-    title: 'Dislike Games',
-    description: "Dislike games you don't like and see Top Disliked Games",
-    color: 'red',
-  },
-  {
-    icon: Ghost,
-    title: 'Game Graveyard',
-    description: 'Remember games that shut down or were discontinued',
-    color: 'purple',
-  },
-  {
-    icon: SquarePen,
-    title: 'Diss Rating',
-    description: 'Give detailed ratings and share your honest opinions',
-    color: 'orange',
-  },
-  {
-    icon: SmilePlus,
-    title: 'Emoji Reactions',
-    description: 'React games with selected emojis with other folks',
-    color: 'yellow',
-  },
-];
+// Features will be populated with translations in the component
 
 export function WelcomeDialog() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+
+  const features: Feature[] = [
+    {
+      icon: ThumbsDown,
+      title: t('welcome_feature_dislike_title'),
+      description: t('welcome_feature_dislike_description'),
+      color: 'red',
+    },
+    {
+      icon: Ghost,
+      title: t('welcome_feature_graveyard_title'),
+      description: t('welcome_feature_graveyard_description'),
+      color: 'purple',
+    },
+    {
+      icon: SquarePen,
+      title: t('welcome_feature_rating_title'),
+      description: t('welcome_feature_rating_description'),
+      color: 'orange',
+    },
+    {
+      icon: SmilePlus,
+      title: t('welcome_feature_emoji_title'),
+      description: t('welcome_feature_emoji_description'),
+      color: 'yellow',
+    },
+  ];
 
   useEffect(() => {
     const hasShown = localStorage.getItem(WELCOME_DIALOG_KEY);
@@ -103,9 +107,9 @@ export function WelcomeDialog() {
             </motion.div>
             <span className="relative bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
               <span className="absolute inset-0 animate-pulse bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent opacity-50 blur-sm">
-                Welcome to DissGame!
+                {t('welcome_title')}
               </span>
-              Welcome to DissGame!
+              {t('welcome_title')}
             </span>
           </DialogTitle>
         </DialogHeader>
@@ -165,7 +169,7 @@ export function WelcomeDialog() {
               size="lg"
               className="w-full"
             >
-              Get Started
+              {t('welcome_get_started')}
             </Button>
           </div>
         </div>

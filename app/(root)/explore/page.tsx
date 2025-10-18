@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { GameService } from '@/lib/supabase/client';
 import { DeadGamesTableContainer } from '@/components/shared/dead-games/dead-games-table-container';
 import type { GameDbData } from '@/types';
+import { useTranslation } from '@/lib/i18n/client';
 
 const GAMES_PER_PAGE = 15;
 const TOP_GAMES_LIMIT = 100;
@@ -49,6 +50,7 @@ const cardVariants = {
 };
 
 const GameExplorePage = () => {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
   const view = searchParams.get('view') || 'disliked';
@@ -160,13 +162,13 @@ const GameExplorePage = () => {
             {view === 'graveyard' ? (
               <>
                 <ArrowBigLeftDash className="!h-8 !w-8" />
-                <span className="text-lg font-bold">Top 100 Disliked</span>
+                <span className="text-lg font-bold">{t('explore_top_disliked_games')}</span>
                 <ThumbsDown className="!h-4 !w-4" />
               </>
             ) : (
               <>
                 <Ghost className="!h-5 !w-5" />
-                <span className="text-lg font-bold">Game Graveyard</span>
+                <span className="text-lg font-bold">{t('explore_game_graveyard')}</span>
                 <ArrowBigRightDash className="!h-8 !w-8" />
               </>
             )}
@@ -197,12 +199,12 @@ const GameExplorePage = () => {
               }`}
               style={{ fontWeight: 900 }}
             >
-              {view === 'graveyard' ? 'Game Graveyard' : 'Top Disliked Games'}
+              {view === 'graveyard' ? t('explore_game_graveyard') : t('explore_top_disliked_games')}
             </h1>
             <p className="text-lg text-gray-400">
               {view === 'graveyard'
-                ? 'Games That Have Shut Down or Been Discontinued'
-                : 'The Most Controversial Titles Ranked by Player Reactions'}
+                ? t('explore_game_graveyard_description')
+                : t('explore_top_disliked_description')}
             </p>
           </div>
 
@@ -235,12 +237,10 @@ const GameExplorePage = () => {
             {/* Bottom Quote - only in graveyard view */}
             <div className="mt-16 text-center">
               <p className="mx-auto max-w-2xl text-base text-gray-400 italic sm:text-lg">
-                {
-                  "I've always felt that 'game over' is a state of failure more for the game designer than from the player."
-                }
+                {t('explore_graveyard_quote')}
               </p>
               <p className="mt-2 text-sm text-gray-500 italic">
-                — David Cage, Detroit: Become Human
+                {t('explore_graveyard_quote_author')}
               </p>
             </div>
           </motion.div>
@@ -257,7 +257,7 @@ const GameExplorePage = () => {
               <div className="flex items-center justify-center py-20">
                 <div className="text-muted-foreground flex items-center gap-3">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  <span>Loading games...</span>
+                  <span>{t('explore_loading_games')}</span>
                 </div>
               </div>
             ) : (

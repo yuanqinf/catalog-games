@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { dark } from '@clerk/themes';
+import { useTranslation } from '@/lib/i18n/client';
 
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger } from '@/components/ui/popover';
@@ -60,6 +61,7 @@ const GameDetail = ({
   game: GameDbData;
   deadGame?: DeadGameFromAPI | null;
 }) => {
+  const { t } = useTranslation();
   const { isSignedIn } = useUser();
   const isDeadGame = !!deadGame;
 
@@ -337,10 +339,10 @@ const GameDetail = ({
     ...(steamCurrentPlayers !== null && steamCurrentPlayers > 0
       ? [
           {
-            title: 'Current players',
+            title: t('game_detail_current_players'),
             value: steamCurrentPlayers.toLocaleString(),
             icon: Joystick,
-            tooltipContent: <p>Source: Steam (Live)</p>,
+            tooltipContent: <p>{t('game_detail_source_steam')}</p>,
           },
         ]
       : []),
@@ -349,10 +351,10 @@ const GameDetail = ({
     ...(twitchLiveViewers
       ? [
           {
-            title: 'Live viewers',
+            title: t('game_detail_live_viewers'),
             value: `${twitchLiveViewers.toLocaleString()}`,
             icon: ChartColumnIncreasing,
-            tooltipContent: <p>Source: Twitch</p>,
+            tooltipContent: <p>{t('game_detail_source_twitch')}</p>,
           },
         ]
       : []),
@@ -361,7 +363,7 @@ const GameDetail = ({
     ...(steamSpyData?.averagePlaytime || playtrackerData?.averagePlaytime
       ? [
           {
-            title: 'Average Playtime',
+            title: t('game_detail_average_playtime'),
             value: steamSpyData?.averagePlaytime
               ? `${steamSpyData.averagePlaytime} hours`
               : (playtrackerData?.averagePlaytime as string),
@@ -398,7 +400,7 @@ const GameDetail = ({
           <Link href="/explore">
             <Button variant="ghost" className="text-gray-300 hover:text-white">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              {isDeadGame ? 'Back to game graveyard' : 'Back to Top 100'}
+              {isDeadGame ? t('game_detail_back_to_graveyard') : t('game_detail_back_to_top_100')}
             </Button>
           </Link>
         </div>
@@ -507,10 +509,10 @@ const GameDetail = ({
                 <div className="flex items-center gap-3 rounded-lg border-2 border-dashed border-zinc-700 bg-zinc-900/30 p-3">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-300">
-                      No reactions yet
+                      {t('game_detail_no_reactions_yet')}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Be the first to share how you feel about this game!
+                      {t('game_detail_be_first_to_react')}
                     </p>
                   </div>
                   <Popover
@@ -522,10 +524,10 @@ const GameDetail = ({
                         variant="secondary"
                         size="lg"
                         className="flex items-center gap-2"
-                        aria-label="Add first emoji reaction"
+                        aria-label={t('game_detail_add_first_emoji')}
                       >
                         <SmilePlus className="!h-4 !w-4" />
-                        Add Reaction
+                        {t('game_detail_add_reaction')}
                       </Button>
                     </PopoverTrigger>
                     <EmojiPickerContent onEmojiClick={handleEmojiClick} />
@@ -590,9 +592,9 @@ const GameDetail = ({
       <Dialog open={showSignInDialog} onOpenChange={setShowSignInDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Sign in to react</DialogTitle>
+            <DialogTitle>{t('game_detail_sign_in_to_react')}</DialogTitle>
             <DialogDescription>
-              Please sign in to add emoji reactions to games.
+              {t('game_detail_sign_in_to_react_description')}
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center py-4">
@@ -602,7 +604,7 @@ const GameDetail = ({
                   setShowSignInDialog(false);
                 }}
               >
-                Login
+                {t('auth_login')}
               </Button>
             </SignInButton>
           </div>

@@ -11,8 +11,10 @@ import { useVoteState } from './hooks/use-vote-state';
 import { FloatingThumbs } from './components/floating-thumbs';
 import { GameCarousel } from './components/game-carousel';
 import { VoteSidebar } from './components/vote-sidebar';
+import { useTranslation } from '@/lib/i18n/client';
 
 const TopDislikeGames = () => {
+  const { t } = useTranslation();
   const [activeIndex, setActiveIndex] = useState(0);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const thumbnailRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -162,7 +164,7 @@ const TopDislikeGames = () => {
               className="flex items-center gap-2 border-zinc-600 bg-zinc-800 text-gray-300 hover:bg-zinc-700 hover:text-white"
             >
               <ExternalLink className="h-4 w-4" />
-              <span className="text-sm">Explore More</span>
+              <span className="text-sm">{t('homepage_explore_more')}</span>
             </Button>
           </Link>
         </div>
@@ -199,9 +201,9 @@ const TopDislikeGames = () => {
         <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-gray-400">
           <div className="text-center">
             <ThumbsDown size={48} className="mx-auto mb-4 opacity-50" />
-            <p className="mb-2">No disliked games yet</p>
+            <p className="mb-2">{t('homepage_no_disliked_games')}</p>
             <p className="text-sm opacity-75">
-              Games will appear here once users start disliking them
+              {t('homepage_no_disliked_games_description')}
             </p>
           </div>
         </div>
@@ -215,7 +217,7 @@ const TopDislikeGames = () => {
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <ThumbsDown className="h-6 w-6 fill-current text-red-500" />
-          <h2 className="text-2xl font-bold">Hall of Shame</h2>
+          <h2 className="text-2xl font-bold">{t('homepage_hall_of_shame')}</h2>
         </div>
       </div>
 
@@ -277,7 +279,7 @@ const TopDislikeGames = () => {
               className="flex items-center gap-2 border-zinc-600 bg-zinc-800 text-gray-300 hover:bg-zinc-700 hover:text-white"
             >
               <ExternalLink className="h-4 w-4" />
-              <span className="text-sm">Explore More</span>
+              <span className="text-sm">{t('homepage_explore_more')}</span>
             </Button>
           </Link>
         </div>
