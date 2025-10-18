@@ -140,53 +140,81 @@ const GameExplorePage = () => {
   };
 
   return (
-    <div className="container-3xl container mx-auto p-4">
+    <div className="container-3xl container mx-auto p-4 pt-0">
       {/* Header with view switch buttons */}
       <div className="relative mb-4">
-        {/* Switch button - absolutely positioned */}
-        {view === 'graveyard' ? (
-          <Button
-            variant="ghost"
-            onClick={() => switchView('disliked')}
-            className="absolute top-0 left-0 flex items-center gap-2 text-red-400 hover:bg-red-950/20 hover:text-red-300"
-          >
-            <ArrowBigLeftDash className="!h-8 !w-8" />
-            <span className="text-lg font-bold">Top 100 Disliked</span>
-            <ThumbsDown className="!h-4 !w-4" />
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            onClick={() => switchView('graveyard')}
-            className="absolute top-0 right-0 flex items-center gap-2 text-gray-400 hover:bg-zinc-800 hover:text-gray-300"
-          >
-            <Ghost className="!h-5 !w-5" />
-            <span className="text-lg font-bold">Game Graveyard</span>
-            <ArrowBigRightDash className="!h-8 !w-8" />
-          </Button>
-        )}
-
         {/* Centered header text */}
-        <div className="text-center">
-          {view === 'graveyard' ? (
-            <>
-              <h1 className="bg-clip-text text-4xl font-bold text-gray-400">
-                Game Graveyard
-              </h1>
-              <p className="mt-2 text-base text-white">
-                Games That Have Shut Down or Been Discontinued
-              </p>
-            </>
-          ) : (
-            <>
-              <h1 className="bg-clip-text text-4xl font-bold text-red-400">
-                Top 100 Most Disliked Games
-              </h1>
-              <p className="mt-2 text-base text-white">
-                The Most Controversial Titles Ranked by Player Reactions
-              </p>
-            </>
-          )}
+        <div className="relative overflow-hidden rounded-2xl px-8 py-12">
+          {/* Switch button - absolutely positioned inside header */}
+          <Button
+            variant="ghost"
+            onClick={() =>
+              switchView(view === 'graveyard' ? 'disliked' : 'graveyard')
+            }
+            className={`absolute top-4 z-20 flex items-center gap-2 ${
+              view === 'graveyard'
+                ? 'left-4 text-red-400 hover:bg-red-950/20 hover:text-red-300'
+                : 'right-4 text-gray-400 hover:bg-zinc-800 hover:text-gray-300'
+            }`}
+          >
+            {view === 'graveyard' ? (
+              <>
+                <ArrowBigLeftDash className="!h-8 !w-8" />
+                <span className="text-lg font-bold">Top 100 Disliked</span>
+                <ThumbsDown className="!h-4 !w-4" />
+              </>
+            ) : (
+              <>
+                <Ghost className="!h-5 !w-5" />
+                <span className="text-lg font-bold">Game Graveyard</span>
+                <ArrowBigRightDash className="!h-8 !w-8" />
+              </>
+            )}
+          </Button>
+
+          {/* Background radial glow effect */}
+          <div className="pointer-events-none absolute inset-0 opacity-30">
+            <div
+              className="absolute top-1/2 left-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+              style={{
+                background: `
+                  radial-gradient(ellipse farthest-corner at top center,
+                    rgba(${view === 'graveyard' ? '156,163,175' : '255,71,87'}, 0.4) 0%,
+                    rgba(0, 0, 0, 0.3) 60%,
+                    transparent 90%)
+                `,
+              }}
+            />
+          </div>
+
+          {/* Content */}
+          <div className="relative z-10 text-center">
+            <h1
+              className={`mb-4 bg-gradient-to-r bg-clip-text text-4xl font-black text-transparent ${
+                view === 'graveyard'
+                  ? 'from-gray-400 to-gray-600'
+                  : 'from-[#ff4757] to-[#ff8894]'
+              }`}
+              style={{ fontWeight: 900 }}
+            >
+              {view === 'graveyard' ? 'Game Graveyard' : 'Top Disliked Games'}
+            </h1>
+            <p className="text-lg text-gray-400">
+              {view === 'graveyard'
+                ? 'Games That Have Shut Down or Been Discontinued'
+                : 'The Most Controversial Titles Ranked by Player Reactions'}
+            </p>
+          </div>
+
+          {/* Bottom border accent */}
+          <div
+            className="absolute right-0 bottom-0 left-0 h-[3px]"
+            style={{
+              background: `linear-gradient(90deg, transparent, ${
+                view === 'graveyard' ? '#9ca3af' : '#ff4757'
+              }, transparent)`,
+            }}
+          />
         </div>
       </div>
 
