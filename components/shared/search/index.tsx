@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Search, Loader2, Gamepad2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUser } from '@clerk/nextjs';
 import { Command } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 import { useSearchBar } from '@/hooks/search/useSearchBar';
@@ -66,7 +65,6 @@ const SearchBar = () => {
   const pathname = usePathname();
   const router = useRouter();
   const isExplorePage = pathname === '/explore';
-  const { user, isSignedIn } = useUser();
   const [isSubmittingDislike, setIsSubmittingDislike] = useState(false);
 
   const handleModalClose = () => {

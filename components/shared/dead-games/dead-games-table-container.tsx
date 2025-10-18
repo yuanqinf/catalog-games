@@ -1,12 +1,12 @@
 'use client';
 
-import { FC, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Ghost, Loader2 } from 'lucide-react';
 import { DeadGameFromAPI, DeadGame } from '@/types';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
-import { DeadGamesTable } from './DeadGamesTable';
+import { DeadGamesTable } from './dead-games-table';
 import { useThrottledReaction } from '@/hooks/useThrottledReaction';
 
 interface DeadGamesTableContainerProps {

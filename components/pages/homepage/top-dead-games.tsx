@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Ghost } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DeadGamesTableContainer } from '@/components/pages/explore-page/DeadGamesTableContainer';
+import { DeadGamesTableContainer } from '@/components/shared/dead-games/dead-games-table-container';
 
 const TopDeadGames = () => {
   return (

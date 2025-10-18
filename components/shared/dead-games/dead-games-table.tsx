@@ -1,4 +1,3 @@
-import { FC, MouseEvent } from 'react';
 import Image from 'next/image';
 import {
   Gamepad2,

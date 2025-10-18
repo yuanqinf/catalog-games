@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
-import { Laugh, Loader2, LogIn } from 'lucide-react';
+import { Loader2, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUserSync } from '@/hooks/useUserSync';
 import { dark } from '@clerk/themes';

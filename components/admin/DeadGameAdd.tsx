@@ -1,11 +1,12 @@
 'use client';
 
-import { FC, FormEvent, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Ghost, Search, Calendar, AlertTriangle, Gamepad2 } from 'lucide-react';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 // Types for dead game form
 interface DeadGameForm {
@@ -171,13 +172,15 @@ const DeadGameAdd: React.FC = () => {
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0">
                 {searchedGame.cover?.url ? (
-                  <img
+                  <Image
                     src={searchedGame.cover.url.replace(
                       't_thumb',
                       't_cover_small',
                     )}
                     alt={searchedGame.name}
                     className="h-20 w-16 rounded object-cover"
+                    width={64}
+                    height={80}
                   />
                 ) : (
                   <div className="flex h-20 w-16 items-center justify-center rounded bg-zinc-700">
