@@ -173,7 +173,7 @@ const GameExplorePage = () => {
               <h1 className="bg-clip-text text-4xl font-bold text-gray-400">
                 Game Graveyard
               </h1>
-              <p className="mt-2 text-base text-gray-400">
+              <p className="mt-2 text-base text-white">
                 Games That Have Shut Down or Been Discontinued
               </p>
             </>
@@ -182,7 +182,7 @@ const GameExplorePage = () => {
               <h1 className="bg-clip-text text-4xl font-bold text-red-400">
                 Top 100 Most Disliked Games
               </h1>
-              <p className="mt-2 text-base text-gray-400">
+              <p className="mt-2 text-base text-white">
                 The Most Controversial Titles Ranked by Player Reactions
               </p>
             </>

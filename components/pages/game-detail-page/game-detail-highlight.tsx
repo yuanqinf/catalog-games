@@ -26,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { RATING_BLOCK_COLORS } from '@/constants/colors';
 
 export interface StatisticItem {
   title: string;
@@ -275,11 +276,18 @@ export default function GameDetailHighlight({
                 height={24}
                 className="mr-1"
               />
-              <span className="mr-2 hidden sm:inline-block">
-                Overall Diss Rating:{' '}
-              </span>
-              <span className="font-semibold text-gray-200">
-                {overallAverage ? overallAverage : 'N/A'}
+              <span className="hidden sm:inline-block">
+                Diss Avg. Rating:{' '}
+                <span
+                  className="font-bold"
+                  style={{
+                    color: overallAverage
+                      ? RATING_BLOCK_COLORS[Math.floor(overallAverage) - 1]
+                      : '#9CA3AF',
+                  }}
+                >
+                  {overallAverage ? overallAverage : 'N/A'}
+                </span>
               </span>
             </div>
           </div>

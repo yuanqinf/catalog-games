@@ -203,7 +203,7 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
         {ratingCategories.map(({ key, label }) => (
           <div key={key} className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700 capitalize">
+              <span className="text-sm font-medium text-white capitalize">
                 {label}
               </span>
               <span className="text-sm text-gray-500">
@@ -290,9 +290,9 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
       <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>My ratings for this game</DialogTitle>
+          <DialogTitle>Celebrate the Badness!</DialogTitle>
           <DialogDescription>
-            Rate this game to help others know how bad it is :D
+            The higher your score, the worse the game is!
           </DialogDescription>
         </DialogHeader>
 

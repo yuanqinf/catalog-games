@@ -3,23 +3,15 @@
 import { useState, useEffect } from 'react';
 import {
   ThumbsDown,
-  Loader2,
   Share2,
   Gamepad2,
   Calendar,
-  Users,
   Ghost,
   MonitorX,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import NumberFlow from '@number-flow/react';
 
@@ -60,8 +52,6 @@ const GameDetailHeadline = ({
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dislikedUsersCount, setDislikedUsersCount] = useState<number>(0);
-  const [isLoadingUsersCount, setIsLoadingUsersCount] = useState(true);
 
   const getRankingColor = (rank: number | null | undefined) => {
     if (!rank) return 'yellow';
@@ -84,7 +74,6 @@ const GameDetailHeadline = ({
     // Skip fetching ranking data for dead games
     if (isDeadGame) {
       setIsLoading(false);
-      setIsLoadingUsersCount(false);
       return;
     }
 
@@ -112,34 +101,6 @@ const GameDetailHeadline = ({
     }
 
     fetchRankingData();
-  }, [gameId, isDeadGame]);
-
-  useEffect(() => {
-    // Skip fetching user counts for dead games
-    if (isDeadGame) {
-      setIsLoadingUsersCount(false);
-      return;
-    }
-
-    async function fetchDislikedUsersCount() {
-      try {
-        setIsLoadingUsersCount(true);
-        const response = await fetch(
-          `/api/games/disliked-users-count?gameId=${gameId}`,
-        );
-        const result = await response.json();
-
-        if (result.success) {
-          setDislikedUsersCount(result.data.dislikedUsersCount);
-        }
-      } catch (err) {
-        console.error('Failed to fetch disliked users count:', err);
-      } finally {
-        setIsLoadingUsersCount(false);
-      }
-    }
-
-    fetchDislikedUsersCount();
   }, [gameId, isDeadGame]);
 
   if (isLoading) {
@@ -262,38 +223,24 @@ const GameDetailHeadline = ({
                 ) : (
                   <>
                     {/* Normal Game Info - Ranking Display */}
-                    {rankingData?.currentGame.rank ? (
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          className={`text-sm font-bold text-white bg-${getRankingColor(rankingData.currentGame.rank)}-600 hover:bg-${getRankingColor(rankingData.currentGame.rank)}-600`}
-                        >
-                          #{rankingData.currentGame.rank}
-                        </Badge>
-                        <span className="text-sm text-gray-400">
-                          {'of top 100 most disliked'}
-                        </span>
-                      </div>
-                    ) : (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex cursor-help items-center gap-2">
-                              <Badge className="bg-green-600 text-sm font-bold text-white hover:bg-green-600">
-                                Outside Top 100
-                              </Badge>
-                              <span className="text-sm text-gray-400">
-                                This game is not that bad
-                              </span>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              This game is not among the 100 most disliked games
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        className={`text-sm font-bold text-white ${
+                          rankingData?.currentGame.rank
+                            ? `bg-${getRankingColor(rankingData.currentGame.rank)}-600 hover:bg-${getRankingColor(rankingData.currentGame.rank)}-600`
+                            : 'bg-green-600 hover:bg-green-600'
+                        }`}
+                      >
+                        {rankingData?.currentGame.rank
+                          ? `#${rankingData.currentGame.rank}`
+                          : 'Outside Top 100'}
+                      </Badge>
+                      <span className="text-sm text-gray-400">
+                        {rankingData?.currentGame.rank
+                          ? 'of top 100 most disliked'
+                          : 'This game is not that bad :)'}
+                      </span>
+                    </div>
 
                     <div className="h-4 w-px bg-red-700/50" />
 
@@ -306,16 +253,6 @@ const GameDetailHeadline = ({
                     </div>
 
                     {/* Disliked User Count */}
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-yellow-500" />
-                      {isLoadingUsersCount ? (
-                        <Loader2 className="inline h-3 w-3 animate-spin" />
-                      ) : (
-                        <p className="text-sm font-bold text-yellow-500">
-                          {dislikedUsersCount}
-                        </p>
-                      )}
-                    </div>
 
                     {/* Release Date */}
                     {gameReleaseDate && (
