@@ -10,6 +10,7 @@ import { useSearchBar } from '@/hooks/search/useSearchBar';
 import { SearchInput } from './search-input';
 import { SearchSuggestions } from './search-suggestions';
 import { CreateDislikeGameModal } from '../create-dislike-game-modal';
+import { FeedbackDialog } from '@/components/shared/feedback-dialog';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n/client';
 
@@ -68,6 +69,7 @@ const SearchBar = () => {
   const router = useRouter();
   const isExplorePage = pathname === '/explore';
   const [isSubmittingDislike, setIsSubmittingDislike] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const handleModalClose = () => {
     props.setShowDislikeModal(false);
@@ -171,6 +173,7 @@ const SearchBar = () => {
               supabaseGames={props.supabaseGames}
               igdbGames={props.igdbGames}
               isLoading={props.isLoading}
+              onOpenFeedback={() => setIsFeedbackOpen(true)}
             />
           )}
         </Command>
@@ -232,6 +235,13 @@ const SearchBar = () => {
         onConfirm={handleDislikeConfirm}
         game={props.selectedIgdbGame}
         isSubmitting={isSubmittingDislike}
+      />
+
+      {/* Feedback Dialog */}
+      <FeedbackDialog
+        open={isFeedbackOpen}
+        onOpenChange={setIsFeedbackOpen}
+        defaultReason="missing-game"
       />
     </div>
   );

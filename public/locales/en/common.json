@@ -44,6 +44,8 @@
   "explore_loading_dead_games": "Loading dead games...",
   "explore_graveyard_empty": "The graveyard is empty",
   "explore_no_dead_games_yet": "No dead games have been added yet",
+  "explore_know_another_game": "Know another game that belongs here?",
+  "explore_let_us_know": "Let us know",
 
   "_comment_table": "==== TABLE HEADERS ====",
   "table_header_game": "Game",
@@ -61,6 +63,9 @@
   "sidebar_cast_vote_to_increase_shame": "Cast your vote to increase the shame!",
 
   "_comment_search": "==== SEARCH ====",
+  "search_searching": "Searching...",
+  "search_no_results_found": "No results found.",
+  "search_missing_game_lets_know": "Missing a game? Let us know!",
   "search_button": "Search",
   "search_explore_button": "Explore",
   "search_no_game_selected": "No game selected",
@@ -151,7 +156,7 @@
   "feedback_reason_placeholder": "Select a reason",
   "feedback_reason_broken": "Something's broken",
   "feedback_reason_missing_game": "Didn't find the game I wanted",
-  "feedback_reason_add_games": "Want to add more dead games",
+  "feedback_reason_add_dead_games": "Want to add more dead games",
   "feedback_reason_feature_idea": "I have a feature idea",
   "feedback_reason_other": "Just wanted to say something",
   "feedback_input_label": "Your feedback",

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -24,9 +24,14 @@ import { toast } from 'sonner';
 interface FeedbackDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultReason?: string;
 }
 
-export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
+export function FeedbackDialog({
+  open,
+  onOpenChange,
+  defaultReason,
+}: FeedbackDialogProps) {
   const { t, i18n } = useTranslation();
   const [reason, setReason] = useState<string>('');
   const [feedback, setFeedback] = useState<string>('');
@@ -35,10 +40,18 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
   const FEEDBACK_REASONS = [
     { value: 'broken', label: t('feedback_reason_broken') },
     { value: 'missing-game', label: t('feedback_reason_missing_game') },
-    { value: 'add-games', label: t('feedback_reason_add_games') },
+    { value: 'add-dead-games', label: t('feedback_reason_add_dead_games') },
     { value: 'feature-idea', label: t('feedback_reason_feature_idea') },
     { value: 'other', label: t('feedback_reason_other') },
   ];
+
+  // Update reason when dialog opens with defaultReason
+  useEffect(() => {
+    if (open) {
+      setReason(defaultReason || '');
+      setFeedback('');
+    }
+  }, [open, defaultReason]);
 
   const handleSubmit = async () => {
     if (!reason || !feedback.trim()) return;
@@ -52,20 +65,13 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
       });
 
       if (response.ok) {
-        // Show success toast
         toast.success(t('feedback_success'));
-
-        // Reset form and close dialog
-        setReason('');
-        setFeedback('');
         onOpenChange(false);
       } else {
-        // Show error toast
         toast.error(t('feedback_error'));
         console.error('Failed to submit feedback');
       }
     } catch (error) {
-      // Show error toast
       toast.error(t('feedback_error'));
       console.error('Error submitting feedback:', error);
     } finally {
@@ -73,8 +79,14 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
     }
   };
 
+  const handleClose = () => {
+    if (!isSubmitting) {
+      onOpenChange(false);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{t('feedback_dialog_title')}</DialogTitle>
@@ -121,7 +133,8 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
+            disabled={isSubmitting}
           >
             {t('feedback_cancel_button')}
           </Button>
