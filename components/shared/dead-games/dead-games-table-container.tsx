@@ -5,6 +5,7 @@ import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Ghost, Loader2 } from 'lucide-react';
 import { DeadGameFromAPI, DeadGame } from '@/types';
+import { GameService } from '@/lib/supabase/client';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 import { DeadGamesTable } from './dead-games-table';
 import { useThrottledReaction } from '@/hooks/useThrottledReaction';
@@ -22,19 +23,19 @@ export const DeadGamesTableContainer: React.FC<
   DeadGamesTableContainerProps
 > = ({ limit, showSorting = false, showAddDeadGameRow = false }) => {
   const { t } = useTranslation();
-  // Fetch dead games data from Supabase with short polling for real-time updates
+  // Fetch dead games data directly from Supabase with short polling for real-time updates
   const {
-    data: deadGamesResponse,
+    data: deadGamesData,
     error,
     isLoading,
     mutate,
-  } = useSWR<{ success: boolean; data: DeadGameFromAPI[]; error?: string }>(
-    '/api/dead-games',
-    (url) =>
-      fetch(url).then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch dead games');
-        return res.json();
-      }),
+  } = useSWR<DeadGameFromAPI[]>(
+    'dead-games',
+    async () => {
+      const gameService = new GameService();
+      const data = await gameService.getDeadGames();
+      return data as unknown as DeadGameFromAPI[];
+    },
     {
       revalidateOnFocus: false,
       refreshInterval: 5000,
@@ -81,7 +82,7 @@ export const DeadGamesTableContainer: React.FC<
   // Transform and sort API data
   const deadGames: DeadGame[] = useMemo(() => {
     const transformedData =
-      deadGamesResponse?.data?.map((deadGame) => {
+      deadGamesData?.map((deadGame) => {
         const date = new Date(deadGame.dead_date);
         const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}/${date.getFullYear()}`;
 
@@ -128,7 +129,7 @@ export const DeadGamesTableContainer: React.FC<
     // Return with or without limit
     return limit ? transformedData.slice(0, limit) : transformedData;
   }, [
-    deadGamesResponse?.data,
+    deadGamesData,
     sortByReactions,
     sortByDate,
     reactionCounts,
@@ -138,9 +139,9 @@ export const DeadGamesTableContainer: React.FC<
 
   // Initialize reaction counts when data loads and trigger animations on count increases
   useEffect(() => {
-    if (deadGamesResponse?.data && deadGamesResponse.data.length > 0) {
+    if (deadGamesData && deadGamesData.length > 0) {
       setReactionCounts((prevCounts) => {
-        const newCounts = deadGamesResponse.data.reduce(
+        const newCounts = deadGamesData.reduce(
           (acc, deadGame) => ({
             ...acc,
             [deadGame.id]: deadGame.user_reaction_count,
@@ -149,7 +150,7 @@ export const DeadGamesTableContainer: React.FC<
         );
 
         // Check for reaction count increases and trigger animations
-        deadGamesResponse.data.forEach((deadGame) => {
+        deadGamesData.forEach((deadGame) => {
           const oldCount = prevCounts[deadGame.id] || 0;
           const newCount = deadGame.user_reaction_count / 10; // Divide by 10 to reduce the number of animations
 
@@ -176,7 +177,7 @@ export const DeadGamesTableContainer: React.FC<
         return newCounts;
       });
     }
-  }, [deadGamesResponse?.data]);
+  }, [deadGamesData]);
 
   const handleReaction = (deadGameId: string) => {
     // Play pop sound effect

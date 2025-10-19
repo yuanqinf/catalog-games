@@ -2,6 +2,7 @@ import { useState } from 'react';
 import useSWR from 'swr';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 import { DeadGameFromAPI } from '@/types';
+import { GameService } from '@/lib/supabase/client';
 
 export interface FloatingGhost {
   id: string;
@@ -21,14 +22,10 @@ export function useDeadGameReactions(
   }>(
     isDeadGame && deadGame?.id ? ['dead-game-ghost', deadGame.id] : null,
     async ([, deadGameId]: [string, string]) => {
-      const response = await fetch(`/api/dead-games`);
-      const result = await response.json();
+      const gameService = new GameService();
+      const deadGames = await gameService.getDeadGames();
 
-      if (!result.success) {
-        throw new Error('Failed to fetch ghost count');
-      }
-
-      const currentDeadGame = result.data.find(
+      const currentDeadGame = (deadGames as unknown as DeadGameFromAPI[]).find(
         (dg: DeadGameFromAPI) => dg.id === deadGameId,
       );
       return {

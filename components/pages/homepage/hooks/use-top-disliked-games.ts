@@ -56,7 +56,8 @@ export function useTopDislikedGames() {
     {
       revalidateOnFocus: false,
       refreshInterval: 5000,
-      dedupingInterval: 1000,
+      dedupingInterval: 2000,
+      revalidateOnReconnect: false,
     },
   );
 

@@ -16,7 +16,7 @@ export async function GET(request: Request) {
         data: topDislikedGames,
       },
       {
-        headers: cacheHeaders.dynamic(), // Rankings change frequently with user actions
+        headers: cacheHeaders.noCache(),
       },
     );
   } catch (error) {
