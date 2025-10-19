@@ -42,7 +42,7 @@ export function VoteSidebar({
 
   return (
     <div className="relative hidden overflow-hidden rounded-lg bg-zinc-800 p-4 lg:block">
-      <div className="mb-4">
+      <div className="mb-4 hidden 2xl:block">
         <h3 className="mb-2 font-bold text-red-400">
           {t('sidebar_top_5_disliked_games')}
         </h3>
@@ -64,26 +64,26 @@ export function VoteSidebar({
               ref={(el) => {
                 thumbnailRefs.current[index] = el;
               }}
-              className={`group relative cursor-pointer rounded-md border-2 p-3 transition-all ${
+              className={`group relative cursor-pointer rounded-md border-2 p-2 transition-all 2xl:p-3 ${
                 activeIndex === index
                   ? 'border-red-500 bg-red-900/20'
                   : 'border-zinc-700 hover:border-zinc-600 hover:bg-zinc-700/50'
               }`}
               onClick={() => onGameClick(index)}
             >
-              <div className="absolute -top-2 -left-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
+              <div className="absolute -top-2 -left-2 z-10 hidden h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white xl:flex">
                 #{game.rank}
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="flex-shrink-0">
+                <div className="hidden flex-shrink-0 xl:flex">
                   {coverUrl ? (
                     <Image
                       src={coverUrl}
                       alt={`${game.title} cover`}
                       width={48}
                       height={64}
-                      className="h-16 w-12 rounded object-cover"
+                      className="rounded object-cover"
                     />
                   ) : (
                     <div className="flex h-16 w-12 items-center justify-center rounded bg-zinc-700">

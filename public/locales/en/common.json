@@ -25,6 +25,8 @@
   "_comment_homepage": "==== HOMEPAGE ====",
   "homepage_hall_of_shame": "Hall of Shame",
   "homepage_explore_more": "Explore More",
+  "homepage_view_more": "View More",
+  "homepage_explore_all_games": "Explore all games",
   "homepage_no_disliked_games": "No disliked games yet",
   "homepage_no_disliked_games_description": "Games will appear here once users start disliking them",
   "homepage_failed_load_disliked_games": "Failed to load top disliked games",

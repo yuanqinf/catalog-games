@@ -222,6 +222,7 @@ const SearchBar = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
+              className="hidden md:block"
             >
               {isInputActive || isExplorePage
                 ? t('search_button')

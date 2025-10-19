@@ -241,6 +241,7 @@ const TopDislikeGames = () => {
           <GameCarousel
             games={dissGameData}
             activeIndex={activeIndex}
+            clickingButtons={clickingButtons}
             onApiReady={(api) => {
               setCarouselApi(api);
               if (api) {
@@ -250,6 +251,7 @@ const TopDislikeGames = () => {
                 });
               }
             }}
+            onVote={handleDislikeVote}
           />
 
           {/* Mobile pagination dots */}
@@ -289,7 +291,7 @@ const TopDislikeGames = () => {
             </Button>
           </Link>
         </div>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-6 lg:grid-cols-5">
           {dissGameData.slice(5, 10).map((game, index) => {
             // Convert DissGameEntry to GameDbData format for MiniGameCard
             const gameData = {
@@ -313,6 +315,17 @@ const TopDislikeGames = () => {
               />
             );
           })}
+
+          {/* View More Card - Only visible on mobile/tablet (< lg) */}
+          <div className="block lg:hidden">
+            <MiniGameCard
+              placeholder={{
+                title: t('homepage_view_more'),
+                description: t('homepage_explore_all_games'),
+                href: '/explore',
+              }}
+            />
+          </div>
         </div>
       </div>
     </section>

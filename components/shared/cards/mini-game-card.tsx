@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Gamepad2, ThumbsDown, MoreHorizontal } from 'lucide-react';
+import {
+  Gamepad2,
+  ThumbsDown,
+  MoreHorizontal,
+  ExternalLink,
+} from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGamepad } from '@fortawesome/free-solid-svg-icons';
 import NumberFlow from '@number-flow/react';
@@ -56,13 +61,52 @@ const getPlatformIcon = (
   return iconMap[platform] || { type: 'fontawesome', icon: faGamepad };
 };
 
+interface PlaceholderConfig {
+  title: string;
+  description: string;
+  href: string;
+}
+
 const MiniGameCard = ({
   game,
   ranking,
+  placeholder,
 }: {
-  game: GameDbData;
+  game?: GameDbData;
   ranking?: number;
+  placeholder?: PlaceholderConfig;
 }) => {
+  // If placeholder is provided, render placeholder card
+  if (placeholder) {
+    return (
+      <div className="p-1">
+        <Link href={placeholder.href}>
+          <div className="group relative flex h-full cursor-pointer flex-col rounded-lg border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-900 p-4 transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:border-zinc-600 hover:shadow-2xl">
+            <div
+              className="relative mb-2 flex items-center justify-center overflow-hidden rounded bg-zinc-700/50 transition-all duration-300 group-hover:bg-zinc-600/50"
+              style={{ aspectRatio: '672/895' }}
+            >
+              <Gamepad2 className="h-16 w-16 text-gray-400 transition-all duration-300 group-hover:scale-110 group-hover:text-gray-300" />
+            </div>
+
+            <div className="mt-2 flex flex-col items-center justify-center gap-1 text-center">
+              <h3 className="line-clamp-1 font-bold text-white transition-colors duration-300 group-hover:text-gray-100">
+                {placeholder.title}
+              </h3>
+              <p className="line-clamp-1 text-sm text-gray-400 transition-colors duration-300 group-hover:text-gray-300">
+                {placeholder.description}
+              </p>
+              <ExternalLink className="mt-1 h-4 w-4 text-gray-500 transition-all duration-300 group-hover:translate-x-1 group-hover:text-gray-400" />
+            </div>
+          </div>
+        </Link>
+      </div>
+    );
+  }
+
+  // Regular game card
+  if (!game) return null;
+
   const [isClicking, setIsClicking] = useState(false);
   const [localDislikeCount, setLocalDislikeCount] = useState(
     game.dislike_count || 0,

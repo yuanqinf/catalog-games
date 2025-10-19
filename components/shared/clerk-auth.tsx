@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
-import { Loader2, LogIn } from 'lucide-react';
+import { Loader2, LogIn, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUserSync } from '@/hooks/useUserSync';
 import { dark } from '@clerk/themes';
@@ -133,7 +133,10 @@ const ClerkAuth = () => {
             </SignedOut>
             <SignedIn>
               <Link href={'/profile'}>
-                <Button>{t('auth_profile')}</Button>
+                <Button>
+                  <User className="h-3 w-3" />
+                  <p className="hidden md:block">{t('auth_profile')}</p>
+                </Button>
               </Link>
               <UserButton
                 appearance={{
