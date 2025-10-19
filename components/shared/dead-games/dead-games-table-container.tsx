@@ -15,12 +15,12 @@ import { useTranslation } from '@/lib/i18n/client';
 interface DeadGamesTableContainerProps {
   limit?: number; // undefined = show all games
   showSorting?: boolean;
-  showGameCount?: boolean;
+  showAddDeadGameRow?: boolean;
 }
 
 export const DeadGamesTableContainer: React.FC<
   DeadGamesTableContainerProps
-> = ({ limit, showSorting = false, showGameCount = false }) => {
+> = ({ limit, showSorting = false, showAddDeadGameRow = false }) => {
   const { t } = useTranslation();
   // Fetch dead games data from Supabase with short polling for real-time updates
   const {
@@ -338,48 +338,50 @@ export const DeadGamesTableContainer: React.FC<
         onSortByDate={handleSortByDate}
       />
 
-      {/* Add Dead Game Prompt */}
-      <div className="max-w-8xl mx-auto mt-6">
-        <div className="overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900/50 shadow-2xl">
-          <div className="grid grid-cols-[auto_1fr_1fr_1fr_auto] items-center gap-6 px-6 py-6">
-            {/* Ghost Icon Skeleton */}
-            <div className="flex h-16 w-12 items-center justify-center overflow-hidden rounded-lg bg-zinc-800/50 shadow-md">
-              <Ghost className="h-6 w-6 text-gray-500 opacity-50" />
-            </div>
+      {/* Add Dead Game Row */}
+      {showAddDeadGameRow && (
+        <div className="max-w-8xl mx-auto mt-6">
+          <div className="overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900/50 shadow-2xl">
+            <div className="grid grid-cols-[auto_1fr_1fr_1fr_auto] items-center gap-6 px-6 py-6">
+              {/* Ghost Icon Skeleton */}
+              <div className="flex h-16 w-12 items-center justify-center overflow-hidden rounded-lg bg-zinc-800/50 shadow-md">
+                <Ghost className="h-6 w-6 text-gray-500 opacity-50" />
+              </div>
 
-            {/* Game Name Skeleton */}
-            <div className="space-y-2">
-              <div className="h-4 w-48 animate-pulse rounded bg-zinc-800/50" />
-              <div className="h-3 w-32 animate-pulse rounded bg-zinc-800/30" />
-            </div>
+              {/* Game Name Skeleton */}
+              <div className="space-y-2">
+                <div className="h-4 w-48 animate-pulse rounded bg-zinc-800/50" />
+                <div className="h-3 w-32 animate-pulse rounded bg-zinc-800/30" />
+              </div>
 
-            <div className="space-y-2">
-              <div className="h-4 w-48 animate-pulse rounded bg-zinc-800/50" />
-              <div className="h-3 w-32 animate-pulse rounded bg-zinc-800/30" />
-            </div>
+              <div className="space-y-2">
+                <div className="h-4 w-48 animate-pulse rounded bg-zinc-800/50" />
+                <div className="h-3 w-32 animate-pulse rounded bg-zinc-800/30" />
+              </div>
 
-            <div className="space-y-2">
-              <div className="h-4 w-48 animate-pulse rounded bg-zinc-800/50" />
-              <div className="h-3 w-32 animate-pulse rounded bg-zinc-800/30" />
-            </div>
+              <div className="space-y-2">
+                <div className="h-4 w-48 animate-pulse rounded bg-zinc-800/50" />
+                <div className="h-3 w-32 animate-pulse rounded bg-zinc-800/30" />
+              </div>
 
-            {/* Text and Button */}
-            <div className="col-span-full flex items-center justify-center gap-6 border-t border-zinc-800 pt-4 sm:col-span-1 sm:border-0 sm:pt-0">
-              <span className="hidden text-base text-gray-400 lg:inline">
-                {t('explore_know_another_game')}
-              </span>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setIsFeedbackOpen(true)}
-                className="border-zinc-600 bg-zinc-800/50 text-gray-300 transition-all duration-200 hover:scale-105 hover:border-zinc-500 hover:bg-zinc-700 hover:text-white"
-              >
-                {t('explore_let_us_know')}
-              </Button>
+              {/* Text and Button */}
+              <div className="col-span-full flex items-center justify-center gap-6 border-t border-zinc-800 pt-4 sm:col-span-1 sm:border-0 sm:pt-0">
+                <span className="hidden text-base text-gray-400 lg:inline">
+                  {t('explore_know_another_game')}
+                </span>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setIsFeedbackOpen(true)}
+                  className="border-zinc-600 bg-zinc-800/50 text-gray-300 transition-all duration-200 hover:scale-105 hover:border-zinc-500 hover:bg-zinc-700 hover:text-white"
+                >
+                  {t('explore_let_us_know')}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Feedback Dialog */}
       <FeedbackDialog

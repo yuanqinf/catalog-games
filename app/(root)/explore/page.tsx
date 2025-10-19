@@ -238,7 +238,7 @@ const GameExplorePage = () => {
             className="gap-4 p-6 xl:p-12"
           >
             {/* Graveyard view */}
-            <DeadGamesTableContainer showSorting={true} showGameCount={true} />
+            <DeadGamesTableContainer showSorting showAddDeadGameRow />
 
             {/* Bottom Quote - only in graveyard view */}
             <div className="mt-16 text-center">
