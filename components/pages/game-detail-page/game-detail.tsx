@@ -400,7 +400,9 @@ const GameDetail = ({
           <Link href="/explore">
             <Button variant="ghost" className="text-gray-300 hover:text-white">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              {isDeadGame ? t('game_detail_back_to_graveyard') : t('game_detail_back_to_top_100')}
+              {isDeadGame
+                ? t('game_detail_back_to_graveyard')
+                : t('game_detail_back_to_top_100')}
             </Button>
           </Link>
         </div>

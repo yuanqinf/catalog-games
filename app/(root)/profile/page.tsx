@@ -113,9 +113,7 @@ const UserProfilePage = () => {
             </div>
           </div>
           <blockquote className="text-muted-foreground hidden max-w-md border-l-2 border-gray-600 pl-4 italic lg:block">
-            <p className="text-base leading-relaxed">
-              {t('profile_quote')}
-            </p>
+            <p className="text-base leading-relaxed">{t('profile_quote')}</p>
             <footer className="mt-3 text-sm font-medium text-gray-300">
               {t('profile_quote_author')}
             </footer>
@@ -131,7 +129,9 @@ const UserProfilePage = () => {
                     totalDislikes
                   )}
                 </p>
-                <p className="text-muted-foreground text-sm">{t('profile_total_dislikes')}</p>
+                <p className="text-muted-foreground text-sm">
+                  {t('profile_total_dislikes')}
+                </p>
               </div>
             </div>
           </div>
@@ -140,7 +140,9 @@ const UserProfilePage = () => {
       <hr className="my-8 border-zinc-700" />
 
       <section>
-        <h2 className="mb-6 text-2xl font-bold">{t('profile_my_disliked_games')}</h2>
+        <h2 className="mb-6 text-2xl font-bold">
+          {t('profile_my_disliked_games')}
+        </h2>
         {isLoadingGames ? (
           <div className="flex justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin" />

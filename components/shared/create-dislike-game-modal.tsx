@@ -123,9 +123,7 @@ export const CreateDislikeGameModal = ({
             </Button>
           </CardAction>
           <CardTitle>{t('dislike_modal_title')}</CardTitle>
-          <CardDescription>
-            {t('dislike_modal_description')}
-          </CardDescription>
+          <CardDescription>{t('dislike_modal_description')}</CardDescription>
         </CardHeader>
 
         <CardContent>

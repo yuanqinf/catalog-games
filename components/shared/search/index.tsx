@@ -133,7 +133,9 @@ const SearchBar = () => {
     } catch (error) {
       console.error('Failed to submit dislike:', error);
       toast.error(
-        error instanceof Error ? error.message : t('search_failed_to_submit_dislike'),
+        error instanceof Error
+          ? error.message
+          : t('search_failed_to_submit_dislike'),
       );
     } finally {
       setIsSubmittingDislike(false);
@@ -215,7 +217,9 @@ const SearchBar = () => {
               animate="visible"
               exit="exit"
             >
-              {isInputActive || isExplorePage ? t('search_button') : t('search_explore_button')}
+              {isInputActive || isExplorePage
+                ? t('search_button')
+                : t('search_explore_button')}
             </motion.p>
           </AnimatePresence>
         </Button>

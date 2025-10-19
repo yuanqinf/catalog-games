@@ -92,6 +92,24 @@
   "profile_quote": "Ultimately, the player's experience is the truth. If the game does not feel right to them, then it is not right.",
   "profile_quote_author": "— Jesse Schell, The Art of Game Design",
 
+  "_comment_feedback": "==== FEEDBACK DIALOG ====",
+  "feedback_dialog_title": "Send Feedback",
+  "feedback_dialog_description": "Help us improve! Let us know what you think.",
+  "feedback_reason_label": "Reason",
+  "feedback_reason_placeholder": "Select a reason",
+  "feedback_reason_broken": "Something's broken",
+  "feedback_reason_missing_game": "Didn't find the game I wanted",
+  "feedback_reason_add_games": "Want to add more dead games",
+  "feedback_reason_feature_idea": "I have a feature idea",
+  "feedback_reason_other": "Just wanted to say something",
+  "feedback_input_label": "Your feedback",
+  "feedback_input_placeholder": "Tell us more...",
+  "feedback_cancel_button": "Cancel",
+  "feedback_submit_button": "Send Feedback",
+  "feedback_submitting": "Sending...",
+  "feedback_success": "Thank you for your feedback!",
+  "feedback_error": "Failed to send feedback. Please try again.",
+
   "_comment_errors": "==== MESSAGES ====",
   "error_unknown": "Unknown error occurred"
 }

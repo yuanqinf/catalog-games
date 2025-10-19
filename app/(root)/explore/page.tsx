@@ -162,13 +162,17 @@ const GameExplorePage = () => {
             {view === 'graveyard' ? (
               <>
                 <ArrowBigLeftDash className="!h-8 !w-8" />
-                <span className="text-lg font-bold">{t('explore_top_disliked_games')}</span>
+                <span className="text-lg font-bold">
+                  {t('explore_top_disliked_games')}
+                </span>
                 <ThumbsDown className="!h-4 !w-4" />
               </>
             ) : (
               <>
                 <Ghost className="!h-5 !w-5" />
-                <span className="text-lg font-bold">{t('explore_game_graveyard')}</span>
+                <span className="text-lg font-bold">
+                  {t('explore_game_graveyard')}
+                </span>
                 <ArrowBigRightDash className="!h-8 !w-8" />
               </>
             )}
@@ -199,7 +203,9 @@ const GameExplorePage = () => {
               }`}
               style={{ fontWeight: 900 }}
             >
-              {view === 'graveyard' ? t('explore_game_graveyard') : t('explore_top_disliked_games')}
+              {view === 'graveyard'
+                ? t('explore_game_graveyard')
+                : t('explore_top_disliked_games')}
             </h1>
             <p className="text-lg text-gray-400">
               {view === 'graveyard'

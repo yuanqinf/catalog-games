@@ -44,7 +44,12 @@ const Header = () => {
     >
       <Link href="/" className="justify-self-start">
         <div className="header-logo">
-          <Image src="/images/logo.png" alt={t('header_logo_alt')} width={56} height={56} />
+          <Image
+            src="/images/logo.png"
+            alt={t('header_logo_alt')}
+            width={56}
+            height={56}
+          />
         </div>
       </Link>
       <div
