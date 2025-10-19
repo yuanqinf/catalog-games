@@ -11,6 +11,8 @@ export const createGameHandlers = (
   setShowDislikeModal: (show: boolean) => void,
   setSearchHistory: (history: SearchHistoryItem[]) => void,
   getSearchHistory: () => SearchHistoryItem[],
+  setSupabaseGames: (games: GameDbData[]) => void,
+  setIgdbGames: (games: IgdbGame[]) => void,
 ) => {
   const handleSelectSuggestion = (game: GameDbData) => {
     // Add to search history
@@ -24,7 +26,9 @@ export const createGameHandlers = (
     // Update search history state
     setSearchHistory(getSearchHistory());
 
-    // Clear input and hide suggestions
+    // Clear search results, input and hide suggestions
+    setSupabaseGames([]);
+    setIgdbGames([]);
     setInputValue('');
     setShowSuggestions(false);
     setIsInputActive(false);
@@ -45,7 +49,9 @@ export const createGameHandlers = (
     // Update search history state
     setSearchHistory(getSearchHistory());
 
-    // Clear input and hide suggestions
+    // Clear search results, input and hide suggestions
+    setSupabaseGames([]);
+    setIgdbGames([]);
     setInputValue('');
     setShowSuggestions(false);
     setIsInputActive(false);

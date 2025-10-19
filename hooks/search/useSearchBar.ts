@@ -46,6 +46,8 @@ export const useSearchBar = () => {
     setShowDislikeModal,
     setSearchHistory,
     getSearchHistory,
+    setSupabaseGames,
+    setIgdbGames,
   );
 
   // Click outside handler
@@ -135,10 +137,14 @@ export const useSearchBar = () => {
 
   const handleSearchClick = () => {
     if (inputValue.trim()) {
+      // Ensure input is active and suggestions panel is visible before performing search
+      setIsInputActive(true);
+      setShowSuggestions(true);
       performSuggestionSearch(inputValue);
     } else {
       // If no input, activate the search bar and focus input
       setIsInputActive(true);
+      setShowSuggestions(true);
       inputRef.current?.focus();
     }
   };
@@ -155,11 +161,10 @@ export const useSearchBar = () => {
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
-    // When user changes input, clear current results and hide suggestions
+    // When user changes input, clear current results but keep suggestions panel visible
     if (value.trim() !== inputValue.trim()) {
       setSupabaseGames([]);
       setIgdbGames([]);
-      setShowSuggestions(false);
     }
   };
 
