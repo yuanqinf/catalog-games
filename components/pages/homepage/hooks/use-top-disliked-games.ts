@@ -19,7 +19,7 @@ interface TopDislikedGamesResponse {
   error?: string;
 }
 
-export interface GameOverEntry {
+export interface DissGameEntry {
   id: string;
   title: string;
   bannerUrl: string;
@@ -38,7 +38,7 @@ interface FloatingThumb {
 }
 
 export function useTopDislikedGames() {
-  const [gameOverData, setGameOverData] = useState<GameOverEntry[]>([]);
+  const [dissGameData, setDissGameData] = useState<DissGameEntry[]>([]);
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
 
   const {
@@ -63,7 +63,7 @@ export function useTopDislikedGames() {
 
   useEffect(() => {
     if (topDislikedGamesResponse?.data) {
-      setGameOverData((prevData) => {
+      setDissGameData((prevData) => {
         const transformedData = topDislikedGamesResponse.data.map(
           (game, index) => ({
             id: game.igdb_id.toString(),
@@ -102,8 +102,8 @@ export function useTopDislikedGames() {
   }, [topDislikedGamesResponse?.data]);
 
   return {
-    gameOverData,
-    setGameOverData,
+    dissGameData,
+    setDissGameData,
     floatingThumbs,
     setFloatingThumbs,
     topDislikedGamesResponse,

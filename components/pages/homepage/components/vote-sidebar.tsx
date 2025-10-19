@@ -5,7 +5,7 @@ import { ThumbsDown, Gamepad2 } from 'lucide-react';
 import NumberFlow from '@number-flow/react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import type { GameOverEntry } from '../hooks/use-top-disliked-games';
+import type { DissGameEntry } from '../hooks/use-top-disliked-games';
 import { useTranslation } from '@/lib/i18n/client';
 
 interface TopDislikedGame {
@@ -20,7 +20,7 @@ interface TopDislikedGame {
 }
 
 interface VoteSidebarProps {
-  games: GameOverEntry[];
+  games: DissGameEntry[];
   topDislikedGamesData: TopDislikedGame[] | undefined;
   activeIndex: number;
   clickingButtons: Set<string>;

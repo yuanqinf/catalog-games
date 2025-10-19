@@ -9,10 +9,10 @@ import {
   CarouselContent,
   CarouselItem,
 } from '@/components/ui/carousel';
-import type { GameOverEntry } from '../hooks/use-top-disliked-games';
+import type { DissGameEntry } from '../hooks/use-top-disliked-games';
 
 interface GameCarouselProps {
-  games: GameOverEntry[];
+  games: DissGameEntry[];
   activeIndex: number;
   onApiReady: (api: any) => void;
 }

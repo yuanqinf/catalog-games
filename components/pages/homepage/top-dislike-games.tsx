@@ -20,8 +20,8 @@ const TopDislikeGames = () => {
   const thumbnailRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const {
-    gameOverData,
-    setGameOverData,
+    dissGameData,
+    setDissGameData,
     floatingThumbs,
     setFloatingThumbs,
     topDislikedGamesResponse,
@@ -61,7 +61,7 @@ const TopDislikeGames = () => {
     }, 200);
 
     // Find the index of the voted game
-    const gameIndex = gameOverData.findIndex((game) => game.id === gameId);
+    const gameIndex = dissGameData.findIndex((game) => game.id === gameId);
 
     // Switch to the voted game if it's not currently active
     if (gameIndex !== -1 && gameIndex !== activeIndex) {
@@ -104,7 +104,7 @@ const TopDislikeGames = () => {
     });
 
     // Optimistically update the UI immediately
-    setGameOverData((prev) =>
+    setDissGameData((prev) =>
       prev.map((game) =>
         game.id === gameId
           ? { ...game, dislikeCount: game.dislikeCount + increment }
@@ -125,13 +125,13 @@ const TopDislikeGames = () => {
 
   // Scroll the active thumbnail into view when activeIndex changes
   useEffect(() => {
-    if (thumbnailRefs.current[activeIndex] && gameOverData.length > 0) {
+    if (thumbnailRefs.current[activeIndex] && dissGameData.length > 0) {
       thumbnailRefs.current[activeIndex]?.scrollIntoView({
         behavior: 'smooth',
         block: 'nearest',
       });
     }
-  }, [activeIndex, gameOverData.length]);
+  }, [activeIndex, dissGameData.length]);
 
   // Error state
   if (error) {
@@ -201,7 +201,7 @@ const TopDislikeGames = () => {
   }
 
   // Empty state
-  if (!gameOverData || gameOverData.length === 0) {
+  if (!dissGameData || dissGameData.length === 0) {
     return (
       <section className="relative mb-12">
         <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-gray-400">
@@ -232,14 +232,14 @@ const TopDislikeGames = () => {
         <div className="relative lg:col-span-3">
           <FloatingThumbs
             floatingThumbs={floatingThumbs}
-            activeGameId={gameOverData[activeIndex]?.id}
+            activeGameId={dissGameData[activeIndex]?.id}
             onAnimationComplete={(id) => {
               setFloatingThumbs((prev) => prev.filter((t) => t.id !== id));
             }}
           />
 
           <GameCarousel
-            games={gameOverData}
+            games={dissGameData}
             activeIndex={activeIndex}
             onApiReady={(api) => {
               setCarouselApi(api);
@@ -254,7 +254,7 @@ const TopDislikeGames = () => {
 
           {/* Mobile pagination dots */}
           <PaginationDots
-            totalItems={Math.min(gameOverData.length, 5)}
+            totalItems={Math.min(dissGameData.length, 5)}
             activeIndex={activeIndex}
             carouselApi={carouselApi}
             className="lg:hidden"
@@ -262,7 +262,7 @@ const TopDislikeGames = () => {
         </div>
 
         <VoteSidebar
-          games={gameOverData}
+          games={dissGameData}
           topDislikedGamesData={topDislikedGamesResponse?.data}
           activeIndex={activeIndex}
           clickingButtons={clickingButtons}
@@ -290,8 +290,8 @@ const TopDislikeGames = () => {
           </Link>
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-          {gameOverData.slice(5, 10).map((game, index) => {
-            // Convert GameOverEntry to GameDbData format for MiniGameCard
+          {dissGameData.slice(5, 10).map((game, index) => {
+            // Convert DissGameEntry to GameDbData format for MiniGameCard
             const gameData = {
               id: parseInt(game.id),
               igdb_id: parseInt(game.id),
@@ -300,8 +300,8 @@ const TopDislikeGames = () => {
               cover_url: game.bannerUrl,
               banner_url: game.bannerUrl,
               developers: game.developer ? [game.developer] : null,
-              platforms: [], // We don't have platform data in GameOverEntry
-              first_release_date: null, // We don't have release date in GameOverEntry
+              platforms: [], // We don't have platform data in DissGameEntry
+              first_release_date: null, // We don't have release date in DissGameEntry
               dislike_count: game.dislikeCount,
             };
 
