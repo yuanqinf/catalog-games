@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import NumberFlow from '@number-flow/react';
+import { useTranslation } from '@/lib/i18n/client';
 
 // API response interface
 interface RankingData {
@@ -49,6 +50,7 @@ const GameDetailHeadline = ({
   deadStatus,
   ghostCount = 0,
 }: GameDetailHeadlineProps) => {
+  const { t } = useTranslation();
   const [rankingData, setRankingData] = useState<RankingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,10 +65,10 @@ const GameDetailHeadline = ({
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      toast.success('Link copied!');
+      toast.success(t('game_detail_link_copied'));
     } catch (error) {
       console.error('Failed to copy link:', error);
-      toast.error('Failed to copy link');
+      toast.error(t('game_detail_failed_copy_link'));
     }
   };
 
@@ -135,7 +137,7 @@ const GameDetailHeadline = ({
       <section className="mb-8">
         <div className="p-6">
           <div className="text-center text-gray-400">
-            {error || 'Failed to load ranking data'}
+            {error || t('game_detail_failed_load_ranking')}
           </div>
         </div>
       </section>
@@ -193,7 +195,7 @@ const GameDetailHeadline = ({
                             className={`h-4 w-4 ${isDeadGame ? 'text-grey-400' : 'text-blue-400'}`}
                           />
                           <span className="text-sm text-gray-400">
-                            Released{' '}
+                            {t('game_detail_released')}
                             {new Date(gameReleaseDate).toLocaleDateString()}
                           </span>
                         </div>
@@ -233,12 +235,12 @@ const GameDetailHeadline = ({
                       >
                         {rankingData?.currentGame.rank
                           ? `#${rankingData.currentGame.rank}`
-                          : 'Outside Top 100'}
+                          : t('game_detail_outside_top_100')}
                       </Badge>
                       <span className="text-sm text-gray-400">
                         {rankingData?.currentGame.rank
-                          ? 'of top 100 most disliked'
-                          : 'This game is not that bad :)'}
+                          ? t('game_detail_of_top_100_disliked')
+                          : t('game_detail_not_that_bad')}
                       </span>
                     </div>
 
@@ -252,8 +254,6 @@ const GameDetailHeadline = ({
                       </span>
                     </div>
 
-                    {/* Disliked User Count */}
-
                     {/* Release Date */}
                     {gameReleaseDate && (
                       <>
@@ -261,7 +261,7 @@ const GameDetailHeadline = ({
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-blue-400" />
                           <span className="text-sm text-gray-400">
-                            Released{' '}
+                            {t('game_detail_released')}
                             {new Date(gameReleaseDate).toLocaleDateString()}
                           </span>
                         </div>
@@ -277,7 +277,7 @@ const GameDetailHeadline = ({
           <div className="flex items-center gap-3">
             <Button onClick={handleShare} variant="outline">
               <Share2 className="mr-1 h-4 w-4" />
-              Share
+              {t('game_detail_share_button')}
             </Button>
           </div>
         </div>

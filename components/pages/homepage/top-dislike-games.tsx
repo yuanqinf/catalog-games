@@ -139,8 +139,10 @@ const TopDislikeGames = () => {
       <section className="relative mb-12">
         <div className="flex h-64 items-center justify-center rounded-lg border bg-zinc-800/50">
           <div className="text-center">
-            <p className="mb-2">Failed to load top disliked games</p>
-            <p className="text-sm opacity-75">Please try again later</p>
+            <p className="mb-2">{t('homepage_failed_load_disliked_games')}</p>
+            <p className="text-sm opacity-75">
+              {t('homepage_please_try_again')}
+            </p>
           </div>
         </div>
       </section>
@@ -155,7 +157,9 @@ const TopDislikeGames = () => {
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <ThumbsDown className="h-6 w-6 fill-current text-red-500" />
-            <h2 className="text-2xl font-bold">Hall of Shame</h2>
+            <h2 className="text-2xl font-bold">
+              {t('homepage_hall_of_shame')}
+            </h2>
           </div>
           <Link href="/explore">
             <Button
@@ -180,9 +184,11 @@ const TopDislikeGames = () => {
           {/* Sidebar Area */}
           <div className="hidden h-full rounded-lg bg-zinc-800 p-4 lg:block">
             <div className="mb-4">
-              <h3 className="mb-2 font-bold text-red-400">Attack Panel</h3>
+              <h3 className="mb-2 font-bold text-red-400">
+                {t('homepage_attack_panel')}
+              </h3>
               <p className="text-xs text-gray-400">
-                Cast your vote to increase the shame!
+                {t('homepage_cast_vote_increase_shame')}
               </p>
             </div>
             <div className="flex items-center justify-center py-8">

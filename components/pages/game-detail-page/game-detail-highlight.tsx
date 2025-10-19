@@ -27,6 +27,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { RATING_BLOCK_COLORS } from '@/constants/colors';
+import { useTranslation } from '@/lib/i18n/client';
 
 export interface StatisticItem {
   title: string;
@@ -70,6 +71,7 @@ export default function GameDetailHighlight({
   onGhostClick,
   isSignedIn = false,
 }: GameDetailHighlightProps) {
+  const { t } = useTranslation();
   const {
     rating,
     overallAverage,
@@ -130,7 +132,9 @@ export default function GameDetailHighlight({
                   <NumberFlow value={userDislikeCount} />
                 </span>
               )}
-              <span className="text-xs text-gray-500">yours</span>
+              <span className="text-xs text-gray-500">
+                {t('game_detail_yours_dislikes')}
+              </span>
             </div>
           ) : (
             <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
@@ -139,7 +143,7 @@ export default function GameDetailHighlight({
                 className="flex cursor-pointer items-center gap-1 text-sm text-gray-400 transition-colors hover:text-gray-300"
               >
                 <LogIn className="h-3 w-3" />
-                <span>Sign in to track your dislikes</span>
+                <span>{t('game_detail_sign_in_to_track_dislikes')}</span>
               </Button>
             </SignInButton>
           )}
@@ -277,7 +281,7 @@ export default function GameDetailHighlight({
                 className="mr-1"
               />
               <span className="hidden sm:inline-block">
-                Diss Avg. Rating:{' '}
+                {t('game_detail_diss_avg_rating')}:{' '}
                 <span
                   className="font-bold"
                   style={{

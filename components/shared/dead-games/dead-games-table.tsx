@@ -17,6 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { DeadGame } from '@/types';
+import { useTranslation } from '@/lib/i18n/client';
 
 interface DeadGamesTableProps {
   games: DeadGame[];
@@ -41,6 +42,8 @@ export const DeadGamesTable: React.FC<DeadGamesTableProps> = ({
   onSortByReactions,
   onSortByDate,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="max-w-8xl mx-auto">
       <div className="overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900/50 shadow-2xl">
@@ -49,7 +52,9 @@ export const DeadGamesTable: React.FC<DeadGamesTableProps> = ({
             <TableHeader>
               <TableRow>
                 <TableHead className="w-20 px-6 py-6" />
-                <TableHead className="px-6 py-6">Game</TableHead>
+                <TableHead className="px-6 py-6">
+                  {t('table_header_game')}
+                </TableHead>
                 <TableHead className="hidden px-6 py-6 sm:table-cell">
                   {showSorting && onSortByDate ? (
                     <Button
@@ -58,7 +63,7 @@ export const DeadGamesTable: React.FC<DeadGamesTableProps> = ({
                       onClick={onSortByDate}
                       className="flex items-center gap-1 px-2 py-1 text-gray-400 hover:text-gray-200"
                     >
-                      Date
+                      {t('table_header_date')}
                       {sortByDate === 'none' && (
                         <ArrowUpDown className="h-3 w-3" />
                       )}
@@ -70,15 +75,17 @@ export const DeadGamesTable: React.FC<DeadGamesTableProps> = ({
                       )}
                     </Button>
                   ) : (
-                    'Date'
+                    t('table_header_date')
                   )}
                 </TableHead>
-                <TableHead className="px-6 py-6">Status</TableHead>
+                <TableHead className="px-6 py-6">
+                  {t('table_header_status')}
+                </TableHead>
                 <TableHead className="hidden px-6 py-6 lg:table-cell">
-                  Developer
+                  {t('table_header_developer')}
                 </TableHead>
                 <TableHead className="hidden px-6 py-6 xl:table-cell">
-                  Publisher
+                  {t('table_header_publisher')}
                 </TableHead>
                 <TableHead className="px-6 py-6 text-center">
                   {showSorting && onSortByReactions ? (

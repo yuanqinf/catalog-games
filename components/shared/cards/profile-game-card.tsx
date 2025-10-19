@@ -28,6 +28,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { RATING_BLOCK_COLORS } from '@/constants/colors';
+import { useTranslation } from '@/lib/i18n/client';
 
 interface ProfileGameCardProps {
   game: GameDbData;
@@ -50,6 +51,7 @@ export default function ProfileGameCard({
   userGameDislikeCount,
   userGameEmojiCount,
 }: ProfileGameCardProps) {
+  const { t } = useTranslation();
   const {
     rating,
     overallAverage,
@@ -122,24 +124,27 @@ export default function ProfileGameCard({
       ).length;
 
       if (successCount === 3) {
-        toast.success(`Successfully removed all interactions for ${game.name}`);
+        toast.success(`${t('profile_card_removed_all_success')} ${game.name}`);
         setIsDialogOpen(false);
         window.location.reload();
       } else if (successCount > 0) {
         const successMessages = [];
-        if (dislikeSuccess) successMessages.push('dislikes');
-        if (emojiSuccess) successMessages.push('emoji reactions');
-        if (ratingSuccess) successMessages.push('ratings');
+        if (dislikeSuccess) successMessages.push(t('profile_card_dislikes'));
+        if (emojiSuccess)
+          successMessages.push(t('profile_card_emoji_reactions'));
+        if (ratingSuccess) successMessages.push(t('profile_card_ratings'));
 
-        toast.success(`Removed ${successMessages.join(', ')} for ${game.name}`);
+        toast.success(
+          `${t('profile_card_removed_partial_success').replace('{items}', successMessages.join(', ')).replace('{game}', game.name)}`,
+        );
         setIsDialogOpen(false);
         window.location.reload();
       } else {
-        toast.error('No interactions found to remove');
+        toast.error(t('profile_card_no_interactions'));
       }
     } catch (error) {
       console.error('Error removing interactions:', error);
-      toast.error('An error occurred while removing data');
+      toast.error(t('profile_card_error_removing'));
     } finally {
       setIsRemoving(false);
     }
@@ -267,7 +272,7 @@ export default function ProfileGameCard({
             className="mr-1"
           />
           <span className="hidden sm:inline-block">
-            Diss Avg. Rating:{' '}
+            {t('profile_card_diss_avg_rating')}{' '}
             <span
               className="font-bold"
               style={{
@@ -289,17 +294,16 @@ export default function ProfileGameCard({
               className="bg-red-500 font-bold text-white transition-all hover:scale-105 hover:bg-red-600 hover:shadow-lg"
             >
               <CircleX className="h-4 w-4" />
-              Remove
+              {t('profile_card_remove_button')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Remove All Interactions</DialogTitle>
+              <DialogTitle>{t('profile_card_remove_dialog_title')}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to remove all your dislikes and emoji
-                reactions for{' '}
-                <span className="font-semibold text-white">{game.name}</span>?
-                This action cannot be undone.
+                {t('profile_card_remove_dialog_description')}{' '}
+                <span className="font-semibold text-white">{game.name}</span>?{' '}
+                {t('profile_card_remove_dialog_warning')}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -308,7 +312,7 @@ export default function ProfileGameCard({
                 onClick={() => setIsDialogOpen(false)}
                 disabled={isRemoving}
               >
-                Cancel
+                {t('profile_card_cancel_button')}
               </Button>
               <Button
                 onClick={handleUndoDislike}
@@ -318,10 +322,10 @@ export default function ProfileGameCard({
                 {isRemoving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Removing...
+                    {t('profile_card_removing')}
                   </>
                 ) : (
-                  'Remove All'
+                  t('profile_card_remove_all_button')
                 )}
               </Button>
             </DialogFooter>

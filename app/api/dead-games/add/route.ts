@@ -8,6 +8,7 @@ interface AddDeadGameRequest {
   igdbGameData: {
     id: number;
     name: string;
+    slug: string;
     cover?: {
       url: string;
     };

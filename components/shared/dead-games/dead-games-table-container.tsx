@@ -8,6 +8,7 @@ import { DeadGameFromAPI, DeadGame } from '@/types';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 import { DeadGamesTable } from './dead-games-table';
 import { useThrottledReaction } from '@/hooks/useThrottledReaction';
+import { useTranslation } from '@/lib/i18n/client';
 
 interface DeadGamesTableContainerProps {
   limit?: number; // undefined = show all games
@@ -18,6 +19,7 @@ interface DeadGamesTableContainerProps {
 export const DeadGamesTableContainer: React.FC<
   DeadGamesTableContainerProps
 > = ({ limit, showSorting = false, showGameCount = false }) => {
+  const { t } = useTranslation();
   // Fetch dead games data from Supabase with short polling for real-time updates
   const {
     data: deadGamesResponse,
@@ -244,8 +246,8 @@ export const DeadGamesTableContainer: React.FC<
     return (
       <div className="flex h-64 items-center justify-center rounded-lg bg-zinc-800/50">
         <div className="text-center">
-          <p className="mb-2">Failed to load dead games</p>
-          <p className="text-sm opacity-75">Please try again later</p>
+          <p className="mb-2">{t('explore_failed_load_dead_games')}</p>
+          <p className="text-sm opacity-75">{t('explore_try_again_later')}</p>
         </div>
       </div>
     );
@@ -257,7 +259,7 @@ export const DeadGamesTableContainer: React.FC<
       <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50">
         <div className="flex items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-          <p className="text-gray-400">Loading dead games...</p>
+          <p className="text-gray-400">{t('explore_loading_dead_games')}</p>
         </div>
       </div>
     );
@@ -269,10 +271,8 @@ export const DeadGamesTableContainer: React.FC<
       <div className="flex h-64 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-gray-400">
         <div className="text-center">
           <Ghost size={48} className="mx-auto mb-4 opacity-50" />
-          <p className="mb-2">The graveyard is empty</p>
-          <p className="text-sm opacity-75">
-            No dead games have been added yet
-          </p>
+          <p className="mb-2">{t('explore_graveyard_empty')}</p>
+          <p className="text-sm opacity-75">{t('explore_no_dead_games_yet')}</p>
         </div>
       </div>
     );

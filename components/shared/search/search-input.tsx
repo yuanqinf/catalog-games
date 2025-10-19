@@ -1,6 +1,5 @@
 'use client';
 
-import { KeyboardEvent, MouseEvent } from 'react';
 import { Search as SearchIconLucide, X as XIcon, Loader2 } from 'lucide-react';
 import { CommandInput } from '@/components/ui/command';
 import { useTranslation } from '@/lib/i18n/client';

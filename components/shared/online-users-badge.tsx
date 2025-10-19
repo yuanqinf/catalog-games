@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import NumberFlow from '@number-flow/react';
 import { Button } from '../ui/button';
 import { FeedbackDialog } from './feedback-dialog';
+import { useTranslation } from '@/lib/i18n/client';
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -17,6 +18,7 @@ const fetcher = async (url: string) => {
 };
 
 const OnlineUsersBadge = () => {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -102,7 +104,8 @@ const OnlineUsersBadge = () => {
 
             {/* Count */}
             <span className="pointer-events-none font-medium text-white">
-              <NumberFlow value={onlineCount} /> online
+              <NumberFlow value={onlineCount} />
+              {t('badge_online_suffix')}
             </span>
 
             {/* Expanded info on hover */}
@@ -117,7 +120,8 @@ const OnlineUsersBadge = () => {
                 >
                   <ThumbsDown className="h-3.5 w-3.5 fill-current text-red-500" />
                   <span className="pointer-events-none font-medium whitespace-nowrap text-white">
-                    <NumberFlow value={totalDislikes} /> dislikes
+                    <NumberFlow value={totalDislikes} />
+                    {t('badge_dislikes_suffix')}
                   </span>
 
                   <Button

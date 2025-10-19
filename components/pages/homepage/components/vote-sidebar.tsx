@@ -6,6 +6,7 @@ import NumberFlow from '@number-flow/react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import type { GameOverEntry } from '../hooks/use-top-disliked-games';
+import { useTranslation } from '@/lib/i18n/client';
 
 interface TopDislikedGame {
   id: number;
@@ -37,12 +38,16 @@ export function VoteSidebar({
   onGameClick,
   onVote,
 }: VoteSidebarProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="relative hidden overflow-hidden rounded-lg bg-zinc-800 p-4 lg:block">
       <div className="mb-4">
-        <h3 className="mb-2 font-bold text-red-400">Top 5 Disliked Games</h3>
+        <h3 className="mb-2 font-bold text-red-400">
+          {t('sidebar_top_5_disliked_games')}
+        </h3>
         <p className="text-xs text-gray-400">
-          Cast your vote to increase the shame!
+          {t('sidebar_cast_vote_to_increase_shame')}
         </p>
       </div>
 

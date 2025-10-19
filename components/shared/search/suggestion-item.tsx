@@ -9,6 +9,7 @@ import {
 } from '@/types';
 import Image from 'next/image';
 import NumberFlow from '@number-flow/react';
+import { useTranslation } from '@/lib/i18n/client';
 
 interface SuggestionItemProps {
   item: SuggestionItemType;
@@ -62,6 +63,8 @@ export const SuggestionItem = ({
   onSelect,
   isGame = false,
 }: SuggestionItemProps) => {
+  const { t } = useTranslation();
+
   if (isGame) {
     const game = item as GameDbData | IgdbGame;
     const { developer, dislikeCount, ghostCount, isDead } =
@@ -105,7 +108,7 @@ export const SuggestionItem = ({
             ) : (
               <div className="flex items-center gap-1 text-xs text-gray-400">
                 <Ghost className="h-3 w-3" />
-                <span>RIP</span>
+                <span>{t('search_rip')}</span>
               </div>
             )
           ) : dislikeCount ? (
@@ -119,7 +122,7 @@ export const SuggestionItem = ({
           ) : (
             <div className="flex items-center gap-1 text-xs text-gray-400">
               <ThumbsDown className="h-3 w-3" />
-              <span>Be the first to dislike</span>
+              <span>{t('search_be_first_to_dislike')}</span>
             </div>
           )}
         </div>
