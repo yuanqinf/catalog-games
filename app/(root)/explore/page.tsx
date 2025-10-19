@@ -161,8 +161,8 @@ const GameExplorePage = () => {
           >
             {view === 'graveyard' ? (
               <>
-                <ArrowBigLeftDash className="!h-8 !w-8" />
-                <span className="text-lg font-bold">
+                <ArrowBigLeftDash className="!h-6 !w-6 md:!h-8 md:!w-8" />
+                <span className="hidden text-lg font-bold md:block">
                   {t('explore_top_disliked_games')}
                 </span>
                 <ThumbsDown className="!h-4 !w-4" />
@@ -170,10 +170,10 @@ const GameExplorePage = () => {
             ) : (
               <>
                 <Ghost className="!h-5 !w-5" />
-                <span className="text-lg font-bold">
+                <span className="hidden text-lg font-bold md:block">
                   {t('explore_game_graveyard')}
                 </span>
-                <ArrowBigRightDash className="!h-8 !w-8" />
+                <ArrowBigRightDash className="!h-6 !w-6 md:!h-8 md:!w-8" />
               </>
             )}
           </Button>
@@ -194,9 +194,9 @@ const GameExplorePage = () => {
           </div>
 
           {/* Content */}
-          <div className="relative z-10 text-center">
+          <div className="relative z-10 mt-4 text-center">
             <h1
-              className={`mb-4 bg-gradient-to-r bg-clip-text text-4xl font-black text-transparent ${
+              className={`mb-4 bg-gradient-to-r bg-clip-text text-2xl font-black text-transparent md:text-4xl ${
                 view === 'graveyard'
                   ? 'from-gray-400 to-gray-600'
                   : 'from-[#ff4757] to-[#ff8894]'
@@ -207,7 +207,7 @@ const GameExplorePage = () => {
                 ? t('explore_game_graveyard')
                 : t('explore_top_disliked_games')}
             </h1>
-            <p className="text-lg text-gray-400">
+            <p className="text-base text-gray-400 md:text-lg">
               {view === 'graveyard'
                 ? t('explore_game_graveyard_description')
                 : t('explore_top_disliked_description')}
