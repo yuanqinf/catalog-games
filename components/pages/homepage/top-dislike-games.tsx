@@ -5,7 +5,7 @@ import { CarouselApi } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
 import PaginationDots from '@/components/shared/pagination-dots';
 import MiniGameCard from '@/components/shared/cards/mini-game-card';
-import { useThrottledDislike } from '@/hooks/useThrottledDislike';
+import { useThrottledDislikeReaction } from '@/hooks/useThrottledDislikeReaction';
 import { useTopDislikedGames } from './hooks/use-top-disliked-games';
 import { useVoteState } from './hooks/use-vote-state';
 import { FloatingThumbs } from './components/floating-thumbs';
@@ -37,7 +37,7 @@ const TopDislikeGames = () => {
     setClickingButtons,
   } = useVoteState();
 
-  const { sendDislike } = useThrottledDislike({
+  const { sendDislike } = useThrottledDislikeReaction({
     onSuccess: () => mutate(),
   });
 

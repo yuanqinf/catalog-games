@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import useSWR from 'swr';
-import { useThrottledDislike } from '@/hooks/useThrottledDislike';
+import { useThrottledDislikeReaction } from '@/hooks/useThrottledDislikeReaction';
 import { useThrottledEmojiReaction } from '@/hooks/useThrottledEmojiReaction';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 
@@ -38,7 +38,7 @@ export function useGameReactions(
     isPowerMode: false,
   });
 
-  const { sendDislike } = useThrottledDislike({
+  const { sendDislike } = useThrottledDislikeReaction({
     onSuccess: () => {
       mutateDislike();
     },

@@ -24,7 +24,7 @@ import {
 import type { GameDbData } from '@/types';
 import { unifyPlatforms, type UnifiedPlatform } from '@/utils/platform-utils';
 import { Button } from '@/components/ui/button';
-import { useThrottledDislike } from '@/hooks/useThrottledDislike';
+import { useThrottledDislikeReaction } from '@/hooks/useThrottledDislikeReaction';
 
 type PlatformIconData =
   | {
@@ -86,7 +86,7 @@ const MiniGameCard = ({
   );
 
   // Use throttled dislike hook for optimized API calls
-  const { sendDislike } = useThrottledDislike({
+  const { sendDislike } = useThrottledDislikeReaction({
     onOptimisticUpdate: (increment) => {
       setLocalDislikeCount((prev) => prev + increment);
     },

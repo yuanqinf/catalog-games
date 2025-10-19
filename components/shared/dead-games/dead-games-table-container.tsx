@@ -8,7 +8,7 @@ import { DeadGameFromAPI, DeadGame } from '@/types';
 import { GameService } from '@/lib/supabase/client';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 import { DeadGamesTable } from './dead-games-table';
-import { useThrottledReaction } from '@/hooks/useThrottledReaction';
+import { useThrottledDeadGameReaction } from '@/hooks/useThrottledDeadGameReaction';
 import { FeedbackDialog } from '@/components/shared/feedback-dialog';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n/client';
@@ -58,7 +58,7 @@ export const DeadGamesTableContainer: React.FC<
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   // Use throttled reaction hook for optimized API calls
-  const { sendReaction } = useThrottledReaction({
+  const { sendReaction } = useThrottledDeadGameReaction({
     onError: (error, increment) => {
       console.error('Failed to update reaction count:', error);
       // Note: Error handling per-game is done in handleReaction
