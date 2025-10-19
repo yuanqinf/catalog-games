@@ -1,5 +1,6 @@
-import { GameDbData, IgdbGame } from '@/types';
+import { GameDbData, IgdbGame, SearchHistoryItem } from '@/types';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { addToSearchHistory } from '@/utils/searchHistory';
 
 export const createGameHandlers = (
   router: AppRouterInstance,
@@ -8,8 +9,21 @@ export const createGameHandlers = (
   setIsInputActive: (active: boolean) => void,
   setSelectedIgdbGame: (game: IgdbGame | null) => void,
   setShowDislikeModal: (show: boolean) => void,
+  setSearchHistory: (history: SearchHistoryItem[]) => void,
+  getSearchHistory: () => SearchHistoryItem[],
 ) => {
   const handleSelectSuggestion = (game: GameDbData) => {
+    // Add to search history
+    addToSearchHistory({
+      id: game.id || game.igdb_id,
+      name: game.name,
+      slug: game.slug || '',
+      cover_url: game.cover_url,
+    });
+
+    // Update search history state
+    setSearchHistory(getSearchHistory());
+
     // Clear input and hide suggestions
     setInputValue('');
     setShowSuggestions(false);
@@ -20,6 +34,17 @@ export const createGameHandlers = (
   };
 
   const handleSelectIgdbGame = (igdbGame: IgdbGame) => {
+    // Add to search history (IGDB games)
+    addToSearchHistory({
+      id: igdbGame.id,
+      name: igdbGame.name,
+      slug: igdbGame.slug,
+      cover_url: igdbGame.cover_url,
+    });
+
+    // Update search history state
+    setSearchHistory(getSearchHistory());
+
     // Clear input and hide suggestions
     setInputValue('');
     setShowSuggestions(false);

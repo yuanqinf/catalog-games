@@ -2,14 +2,25 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { GameDbData, IgdbGame, HybridSearchResult } from '@/types';
+import {
+  GameDbData,
+  IgdbGame,
+  HybridSearchResult,
+  SearchHistoryItem,
+} from '@/types';
 import { createGameHandlers } from './game-handlers';
+import {
+  getSearchHistory,
+  addToSearchHistory,
+  clearSearchHistory,
+} from '@/utils/searchHistory';
 
 export const useSearchBar = () => {
   // State
   const [inputValue, setInputValue] = useState('');
   const [supabaseGames, setSupabaseGames] = useState<GameDbData[]>([]);
   const [igdbGames, setIgdbGames] = useState<IgdbGame[]>([]);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isInputActive, setIsInputActive] = useState(false);
@@ -33,6 +44,8 @@ export const useSearchBar = () => {
     setIsInputActive,
     setSelectedIgdbGame,
     setShowDislikeModal,
+    setSearchHistory,
+    getSearchHistory,
   );
 
   // Click outside handler
@@ -48,6 +61,11 @@ export const useSearchBar = () => {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Load search history on mount
+  useEffect(() => {
+    setSearchHistory(getSearchHistory());
   }, []);
 
   // Focus input when active
@@ -119,20 +137,20 @@ export const useSearchBar = () => {
     if (inputValue.trim()) {
       performSuggestionSearch(inputValue);
     } else {
-      // If no input, activate the search bar
+      // If no input, activate the search bar and focus input
       setIsInputActive(true);
+      inputRef.current?.focus();
     }
   };
 
-  const handleActivate = () => setIsInputActive(true);
+  const handleActivate = () => {
+    setIsInputActive(true);
+    setShowSuggestions(true);
+  };
+
   const handleFocus = () => {
-    // Only show suggestions if there's input and results
-    if (
-      inputValue.trim() &&
-      (supabaseGames.length > 0 || igdbGames.length > 0)
-    ) {
-      setShowSuggestions(true);
-    }
+    // Show suggestions on focus (will show history if no input/results)
+    setShowSuggestions(true);
   };
 
   const handleInputChange = (value: string) => {
@@ -145,12 +163,18 @@ export const useSearchBar = () => {
     }
   };
 
+  const handleClearHistory = () => {
+    clearSearchHistory();
+    setSearchHistory([]);
+  };
+
   return {
     // State
     inputValue,
     setInputValue: handleInputChange,
     supabaseGames,
     igdbGames,
+    searchHistory,
     isLoading,
     showSuggestions,
     isInputActive,
@@ -166,6 +190,7 @@ export const useSearchBar = () => {
     handleSelectSuggestion,
     handleSelectIgdbGame,
     handleClearInput,
+    handleClearHistory,
     handleInputKeyDown,
     handleActivate,
     handleFocus,

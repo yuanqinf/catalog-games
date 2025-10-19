@@ -75,6 +75,9 @@
   "search_failed_to_submit_dislike": "Failed to submit dislike",
   "search_rip": "RIP",
   "search_be_first_to_dislike": "Be the first to dislike",
+  "search_recent_searches": "Recent Searches",
+  "search_results": "Search Results",
+  "search_clear_history": "Clear history",
 
   "_comment_dislike_modal": "==== DISLIKE MODAL ====",
   "dislike_modal_title": "Dislike this game?",

@@ -99,6 +99,15 @@ export type SuggestionItem =
   | GameDbData
   | IgdbGame;
 
+// Search history type (simplified game data without counts)
+export interface SearchHistoryItem {
+  id: number;
+  name: string;
+  slug: string;
+  cover_url?: string | null;
+  timestamp: number; // When it was searched
+}
+
 // Dead games types
 export interface DeadGameFromAPI {
   id: string;

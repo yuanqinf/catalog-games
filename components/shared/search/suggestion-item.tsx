@@ -15,6 +15,7 @@ interface SuggestionItemProps {
   item: SuggestionItemType;
   onSelect: (value: any) => void;
   isGame?: boolean;
+  isHistory?: boolean;
 }
 
 const extractDeveloper = (game: GameDbData | IgdbGame): string => {
@@ -62,6 +63,7 @@ export const SuggestionItem = ({
   item,
   onSelect,
   isGame = false,
+  isHistory = false,
 }: SuggestionItemProps) => {
   const { t } = useTranslation();
 
@@ -98,32 +100,40 @@ export const SuggestionItem = ({
               </span>
             )}
           </div>
-          {/* Show ghost count for dead games, dislike count for normal games */}
-          {isDead ? (
-            ghostCount ? (
-              <div className="flex items-center gap-1 text-xs text-gray-300">
-                <Ghost className="h-3 w-3 text-gray-300" fill="currentColor" />
-                <NumberFlow value={ghostCount} />
-              </div>
-            ) : (
-              <div className="flex items-center gap-1 text-xs text-gray-400">
-                <Ghost className="h-3 w-3" />
-                <span>{t('search_rip')}</span>
-              </div>
-            )
-          ) : dislikeCount ? (
-            <div className="flex items-center gap-1 text-xs text-red-400">
-              <ThumbsDown
-                className="drop-shadow-2xl' h-3 w-3 text-red-500"
-                fill="currentColor"
-              />
-              <NumberFlow value={dislikeCount} />
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 text-xs text-gray-400">
-              <ThumbsDown className="h-3 w-3" />
-              <span>{t('search_be_first_to_dislike')}</span>
-            </div>
+          {/* Don't show counts for history items */}
+          {!isHistory && (
+            <>
+              {/* Show ghost count for dead games, dislike count for normal games */}
+              {isDead ? (
+                ghostCount ? (
+                  <div className="flex items-center gap-1 text-xs text-gray-300">
+                    <Ghost
+                      className="h-3 w-3 text-gray-300"
+                      fill="currentColor"
+                    />
+                    <NumberFlow value={ghostCount} />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                    <Ghost className="h-3 w-3" />
+                    <span>{t('search_rip')}</span>
+                  </div>
+                )
+              ) : dislikeCount ? (
+                <div className="flex items-center gap-1 text-xs text-red-400">
+                  <ThumbsDown
+                    className="drop-shadow-2xl' h-3 w-3 text-red-500"
+                    fill="currentColor"
+                  />
+                  <NumberFlow value={dislikeCount} />
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-xs text-gray-400">
+                  <ThumbsDown className="h-3 w-3" />
+                  <span>{t('search_be_first_to_dislike')}</span>
+                </div>
+              )}
+            </>
           )}
         </div>
       </CommandItem>

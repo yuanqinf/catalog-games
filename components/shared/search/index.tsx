@@ -172,8 +172,11 @@ const SearchBar = () => {
               onSelectIgdbGame={props.handleSelectIgdbGame}
               supabaseGames={props.supabaseGames}
               igdbGames={props.igdbGames}
+              searchHistory={props.searchHistory}
               isLoading={props.isLoading}
               onOpenFeedback={() => setIsFeedbackOpen(true)}
+              onClearHistory={props.handleClearHistory}
+              inputValue={props.inputValue}
             />
           )}
         </Command>

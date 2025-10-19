@@ -5,19 +5,22 @@ import {
   CommandEmpty,
   CommandGroup,
 } from '@/components/ui/command';
-import { GameDbData, IgdbGame } from '@/types';
-import { SuggestionItem } from './suggestion-item';
+import { GameDbData, IgdbGame, SearchHistoryItem } from '@/types';
 import { useTranslation } from '@/lib/i18n/client';
 import { Button } from '@/components/ui/button';
 import { MessageCircle } from 'lucide-react';
+import { SuggestionItem } from './suggestion-item';
 
 interface SearchSuggestionsProps {
   onSelectGame: (game: any) => void;
   onSelectIgdbGame: (game: any) => void;
   supabaseGames: GameDbData[];
   igdbGames: IgdbGame[];
+  searchHistory: SearchHistoryItem[];
   isLoading: boolean;
   onOpenFeedback: () => void;
+  onClearHistory: () => void;
+  inputValue: string;
 }
 
 export const SearchSuggestions = ({
@@ -25,10 +28,18 @@ export const SearchSuggestions = ({
   onSelectIgdbGame,
   supabaseGames,
   igdbGames,
+  searchHistory,
   isLoading,
   onOpenFeedback,
+  onClearHistory,
+  inputValue,
 }: SearchSuggestionsProps) => {
   const { t } = useTranslation();
+
+  const hasSearchResults = supabaseGames.length > 0 || igdbGames.length > 0;
+  // Show history when: not loading, no search results yet, and has history
+  const showHistory =
+    !isLoading && !hasSearchResults && searchHistory.length > 0;
 
   return (
     <div className="search-dropdown">
@@ -50,8 +61,47 @@ export const SearchSuggestions = ({
           </div>
         </CommandEmpty>
 
-        {!isLoading && (supabaseGames.length > 0 || igdbGames.length > 0) && (
-          <CommandGroup heading="Search Results">
+        {/* Show search history when no input */}
+        {showHistory && (
+          <CommandGroup
+            heading={
+              <div className="flex items-center justify-between">
+                <span>{t('search_recent_searches')}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClearHistory();
+                  }}
+                  className="h-auto px-2 py-1 text-xs text-gray-400 hover:text-white"
+                >
+                  {t('search_clear_history')}
+                </Button>
+              </div>
+            }
+          >
+            {searchHistory.map((historyItem) => (
+              <SuggestionItem
+                key={`history-${historyItem.id}`}
+                item={{
+                  id: historyItem.id,
+                  name: historyItem.name,
+                  slug: historyItem.slug,
+                  cover_url: historyItem.cover_url,
+                  igdb_id: historyItem.id,
+                }}
+                onSelect={onSelectGame}
+                isGame={true}
+                isHistory={true}
+              />
+            ))}
+          </CommandGroup>
+        )}
+
+        {/* Show search results */}
+        {!isLoading && hasSearchResults && (
+          <CommandGroup heading={t('search_results')}>
             {/* Supabase Games first (priority) */}
             {supabaseGames.map((game) => (
               <SuggestionItem
