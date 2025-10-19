@@ -16,22 +16,22 @@ const Footer = () => {
           <p>{t('footer_copyright')}</p>
           <div className="mt-4 flex gap-6 md:mt-0">
             <Link
-              href="/privacy"
+              href="/about/faq"
+              className="transition-colors hover:text-gray-300"
+            >
+              {t('footer_faq')}
+            </Link>
+            <Link
+              href="/about/privacy"
               className="transition-colors hover:text-gray-300"
             >
               {t('footer_privacy_policy')}
             </Link>
             <Link
-              href="/terms"
+              href="/about/terms"
               className="transition-colors hover:text-gray-300"
             >
               {t('footer_terms_of_use')}
-            </Link>
-            <Link
-              href="/cookies"
-              className="transition-colors hover:text-gray-300"
-            >
-              {t('footer_cookie_preferences')}
             </Link>
           </div>
         </div>
