@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import GameDetail from '@/components/pages/game-detail-page/game-detail';
 import { GameService } from '@/lib/supabase/client';
+import GameDetail from '@/components/pages/game-detail-page/game-detail';
 
 const GameDetailPage = async ({
   params,

@@ -1,15 +1,15 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
+import { useEffect, useState } from 'react';
+import { ThumbsDown, Loader2 } from 'lucide-react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardTitle,
 } from '@/components/ui/card';
-import { ThumbsDown, Loader2 } from 'lucide-react';
 import ProfileGameCard from '@/components/shared/cards/profile-game-card';
 import type { GameDbData } from '@/types';
 import { useTranslation } from '@/lib/i18n/client';
