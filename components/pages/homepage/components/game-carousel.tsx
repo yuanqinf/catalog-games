@@ -64,6 +64,7 @@ export function GameCarousel({
                       height={1080}
                       className="h-full w-full object-cover"
                       priority={activeIndex === games.indexOf(game)}
+                      fetchPriority="high"
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-zinc-800">
