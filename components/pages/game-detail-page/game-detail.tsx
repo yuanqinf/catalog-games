@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Joystick,
   SmilePlus,
+  Share2,
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { dark } from '@clerk/themes';
@@ -31,6 +32,7 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SignInButton, useUser } from '@clerk/nextjs';
+import { toast } from 'sonner';
 import GameDetailSection from '@/components/pages/game-detail-page/game-detail-section';
 
 import GameDetailHighlight, { StatisticItem } from './game-detail-highlight';
@@ -108,6 +110,17 @@ const GameDetail = ({
     deadReactions;
 
   const hasEmojiReactions = Object.keys(emojiReactions).length > 0;
+
+  // Handle share button click
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success(t('game_detail_link_copied'));
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      toast.error(t('game_detail_failed_copy_link'));
+    }
+  };
 
   // Handle emoji reaction click
   const handleEmojiClick = async (icon: unknown, name: string) => {
@@ -395,8 +408,8 @@ const GameDetail = ({
   return (
     <div className="bg-background text-foreground min-h-screen w-full p-4">
       <main className="container-3xl container mx-auto px-8">
-        {/* Back Button - Top Left */}
-        <div className="mb-6">
+        {/* Top Navigation - Back Button (Left) and Share Button (Right) */}
+        <div className="mb-6 flex items-center justify-between">
           <Link href="/explore">
             <Button variant="ghost" className="text-gray-300 hover:text-white">
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -405,6 +418,18 @@ const GameDetail = ({
                 : t('game_detail_back_to_top_100')}
             </Button>
           </Link>
+
+          <Button
+            onClick={handleShare}
+            variant="outline"
+            size="sm"
+            className="sm:size-default"
+          >
+            <Share2 className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">
+              {t('game_detail_share_button')}
+            </span>
+          </Button>
         </div>
 
         {/* Headline Section */}
@@ -425,7 +450,7 @@ const GameDetail = ({
         />
 
         {/* Game Detail Main Section */}
-        <section className="grid grid-cols-1 gap-16 lg:grid-cols-3">
+        <section className="grid grid-cols-1 gap-4 sm:gap-16 lg:grid-cols-3">
           {/* Left Column */}
           <div className="flex flex-col gap-6 lg:col-span-2">
             {/* Game Banner Section with Floating Animations */}
@@ -470,7 +495,6 @@ const GameDetail = ({
                       <Button
                         key={emoji.name}
                         variant="outline"
-                        size="lg"
                         onClick={() => {
                           handleEmojiClick(emoji.icon, emoji.name);
                         }}
@@ -478,9 +502,9 @@ const GameDetail = ({
                       >
                         <FontAwesomeIcon
                           icon={emoji.icon}
-                          className="!h-5 !w-5 text-yellow-400"
+                          className="!h-3 !w-3 text-yellow-400 md:!h-5 md:!w-5"
                         />
-                        <span className="text-base font-bold text-white">
+                        <span className="text-xs font-bold text-white md:text-base">
                           <NumberFlow
                             value={emojiReactions[emoji.name] as number}
                           />
@@ -539,7 +563,7 @@ const GameDetail = ({
             </div>
 
             {/* Game Information Section */}
-            <div className="mb-8 space-y-6">
+            <div className="mb-8 hidden space-y-6 lg:block">
               {/* Game Details */}
               {detailsSections.length > 0 && (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

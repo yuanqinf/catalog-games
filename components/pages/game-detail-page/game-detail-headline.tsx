@@ -1,18 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  ThumbsDown,
-  Share2,
-  Gamepad2,
-  Calendar,
-  Ghost,
-  MonitorX,
-} from 'lucide-react';
+import { ThumbsDown, Gamepad2, Calendar, Ghost, MonitorX } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { toast } from 'sonner';
 import NumberFlow from '@number-flow/react';
 import { useTranslation } from '@/lib/i18n/client';
 
@@ -60,16 +51,6 @@ const GameDetailHeadline = ({
     if (rank <= 5) return 'red';
     if (rank <= 15) return 'orange';
     return 'yellow';
-  };
-
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      toast.success(t('game_detail_link_copied'));
-    } catch (error) {
-      console.error('Failed to copy link:', error);
-      toast.error(t('game_detail_failed_copy_link'));
-    }
   };
 
   useEffect(() => {
@@ -154,47 +135,49 @@ const GameDetailHeadline = ({
 
   return (
     <section className="mb-8">
-      <div className="p-6">
-        <div className="flex items-center justify-between">
+      <div className="p-4 sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           {/* Left: Game Info + Ranking Info */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-start gap-3 sm:items-center sm:gap-4">
             {/* Game Avatar */}
             <div
               className={`flex-shrink-0 rounded-full border-2 border-${getRankingColor(rankingData?.currentGame.rank)}-600 p-1`}
             >
               {gameCoverUrl ? (
-                <div className="relative h-16 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+                <div className="relative h-12 w-12 overflow-hidden rounded-full bg-gray-200 sm:h-16 sm:w-16 dark:bg-gray-800">
                   <Image
                     src={gameCoverUrl}
                     alt={`${gameName} avatar`}
                     fill
-                    sizes="64px"
+                    sizes="(max-width: 640px) 48px, 64px"
                     className="rounded-full object-cover"
                     priority
                   />
                 </div>
               ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800">
-                  <Gamepad2 className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 sm:h-16 sm:w-16 dark:bg-gray-800">
+                  <Gamepad2 className="h-5 w-5 text-gray-500 sm:h-6 sm:w-6 dark:text-gray-400" />
                 </div>
               )}
             </div>
 
             {/* Game Title */}
-            <div className="flex flex-col gap-1">
-              <h1 className="mb-1 text-2xl font-bold text-white">{gameName}</h1>
-              <div className="flex items-center gap-4">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <h1 className="mb-1 truncate text-xl font-bold text-white sm:text-2xl lg:text-3xl">
+                {gameName}
+              </h1>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                 {isDeadGame ? (
                   <>
                     {/* Release Date */}
                     {gameReleaseDate && (
                       <>
-                        <div className="h-4 w-px bg-gray-700/50" />
-                        <div className="flex items-center gap-2">
+                        <div className="hidden h-4 w-px bg-gray-700/50 sm:block" />
+                        <div className="flex items-center gap-1.5 sm:gap-2">
                           <Calendar
-                            className={`h-4 w-4 ${isDeadGame ? 'text-grey-400' : 'text-blue-400'}`}
+                            className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isDeadGame ? 'text-grey-400' : 'text-blue-400'}`}
                           />
-                          <span className="text-sm text-gray-400">
+                          <span className="text-xs text-gray-400 sm:text-sm">
                             {t('game_detail_released')}
                             {new Date(gameReleaseDate).toLocaleDateString()}
                           </span>
@@ -202,22 +185,22 @@ const GameDetailHeadline = ({
                       </>
                     )}
 
-                    <div className="h-4 w-px bg-gray-700/50" />
+                    <div className="hidden h-4 w-px bg-gray-700/50 sm:block" />
 
                     {/* Dead Game Info */}
-                    <div className="flex items-center gap-2">
-                      <MonitorX className="h-5 w-5 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-400">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <MonitorX className="h-4 w-4 text-gray-400 sm:h-5 sm:w-5" />
+                      <span className="text-xs font-medium text-gray-400 sm:text-sm">
                         {deadStatus} {formattedDeadDate}
                       </span>
                     </div>
 
-                    <div className="h-4 w-px bg-gray-700/50" />
+                    <div className="hidden h-4 w-px bg-gray-700/50 sm:block" />
 
                     {/* Ghost Count */}
-                    <div className="flex items-center gap-2">
-                      <Ghost className="h-4 w-4 text-gray-300" />
-                      <span className="text-lg font-bold text-gray-300">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <Ghost className="h-3.5 w-3.5 text-gray-300 sm:h-4 sm:w-4" />
+                      <span className="text-base font-bold text-gray-300 sm:text-lg">
                         <NumberFlow value={ghostCount} />
                       </span>
                     </div>
@@ -225,9 +208,9 @@ const GameDetailHeadline = ({
                 ) : (
                   <>
                     {/* Normal Game Info - Ranking Display */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       <Badge
-                        className={`text-sm font-bold text-white ${
+                        className={`text-xs font-bold text-white sm:text-sm ${
                           rankingData?.currentGame.rank
                             ? `bg-${getRankingColor(rankingData.currentGame.rank)}-600 hover:bg-${getRankingColor(rankingData.currentGame.rank)}-600`
                             : 'bg-green-600 hover:bg-green-600'
@@ -237,19 +220,19 @@ const GameDetailHeadline = ({
                           ? `#${rankingData.currentGame.rank}`
                           : t('game_detail_outside_top_100')}
                       </Badge>
-                      <span className="text-sm text-gray-400">
+                      <span className="hidden text-sm text-gray-400 sm:inline">
                         {rankingData?.currentGame.rank
                           ? t('game_detail_of_top_100_disliked')
                           : t('game_detail_not_that_bad')}
                       </span>
                     </div>
 
-                    <div className="h-4 w-px bg-red-700/50" />
+                    <div className="hidden h-4 w-px bg-red-700/50 sm:block" />
 
                     {/* Dislike Count */}
-                    <div className="flex items-center gap-2">
-                      <ThumbsDown className="h-4 w-4 text-red-400" />
-                      <span className="text-lg font-bold text-red-400">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <ThumbsDown className="h-3.5 w-3.5 text-red-400 sm:h-4 sm:w-4" />
+                      <span className="text-base font-bold text-red-400 sm:text-lg">
                         <NumberFlow value={dislikeCount || 0} />
                       </span>
                     </div>
@@ -257,10 +240,10 @@ const GameDetailHeadline = ({
                     {/* Release Date */}
                     {gameReleaseDate && (
                       <>
-                        <div className="h-4 w-px bg-red-700/50" />
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-blue-400" />
-                          <span className="text-sm text-gray-400">
+                        <div className="hidden h-4 w-px bg-red-700/50 sm:block" />
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <Calendar className="h-3.5 w-3.5 text-blue-400 sm:h-4 sm:w-4" />
+                          <span className="text-xs text-gray-400 sm:text-sm">
                             {t('game_detail_released')}
                             {new Date(gameReleaseDate).toLocaleDateString()}
                           </span>
@@ -271,14 +254,6 @@ const GameDetailHeadline = ({
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Right: Action Buttons */}
-          <div className="flex items-center gap-3">
-            <Button onClick={handleShare} variant="outline">
-              <Share2 className="mr-1 h-4 w-4" />
-              {t('game_detail_share_button')}
-            </Button>
           </div>
         </div>
       </div>
