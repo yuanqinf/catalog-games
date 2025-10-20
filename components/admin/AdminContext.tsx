@@ -77,8 +77,6 @@ export const searchAndProcessGameById = async (
     skipSteamCheck?: boolean;
   } = {},
 ) => {
-  console.log(`🔍 Searching for game with ID: ${igdbId}`);
-
   // Fetch IGDB data
   const existsResponse = await fetch(`/api/igdb/games/${igdbId}`);
   if (!existsResponse.ok) {

@@ -77,13 +77,10 @@ export async function POST(request: NextRequest) {
 
     if (existingGame) {
       gameId = existingGame.id;
-      console.log(`Game already exists with ID: ${gameId}`);
     } else {
       // Add game to games table first
-      console.log(`Adding new game to games table: ${igdbGameData.name}`);
       const gameResult = await gameService.addOrUpdateGame(igdbGameData);
       gameId = gameResult.data.id;
-      console.log(`Added new game with ID: ${gameId}`);
     }
 
     // Step 2: Add to dead_games table

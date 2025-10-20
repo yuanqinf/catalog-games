@@ -98,7 +98,6 @@ export class GameService {
           slug: igdbData.slug,
         });
         dbData.banner_url = bannerUrl;
-        console.log(`🖼️ Banner uploaded and attached to game data`);
       } catch (error) {
         console.warn(
           'Banner upload failed, but continuing with game data save:',
@@ -121,7 +120,6 @@ export class GameService {
 
     if (existingGame) {
       // Update existing game
-      console.log(`🔄 Updating existing game: ${igdbData.name}`);
       result = await this.supabase
         .from('games')
         .update(dbData)
@@ -134,7 +132,6 @@ export class GameService {
       }
     } else {
       // Insert new game
-      console.log(`➕ Creating new game: ${igdbData.name}`);
       result = await this.supabase
         .from('games')
         .insert([dbData])

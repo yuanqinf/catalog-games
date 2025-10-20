@@ -14,8 +14,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`🏷️ Fetching Steam tags for: ${gameName}`);
-
     const tagsData = await SteamIntegrationService.getTagsOnly(gameName.trim());
     const appInfo = await SteamIntegrationService.findSteamApp(gameName.trim());
 
@@ -23,8 +21,6 @@ export async function GET(request: NextRequest) {
       steam_app_id: appInfo?.steamAppId || null,
       steam_popular_tags: tagsData?.steam_popular_tags || null,
     };
-
-    console.log(`🏷️ Steam tags result:`, result);
 
     return NextResponse.json(result, {
       headers: cacheHeaders.static(), // Steam tags rarely change

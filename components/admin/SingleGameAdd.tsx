@@ -92,9 +92,6 @@ export const SingleGameAdd = () => {
 
     try {
       const isUpdate = idSearchResult.existsInDb;
-      console.log(
-        `🚀 ${isUpdate ? 'Updating' : 'Adding'} game: ${idSearchResult.name} (ID: ${idSearchResult.igdbId})`,
-      );
 
       // Add or update the game in database
       await gameService.addOrUpdateGame(
@@ -150,8 +147,6 @@ export const SingleGameAdd = () => {
     );
 
     try {
-      console.log(`🔄 Retrying: ${idSearchResult.name}`);
-
       await gameService.addOrUpdateGame(
         idSearchResult.igdbData,
         idSearchResult.bannerFile || undefined,

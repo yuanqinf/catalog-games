@@ -30,15 +30,11 @@ const GameExplorePage = () => {
     async ([, page]: [string, number]) => {
       const gameService = new GameService();
       const offset = (page - 1) * GAMES_PER_PAGE;
-      console.log(
-        `🎮 Fetching games for page ${page} (sorted by dislike count)...`,
-      );
       const pageGames = await gameService.getGamesForExplorePage(
         offset,
         GAMES_PER_PAGE,
         TOP_GAMES_LIMIT,
       );
-      console.log(`📊 Loaded ${pageGames.length} games for page ${page}`);
       return pageGames;
     },
     {

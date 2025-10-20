@@ -36,8 +36,6 @@ export const useUserSync = () => {
         });
 
         if (response.ok) {
-          const result = await response.json();
-          console.log('✅ User synced successfully:', result.message);
           setLastSyncedUserId(user.id);
         } else {
           const error = await response.json();

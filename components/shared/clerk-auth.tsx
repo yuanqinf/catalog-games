@@ -31,7 +31,6 @@ const ClerkAuth = () => {
     const handleDialogClose = async () => {
       try {
         await fetch('/api/users/sync', { method: 'POST' });
-        console.log('User data synced after dialog close');
       } catch (error) {
         console.error('Failed to sync user data:', error);
       }

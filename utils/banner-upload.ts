@@ -52,12 +52,6 @@ export async function uploadBanner(
 
   const fileExists = existingFile && existingFile.length > 0;
 
-  if (fileExists) {
-    console.log(`🔄 Replacing existing banner for game ${igdbId} (${slug})`);
-  } else {
-    console.log(`📤 Uploading new banner for game ${igdbId} (${slug})`);
-  }
-
   // Upload the file
   const { error: uploadError } = await supabase.storage
     .from('game-image-assets')
@@ -77,8 +71,6 @@ export async function uploadBanner(
   // Add cache busting parameter to ensure fresh image loads
   const timestamp = Date.now();
   const urlWithCacheBust = `${data.publicUrl}?updated=${timestamp}`;
-
-  console.log(`✅ Banner uploaded successfully: ${urlWithCacheBust}`);
 
   return urlWithCacheBust;
 }

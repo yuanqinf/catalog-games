@@ -203,35 +203,25 @@ export async function findBestSteamMatch(
   }
 
   try {
-    console.log(`🔍 Searching Steam for: "${igdbName}"`);
-
     // Strategy 1: Direct search with original name
     let candidates = await performSteamSearch(igdbName.trim());
-    console.log(`📊 Direct search found ${candidates.length} candidates`);
 
     // Strategy 2: If no results, try broader search with main keywords
     if (candidates.length === 0) {
       const keywords = extractKeywords(igdbName);
       if (keywords.length >= 2) {
         const broadSearch = keywords.slice(0, 3).join(' '); // Take first 3 keywords
-        console.log(`🔍 Trying broader search: "${broadSearch}"`);
         candidates = await performSteamSearch(broadSearch);
-        console.log(`📊 Broad search found ${candidates.length} candidates`);
       }
     }
 
     // Strategy 3: For games with "Delta", also search for games with Greek Δ
     if (candidates.length === 0 && igdbName.toLowerCase().includes('delta')) {
       const deltaVariant = igdbName.replace(/delta/gi, 'Δ');
-      console.log(`🔍 Trying Delta symbol variant: "${deltaVariant}"`);
       candidates = await performSteamSearch(deltaVariant);
-      console.log(
-        `📊 Delta variant search found ${candidates.length} candidates`,
-      );
     }
 
     if (candidates.length === 0) {
-      console.log(`❌ No Steam candidates found for: "${igdbName}"`);
       return null;
     }
 
@@ -241,9 +231,6 @@ export async function findBestSteamMatch(
 
     for (const candidate of candidates) {
       const score = calculateSimilarity(igdbName, candidate.name);
-      console.log(
-        `🎯 Candidate: "${candidate.name}" - Score: ${score.toFixed(3)}`,
-      );
 
       if (score > bestScore && score >= 0.6) {
         bestScore = score;
@@ -252,15 +239,8 @@ export async function findBestSteamMatch(
     }
 
     if (!bestMatch) {
-      console.log(
-        `❌ No suitable match found (best score < 0.6) for: "${igdbName}"`,
-      );
       return null;
     }
-
-    console.log(
-      `✅ Best match: "${bestMatch.name}" (ID: ${bestMatch.id}, Score: ${bestScore.toFixed(3)})`,
-    );
 
     return {
       steamAppId: bestMatch.id,

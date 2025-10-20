@@ -39,11 +39,6 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    console.log('Attempting to remove rating for:', {
-      userId: userData.id,
-      gameId: parseInt(gameId),
-    });
-
     // Use PostgreSQL function for atomic operation
     const { data: result, error: rpcError } = await supabase.rpc(
       'remove_user_rating',
@@ -53,13 +48,10 @@ export async function DELETE(request: NextRequest) {
       },
     );
 
-    console.log('RPC result:', { result, rpcError });
-
     if (rpcError) {
       console.error('Failed to remove rating via RPC:', rpcError);
 
       // Fallback to manual deletion if RPC function doesn't exist
-      console.log('Attempting manual deletion fallback...');
       const { error: deleteError } = await supabase
         .from('game_ratings')
         .delete()
@@ -74,7 +66,6 @@ export async function DELETE(request: NextRequest) {
         );
       }
 
-      console.log('Manual deletion successful');
       return NextResponse.json({
         success: true,
         message: 'Rating removed successfully (fallback)',
@@ -83,7 +74,6 @@ export async function DELETE(request: NextRequest) {
 
     // Check RPC result
     if (result && typeof result === 'object' && 'success' in result) {
-      console.log('RPC returned success field:', result.success);
       if (result.success) {
         return NextResponse.json({
           success: true,
@@ -92,7 +82,6 @@ export async function DELETE(request: NextRequest) {
         });
       } else {
         // RPC function returned success: false, but this is expected if no rating exists
-        console.log('RPC returned success: false -', result.error);
         return NextResponse.json({
           success: false,
           error: result.error || 'No rating found to remove',
@@ -101,13 +90,11 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
-    console.log('RPC completed without error, assuming success');
     return NextResponse.json({
       success: true,
       message: 'Rating removed successfully',
     });
   } catch (error) {
-    console.error('Failed to remove rating:', error);
     return NextResponse.json(
       {
         success: false,

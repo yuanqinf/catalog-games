@@ -56,7 +56,6 @@ function extractPlaytime($: cheerio.CheerioAPI): string | null {
     const timeMatch = text.match(/(\d+(?:\.\d+)?)\s*h/i);
     if (timeMatch) {
       const playtime = `${timeMatch[1]} hours`;
-      console.log(`⏱️ Found playtime: ${playtime}`);
       return playtime;
     }
   }
@@ -72,7 +71,6 @@ function extractPlaytime($: cheerio.CheerioAPI): string | null {
       const timeMatch = text.match(/(\d+(?:\.\d+)?)\s*h/i);
       if (timeMatch) {
         const playtime = `${timeMatch[1]} hours`;
-        console.log(`⏱️ Found playtime via fallback: ${playtime}`);
         return playtime;
       }
     }
@@ -93,8 +91,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`🎮 Searching playtracker.net for: ${gameName}`);
-
     // Step 1: Search for the game
     const searchUrl = `https://playtracker.net/search/?q=${encodeURIComponent(gameName)}`;
     const searchHtml = await fetchWithBrowserHeaders(searchUrl);
@@ -104,7 +100,6 @@ export async function GET(request: NextRequest) {
     const gameUrl = findFirstGameUrl(searchDoc);
 
     if (!gameUrl) {
-      console.log(`❌ No game found for: ${gameName}`);
       return NextResponse.json({
         gameName,
         averagePlaytime: null,
@@ -112,8 +107,6 @@ export async function GET(request: NextRequest) {
         message: 'No game found in search results',
       });
     }
-
-    console.log(`🔗 Found game URL: ${gameUrl}`);
 
     // Step 3: Fetch the game page
     const gameHtml = await fetchWithBrowserHeaders(gameUrl);
@@ -127,8 +120,6 @@ export async function GET(request: NextRequest) {
       averagePlaytime,
       url: gameUrl,
     };
-
-    console.log(`✅ Playtracker result:`, result);
 
     return NextResponse.json(result, {
       headers: cacheHeaders.external(), // Playtime data changes slowly, cache for 24h

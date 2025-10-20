@@ -50,11 +50,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`🔍 Hybrid search for: "${query}"`);
-
     // Search Supabase first (priority source)
     const supabaseGames = await gameService.searchGames(query.trim(), limit);
-    console.log(`📊 Supabase results: ${supabaseGames.length}`);
 
     // Search IGDB if we need more results
     let igdbGames: IgdbGame[] = [];
@@ -62,16 +59,10 @@ export async function GET(request: NextRequest) {
     if (supabaseGames.length < limit) {
       try {
         const igdbResults = await igdbClient.searchGames(query.trim());
-        console.log(`🎮 IGDB results: ${igdbResults.length}`);
 
         // For each IGDB game, check if it exists in our database
         const igdbGameNames = igdbResults.map((game) => game.name);
-        console.log('🔍 Checking IGDB games for duplicates:', igdbGameNames);
         const existingGames = await gameService.getGamesByNames(igdbGameNames);
-        console.log(
-          '📋 Found existing games in DB:',
-          existingGames.map((g) => g.name),
-        );
         const existingGameNames = new Set(
           existingGames.map((game) => game.name.toLowerCase()),
         );
@@ -86,10 +77,6 @@ export async function GET(request: NextRequest) {
         // Limit IGDB results to fill remaining slots
         const remainingSlots = limit - supabaseGames.length;
         igdbGames = igdbGames.slice(0, remainingSlots);
-
-        console.log(
-          `✨ Unique IGDB results after deduplication: ${igdbGames.length}`,
-        );
       } catch (igdbError) {
         console.error(
           'IGDB search failed, continuing with Supabase results only:',
@@ -103,8 +90,6 @@ export async function GET(request: NextRequest) {
       igdbGames,
       totalResults: supabaseGames.length + igdbGames.length,
     };
-
-    console.log(`🎯 Total hybrid results: ${result.totalResults}`);
 
     return NextResponse.json(result, {
       headers: cacheHeaders.stable(), // Search results stable for short periods

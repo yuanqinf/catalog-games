@@ -97,8 +97,6 @@ export function useGameRating(
       dedupingInterval: 2 * 60 * 1000, // 2 minutes
       errorRetryCount: 2,
       errorRetryInterval: 1000,
-      onSuccess: () =>
-        console.log(`💾 Cached user rating for game ${numericGameId}`),
       onError: (err) => console.error('Failed to fetch user rating:', err),
     },
   );
@@ -112,8 +110,6 @@ export function useGameRating(
       dedupingInterval: 5 * 60 * 1000, // 5 minutes
       errorRetryCount: 2,
       errorRetryInterval: 1000,
-      onSuccess: () =>
-        console.log(`💾 Cached average rating for game ${numericGameId}`),
       onError: (err) => console.error('Failed to fetch average rating:', err),
     },
   );

@@ -16,8 +16,6 @@ export interface SteamData {
  */
 export async function fetchSteamTags(gameName: string): Promise<SteamData> {
   try {
-    console.log(`🏷️ Fetching Steam tags for: ${gameName}`);
-
     // Check if we're running on the server side
     const isServer = typeof window === 'undefined';
 
@@ -34,13 +32,8 @@ export async function fetchSteamTags(gameName: string): Promise<SteamData> {
           steam_popular_tags: tagsData.steam_popular_tags,
         };
 
-        console.log(
-          `🏷️ Steam tags added: ${steamData.steam_popular_tags?.length || 0} tags found`,
-        );
-
         return steamData;
       } else {
-        console.log(`❌ No Steam tags found for: ${gameName}`);
         return {};
       }
     } else {
@@ -57,10 +50,6 @@ export async function fetchSteamTags(gameName: string): Promise<SteamData> {
       }
 
       const result = await response.json();
-
-      console.log(
-        `🏷️ Steam tags added: ${result.steam_popular_tags?.length || 0} tags found`,
-      );
 
       return result;
     }
@@ -82,8 +71,6 @@ export async function checkGameExistsInSteam(
   gameName: string,
 ): Promise<boolean> {
   try {
-    console.log(`🔍 Checking if game exists in Steam: ${gameName}`);
-
     const response = await fetch(
       `/api/steam/check-game-exists?q=${encodeURIComponent(gameName)}`,
     );
@@ -98,12 +85,8 @@ export async function checkGameExistsInSteam(
     const data = await response.json();
 
     if (data.exists) {
-      console.log(
-        `✅ Game found in Steam: ${gameName} (ID: ${data.steamAppId})`,
-      );
       return true;
     } else {
-      console.log(`❌ Game not found in Steam: ${gameName}`);
       return false;
     }
   } catch (error) {

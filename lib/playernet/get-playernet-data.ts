@@ -25,9 +25,6 @@ export async function getPlaytrackerData(
 
     const data: PlaytimeData = await response.json();
 
-    console.log(`🎮 Fetched playtracker data for: ${gameName}`);
-    console.log(`⏱️ Average playtime: ${data.averagePlaytime || 'N/A'}`);
-
     return data;
   } catch (error) {
     console.error(

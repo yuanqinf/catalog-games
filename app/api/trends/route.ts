@@ -39,7 +39,6 @@ async function fetchTrendsWithRetry(
       if (attempt > 0) {
         const delay = Math.min(1000 * Math.pow(2, attempt - 1), 3000);
         await new Promise((resolve) => setTimeout(resolve, delay));
-        console.log(`Retry attempt ${attempt} for keyword: ${keyword}`);
       }
 
       const results = await googleTrends.interestOverTime({
@@ -78,10 +77,6 @@ export async function GET(request: NextRequest) {
     // ✅ Default to last 7 days
     const endDate = new Date();
     const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-    console.log(
-      `Fetching trends for: ${keyword}, ${startDate.toISOString()} → ${endDate.toISOString()}, geo: ${geo || 'GLOBAL'}`,
-    );
 
     // Fetch with retry mechanism
     const results = await fetchTrendsWithRetry(

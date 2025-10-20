@@ -58,14 +58,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(
-      `🎮 Adding game to database: ${igdbData.name} (ID: ${igdbData.id})`,
-    );
-
     const gameService = new GameService();
 
     // Fetch complete Steam data directly in the API route (server-side)
-    console.log(`🔍 Fetching complete Steam data for: ${igdbData.name}`);
     let steamData = {};
 
     try {
@@ -85,9 +80,6 @@ export async function POST(request: NextRequest) {
             steam_recent_review:
               completeResult.data.steam_recent_review || null,
           };
-          console.log(
-            `🏷️ Complete Steam data added: ${completeResult.data.steam_popular_tags?.length || 0} tags, reviews: ${completeResult.data.steam_all_review ? 'Yes' : 'No'}`,
-          );
         } else {
           // Fallback: just get app ID and tags
           const tagsData = await SteamIntegrationService.getTagsOnly(
@@ -118,8 +110,6 @@ export async function POST(request: NextRequest) {
       bannerFile,
       true,
     );
-
-    console.log(`✅ Successfully added game: ${igdbData.name}`);
 
     return NextResponse.json(result);
   } catch (error) {
