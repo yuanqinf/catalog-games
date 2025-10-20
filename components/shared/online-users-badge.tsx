@@ -25,7 +25,7 @@ const OnlineUsersBadge = () => {
   const { user } = useUser();
 
   // Fetch online user count with SWR polling
-  const { data: onlineData } = useSWR('/api/user/online', fetcher, {
+  const { data: onlineData } = useSWR('/api/users/online', fetcher, {
     refreshInterval: 5000,
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
@@ -54,7 +54,7 @@ const OnlineUsersBadge = () => {
 
     const sendHeartbeat = async () => {
       try {
-        await fetch('/api/user/heartbeat', {
+        await fetch('/api/users/heartbeat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
