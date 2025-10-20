@@ -450,7 +450,7 @@ const GameDetail = ({
         />
 
         {/* Game Detail Main Section */}
-        <section className="grid grid-cols-1 gap-4 sm:gap-16 lg:grid-cols-3">
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-3 2xl:gap-10">
           {/* Left Column */}
           <div className="flex flex-col gap-6 lg:col-span-2">
             {/* Game Banner Section with Floating Animations */}

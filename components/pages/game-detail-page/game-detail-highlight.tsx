@@ -73,12 +73,6 @@ export default function GameDetailHighlight({
   isSignedIn = false,
 }: GameDetailHighlightProps) {
   const { t } = useTranslation();
-  const [isClient, setIsClient] = useState(false);
-
-  // Fix hydration issue by only rendering auth-dependent UI on client
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const {
     rating,
@@ -110,7 +104,7 @@ export default function GameDetailHighlight({
           >
             <Button
               onClick={onGhostClick}
-              className="h-12 w-60 bg-zinc-700 p-0 text-white hover:bg-zinc-600"
+              className="h-12 w-20 bg-zinc-700 p-0 text-white hover:bg-zinc-600"
               size="sm"
             >
               <Ghost className="!h-6 !w-6" />
@@ -122,21 +116,83 @@ export default function GameDetailHighlight({
 
     // Normal game panel - dislike button with counts
     return (
-      <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center justify-items-center gap-4">
-        {/* Column 1: Total Dislike Count */}
-        <div className="flex items-center gap-2">
-          <ThumbsDown className="h-5 w-5 text-red-400" />
-          <span className="text-2xl font-bold text-white">
-            <NumberFlow value={dislikeCount} />
-          </span>
+      <>
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center justify-items-center gap-4 2xl:grid-cols-[1fr_auto_1fr_auto_1fr]">
+          {/* Column 1: Total Dislike Count */}
+          <div className="flex items-center gap-2">
+            <ThumbsDown className="h-5 w-5 text-red-400" />
+            <span className="text-2xl font-bold text-white">
+              <NumberFlow value={dislikeCount} />
+            </span>
+          </div>
+
+          {/* Divider 1 */}
+          <div className="hidden h-8 w-px bg-zinc-700 2xl:block" />
+
+          {/* Column 2: User Dislike Count / Sign In Button */}
+          <div className="hidden items-center justify-center 2xl:flex">
+            {isSignedIn ? (
+              <div className="flex items-center gap-2">
+                <Angry className="h-4 w-4 text-orange-400" />
+                {isLoadingUserDislike ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                ) : (
+                  <span className="text-lg font-semibold text-orange-400">
+                    <NumberFlow value={userDislikeCount} />
+                  </span>
+                )}
+                <span className="text-xs text-gray-500">
+                  {t('game_detail_yours_dislikes')}
+                </span>
+              </div>
+            ) : (
+              <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
+                <Button
+                  variant="outline"
+                  className="flex cursor-pointer items-center gap-1 text-sm text-gray-400 transition-colors hover:text-gray-300"
+                >
+                  <LogIn className="h-3 w-3" />
+                  <span>{t('game_detail_sign_in_to_track_dislikes')}</span>
+                </Button>
+              </SignInButton>
+            )}
+          </div>
+
+          {/* Divider 2 */}
+          <div className="h-8 w-px bg-zinc-700" />
+
+          {/* Column 3: Dislike Vote Button */}
+          <div className="flex items-center justify-end">
+            <motion.div
+              animate={clickingButton ? { scale: [1, 0.8, 1.1, 1] } : {}}
+              transition={{ duration: 0.2 }}
+            >
+              <Button
+                onClick={onDislikeVote}
+                className="h-10 w-20 bg-red-600 p-0 text-white hover:bg-red-700"
+              >
+                <ThumbsDown className="!h-5 !w-5" />
+                {userVoteState.isPowerMode && (
+                  <motion.div
+                    className="absolute -inset-1 -z-10 rounded bg-red-500/30"
+                    animate={{
+                      scale: [0.9, 1.1, 0.9],
+                      opacity: [0.5, 0.8, 0.5],
+                    }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                  />
+                )}
+              </Button>
+            </motion.div>
+          </div>
         </div>
 
-        {/* Divider 1 */}
-        <div className="h-8 w-px bg-zinc-700" />
-
-        {/* Column 2: User Dislike Count / Sign In Button */}
-        <div className="flex items-center justify-center">
-          {isClient && isSignedIn ? (
+        <div className="mt-4 flex items-center justify-center 2xl:hidden">
+          {isSignedIn ? (
             <div className="flex items-center gap-2">
               <Angry className="h-4 w-4 text-orange-400" />
               {isLoadingUserDislike ? (
@@ -150,7 +206,7 @@ export default function GameDetailHighlight({
                 {t('game_detail_yours_dislikes')}
               </span>
             </div>
-          ) : isClient ? (
+          ) : (
             <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
               <Button
                 variant="outline"
@@ -160,47 +216,9 @@ export default function GameDetailHighlight({
                 <span>{t('game_detail_sign_in_to_track_dislikes')}</span>
               </Button>
             </SignInButton>
-          ) : (
-            <div className="flex items-center gap-1 text-sm text-gray-400">
-              <LogIn className="h-3 w-3" />
-              <span>{t('game_detail_sign_in_to_track_dislikes')}</span>
-            </div>
           )}
         </div>
-
-        {/* Divider 2 */}
-        <div className="h-8 w-px bg-zinc-700" />
-
-        {/* Column 3: Dislike Vote Button */}
-        <div className="flex items-center justify-end">
-          <motion.div
-            animate={clickingButton ? { scale: [1, 0.8, 1.1, 1] } : {}}
-            transition={{ duration: 0.2 }}
-          >
-            <Button
-              onClick={onDislikeVote}
-              className="h-10 w-20 bg-red-600 p-0 text-white hover:bg-red-700"
-              size="sm"
-            >
-              <ThumbsDown className="!h-5 !w-5" />
-              {userVoteState.isPowerMode && (
-                <motion.div
-                  className="absolute -inset-1 -z-10 rounded bg-red-500/30"
-                  animate={{
-                    scale: [0.9, 1.1, 0.9],
-                    opacity: [0.5, 0.8, 0.5],
-                  }}
-                  transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }}
-                />
-              )}
-            </Button>
-          </motion.div>
-        </div>
-      </div>
+      </>
     );
   };
 
