@@ -271,7 +271,7 @@ export default function ProfileGameCard({
             height={24}
             className="mr-1"
           />
-          <span className="hidden sm:inline-block">
+          <span className="inline-block">
             {t('profile_card_diss_avg_rating')}{' '}
             <span
               className="font-bold"

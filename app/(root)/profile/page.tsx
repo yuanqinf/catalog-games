@@ -92,37 +92,43 @@ const UserProfilePage = () => {
   if (!isLoaded || !isSignedIn) return null;
 
   return (
-    <div className="container mx-auto space-y-12 px-4 py-8">
+    <div className="container mx-auto space-y-8 px-4 py-6 sm:space-y-12 sm:py-8">
       <Card className="w-full">
-        <CardContent className="flex items-center justify-between p-6">
-          <div className="flex items-center space-x-6">
-            <Image
-              className="rounded-full"
-              src={user.imageUrl}
-              alt={'User profile picture'}
-              width={100}
-              height={100}
-            />
-            <div>
-              <CardTitle className="text-3xl font-bold">
-                {user.username}
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                {user.primaryEmailAddress?.emailAddress}
-              </CardDescription>
+        <CardContent className="p-4 sm:p-6">
+          {/* Mobile Layout (< lg) */}
+          <div className="flex flex-col gap-6 lg:hidden">
+            {/* User Info Row */}
+            <div className="flex items-center gap-4">
+              <Image
+                className="rounded-full"
+                src={user.imageUrl}
+                alt={'User profile picture'}
+                width={64}
+                height={64}
+              />
+              <div className="min-w-0 flex-1">
+                <CardTitle className="truncate text-xl font-bold sm:text-2xl">
+                  {user.username}
+                </CardTitle>
+                <CardDescription className="text-muted-foreground truncate text-sm">
+                  {user.primaryEmailAddress?.emailAddress}
+                </CardDescription>
+              </div>
             </div>
-          </div>
-          <blockquote className="text-muted-foreground hidden max-w-md border-l-2 border-gray-600 pl-4 italic lg:block">
-            <p className="text-base leading-relaxed">{t('profile_quote')}</p>
-            <footer className="mt-3 text-sm font-medium text-gray-300">
-              {t('profile_quote_author')}
-            </footer>
-          </blockquote>
-          <div className="flex items-center space-x-8">
-            <div className="flex items-center space-x-3">
-              <ThumbsDown className="text-primary hidden h-6 w-6 sm:block" />
-              <div className="flex items-baseline space-x-2">
-                <p className="text-lg font-bold">
+
+            {/* Quote Row */}
+            <blockquote className="text-muted-foreground border-l-2 border-gray-600 pl-4 italic">
+              <p className="text-base leading-relaxed">{t('profile_quote')}</p>
+              <footer className="mt-2 text-sm font-medium text-gray-300">
+                {t('profile_quote_author')}
+              </footer>
+            </blockquote>
+
+            {/* Stats Row */}
+            <div className="flex items-center justify-center gap-3 rounded-lg border border-zinc-700 bg-zinc-800/50 p-4">
+              <ThumbsDown className="text-primary h-5 w-5" />
+              <div className="flex items-baseline gap-2">
+                <p className="text-xl font-bold">
                   {isLoadingDislikes ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
@@ -135,12 +141,56 @@ const UserProfilePage = () => {
               </div>
             </div>
           </div>
+
+          {/* Desktop Layout (>= lg) */}
+          <div className="hidden items-center justify-between gap-6 lg:flex">
+            <div className="flex items-center space-x-6">
+              <Image
+                className="rounded-full"
+                src={user.imageUrl}
+                alt={'User profile picture'}
+                width={100}
+                height={100}
+              />
+              <div>
+                <CardTitle className="text-3xl font-bold">
+                  {user.username}
+                </CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  {user.primaryEmailAddress?.emailAddress}
+                </CardDescription>
+              </div>
+            </div>
+            <blockquote className="text-muted-foreground max-w-md border-l-2 border-gray-600 pl-4 italic">
+              <p className="text-base leading-relaxed">{t('profile_quote')}</p>
+              <footer className="mt-3 text-sm font-medium text-gray-300">
+                {t('profile_quote_author')}
+              </footer>
+            </blockquote>
+            <div className="flex items-center space-x-8">
+              <div className="flex items-center space-x-3">
+                <ThumbsDown className="text-primary h-6 w-6" />
+                <div className="flex items-baseline space-x-2">
+                  <p className="text-lg font-bold">
+                    {isLoadingDislikes ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      totalDislikes
+                    )}
+                  </p>
+                  <p className="text-muted-foreground hidden text-sm xl:block">
+                    {t('profile_total_dislikes')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
-      <hr className="my-8 border-zinc-700" />
+      <hr className="my-6 border-zinc-700 sm:my-8" />
 
       <section>
-        <h2 className="mb-6 text-2xl font-bold">
+        <h2 className="mb-4 text-xl font-bold sm:mb-6 sm:text-2xl">
           {t('profile_my_disliked_games')}
         </h2>
         {isLoadingGames ? (
@@ -148,7 +198,7 @@ const UserProfilePage = () => {
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
         ) : dislikedGames.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 2xl:grid-cols-4">
             {dislikedGames.map((game) => (
               <ProfileGameCard
                 key={game.id}
@@ -159,7 +209,7 @@ const UserProfilePage = () => {
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground py-12 text-center">
+          <p className="text-muted-foreground py-12 text-center text-sm sm:text-base">
             {t('profile_no_disliked_games')}
           </p>
         )}
