@@ -52,9 +52,14 @@ const OnlineUsersBadge = () => {
       localStorage.setItem('session_id', sessionId);
     }
 
+    let isActive = true;
+
     const sendHeartbeat = async () => {
+      // Don't send if component is unmounted
+      if (!isActive) return;
+
       try {
-        await fetch('/api/users/heartbeat', {
+        const response = await fetch('/api/users/heartbeat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -62,8 +67,15 @@ const OnlineUsersBadge = () => {
             session_id: sessionId,
           }),
         });
+
+        if (!response.ok && isActive) {
+          console.warn('Heartbeat failed with status:', response.status);
+        }
       } catch (error) {
-        console.error('Heartbeat failed:', error);
+        // Only log error if component is still active (not during unmount)
+        if (isActive) {
+          console.error('Heartbeat failed:', error);
+        }
       }
     };
 
@@ -73,7 +85,10 @@ const OnlineUsersBadge = () => {
     // Send heartbeat every 60 seconds
     const interval = setInterval(sendHeartbeat, 60000);
 
-    return () => clearInterval(interval);
+    return () => {
+      isActive = false;
+      clearInterval(interval);
+    };
   }, [user?.id]);
 
   const handleClose = () => setIsVisible(false);

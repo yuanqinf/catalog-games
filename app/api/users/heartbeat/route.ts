@@ -5,7 +5,19 @@ export async function POST(req: Request) {
   try {
     const supabase = createClerkSupabaseClient(null);
 
-    const { user_id, session_id } = await req.json();
+    // Parse request body with error handling
+    let body;
+    try {
+      body = await req.json();
+    } catch (parseError) {
+      console.error('Failed to parse heartbeat request body:', parseError);
+      return NextResponse.json(
+        { success: false, error: 'Invalid JSON in request body' },
+        { status: 400 },
+      );
+    }
+
+    const { user_id, session_id } = body;
 
     if (!session_id) {
       return NextResponse.json(
@@ -14,30 +26,18 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get user UUID from users table if authenticated
-    let userUuid = null;
+    // Update the users table for authenticated users
     if (user_id) {
-      const { data: userData } = await supabase
+      await supabase
         .from('users')
-        .select('id')
-        .eq('clerk_id', user_id)
-        .single();
-
-      userUuid = userData?.id; // This is UUID from users.id
-
-      // Also update the users table for authenticated users
-      if (userUuid) {
-        await supabase
-          .from('users')
-          .update({ last_seen: new Date().toISOString() })
-          .eq('clerk_id', user_id);
-      }
+        .update({ last_seen: new Date().toISOString() })
+        .eq('clerk_id', user_id);
     }
 
     // Upsert active session for both authenticated and anonymous users
     const { error } = await supabase.rpc('upsert_active_session', {
       p_session_id: session_id,
-      p_user_id: userUuid, // Pass UUID (or null for anonymous)
+      p_clerk_id: user_id || null, // Pass clerk_id (or null for anonymous)
     });
 
     if (error) {
