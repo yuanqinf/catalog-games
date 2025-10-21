@@ -14,26 +14,13 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createClerkSupabaseClient(null);
-
-    // Get the user's internal ID from the users table
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('clerk_id', clerkUser.id)
-      .single();
-
-    if (userError || !userData) {
-      return NextResponse.json(
-        { success: false, error: 'User not found' },
-        { status: 404 },
-      );
-    }
+    const clerkUserId = clerkUser.id;
 
     // Fetch all emoji reactions for this user, grouped by game_id
     const { data: emojiReactions, error } = await supabase
       .from('game_emoji_reactions')
       .select('game_id, count')
-      .eq('user_id', userData.id);
+      .eq('clerk_id', clerkUserId);
 
     if (error) {
       console.error('Error fetching emoji reactions:', error);

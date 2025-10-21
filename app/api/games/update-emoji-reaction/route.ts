@@ -142,29 +142,13 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createClerkSupabaseClient(null);
+    const clerkUserId = clerkUser.id;
 
-    // Get the user's internal ID from the users table
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('clerk_id', clerkUser.id)
-      .single();
-
-    if (userError || !userData) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'User not found in database',
-        },
-        { status: 404 },
-      );
-    }
-
-    // Use PostgreSQL RPC function for atomic upsert to prevent racing conditions
+    // Use RPC function for atomic upsert
     const { data: result, error: rpcError } = await supabase.rpc(
       'upsert_emoji_reaction',
       {
-        p_user_id: userData.id,
+        p_clerk_id: clerkUserId,
         p_game_id: gameId,
         p_emoji_name: emojiName,
         p_increment: incrementBy,
@@ -172,89 +156,22 @@ export async function POST(request: NextRequest) {
     );
 
     if (rpcError) {
-      console.error('Failed to upsert emoji reaction via RPC:', rpcError);
-
-      // Fallback to manual upsert if RPC function doesn't exist
-      const { data: existingReaction } = await supabase
-        .from('game_emoji_reactions')
-        .select('id, count')
-        .eq('game_id', gameId)
-        .eq('user_id', userData.id)
-        .eq('emoji_name', emojiName)
-        .maybeSingle();
-
-      if (existingReaction) {
-        // Update existing reaction
-        const { data: updatedData, error: updateError } = await supabase
-          .from('game_emoji_reactions')
-          .update({
-            count: existingReaction.count + incrementBy,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', existingReaction.id)
-          .select('count')
-          .single();
-
-        if (updateError) {
-          console.error('Error updating reaction:', updateError);
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'Failed to update reaction',
-            },
-            { status: 500 },
-          );
-        }
-
-        return NextResponse.json({
-          success: true,
-          data: {
-            gameId,
-            emojiName,
-            newCount: updatedData.count,
-          },
-        });
-      } else {
-        // Insert new reaction
-        const { data: insertedData, error: insertError } = await supabase
-          .from('game_emoji_reactions')
-          .insert({
-            game_id: gameId,
-            user_id: userData.id,
-            emoji_name: emojiName,
-            count: incrementBy,
-          })
-          .select('count')
-          .single();
-
-        if (insertError) {
-          console.error('Error inserting reaction:', insertError);
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'Failed to insert reaction',
-            },
-            { status: 500 },
-          );
-        }
-
-        return NextResponse.json({
-          success: true,
-          data: {
-            gameId,
-            emojiName,
-            newCount: insertedData.count,
-          },
-        });
-      }
-    }
-
-    // Check if the RPC function returned an error
-    if (!result.success) {
+      console.error('Error upserting emoji reaction:', rpcError);
       return NextResponse.json(
         {
           success: false,
-          error: result.error || 'Failed to upsert emoji reaction',
+          error: 'Failed to update reaction',
+        },
+        { status: 500 },
+      );
+    }
+
+    if (!result || !result.success) {
+      console.error('RPC function returned failure:', result);
+      return NextResponse.json(
+        {
+          success: false,
+          error: result?.error || 'Unknown error',
         },
         { status: 500 },
       );
@@ -369,71 +286,23 @@ export async function DELETE(request: NextRequest) {
     }
 
     const supabase = createClerkSupabaseClient(null);
+    const clerkUserId = clerkUser.id;
 
-    // Get the user's internal ID from the users table
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('clerk_id', clerkUser.id)
-      .single();
+    // Delete all emoji reactions for this user and game
+    const { error: deleteError } = await supabase
+      .from('game_emoji_reactions')
+      .delete()
+      .eq('clerk_id', clerkUserId)
+      .eq('game_id', parseInt(gameId));
 
-    if (userError || !userData) {
+    if (deleteError) {
+      console.error('Failed to delete emoji reactions:', deleteError);
       return NextResponse.json(
         {
           success: false,
-          error: 'User not found',
+          error: 'Failed to remove emoji reactions',
         },
-        { status: 404 },
-      );
-    }
-
-    // Use PostgreSQL function for atomic operation
-    const { data: result, error: rpcError } = await supabase.rpc(
-      'remove_user_emoji_reactions',
-      {
-        p_user_id: userData.id,
-        p_game_id: parseInt(gameId),
-      },
-    );
-
-    if (rpcError) {
-      console.error('Failed to remove emoji reactions via RPC:', rpcError);
-
-      // Fallback to manual deletion if RPC function doesn't exist
-      const { error: deleteError } = await supabase
-        .from('game_emoji_reactions')
-        .delete()
-        .eq('user_id', userData.id)
-        .eq('game_id', parseInt(gameId));
-
-      if (deleteError) {
-        console.error('Failed to delete emoji reactions:', deleteError);
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Failed to remove emoji reactions',
-          },
-          { status: 500 },
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          gameId: parseInt(gameId),
-          removed_count: 0, // We don't know the exact count in fallback
-        },
-      });
-    }
-
-    // Check if the RPC function returned an error
-    if (!result.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: result.error,
-        },
-        { status: 404 },
+        { status: 500 },
       );
     }
 
@@ -441,7 +310,6 @@ export async function DELETE(request: NextRequest) {
       success: true,
       data: {
         gameId: parseInt(gameId),
-        removedCount: result.removed_count,
       },
     });
   } catch (error) {
