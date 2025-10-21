@@ -106,7 +106,7 @@ const SearchBar = () => {
         initialDislikeCount: dislikeCount,
       };
 
-      const response = await fetch('/api/games/pending-dislike', {
+      const response = await fetch('/api/games/add-pending-dislike', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClerkSupabaseClient } from '@/lib/supabase/client';
-import { auth } from '@clerk/nextjs/server';
+import { currentUser } from '@clerk/nextjs/server';
 import { rateLimit } from '@/lib/api/rate-limit';
 import { getClientIP } from '@/lib/api/get-client-ip';
 import { validateBodySize, BODY_SIZE_LIMITS } from '@/lib/api/body-size-limit';
@@ -35,8 +35,6 @@ export async function POST(request: NextRequest) {
         },
       );
     }
-
-    const { userId: clerkUserId } = await auth();
 
     const body = await request.json();
     const { igdbGameId, initialDislikeCount = 1, gameName } = body;
@@ -113,55 +111,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create Supabase client (works for both authenticated and anonymous)
-    const supabase = createClerkSupabaseClient();
+    // Get current user (can be null for anonymous)
+    const clerkUser = await currentUser();
+    const clerkUserId = clerkUser?.id || null;
 
-    let supabaseUserId = null;
+    const supabase = createClerkSupabaseClient(null);
 
-    // If user is signed in, get their Supabase user ID
+    // If user is signed in, check if they already submitted
     if (clerkUserId) {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('id')
+      const { data: existingEntry } = await supabase
+        .from('pending_dislike_games')
+        .select('id, initial_dislike_count')
         .eq('clerk_id', clerkUserId)
-        .single();
+        .eq('igdb_game_id', igdbGameId)
+        .maybeSingle();
 
-      if (userData) {
-        supabaseUserId = userData.id;
-
-        // Check if signed-in user already has a pending dislike for this game
-        const { data: existingEntry } = await supabase
-          .from('pending_dislike_games')
-          .select('id, initial_dislike_count')
-          .eq('user_id', supabaseUserId)
-          .eq('igdb_game_id', igdbGameId)
-          .maybeSingle();
-
-        if (existingEntry) {
-          // Return error indicating already submitted
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'ALREADY_SUBMITTED',
-              message: 'You have already submitted a dislike for this game',
-              data: {
-                id: existingEntry.id,
-                igdbGameId,
-                userId: supabaseUserId,
-                initialDislikeCount: existingEntry.initial_dislike_count,
-              },
+      if (existingEntry) {
+        // Return error indicating already submitted
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'ALREADY_SUBMITTED',
+            message: 'You have already submitted a dislike for this game',
+            data: {
+              id: existingEntry.id,
+              igdbGameId,
+              clerkId: clerkUserId,
+              initialDislikeCount: existingEntry.initial_dislike_count,
             },
-            { status: 409 }, // Conflict status code
-          );
-        }
+          },
+          { status: 409 },
+        );
       }
     }
 
-    // Insert new entry (user_id can be null for anonymous users)
+    // Insert new entry (clerk_id can be null for anonymous users)
     const { data, error } = await supabase
       .from('pending_dislike_games')
       .insert({
-        user_id: supabaseUserId, // Will be null for anonymous users
+        clerk_id: clerkUserId,
         igdb_game_id: igdbGameId,
         game_name: gameName,
         initial_dislike_count: initialDislikeCount,
@@ -178,7 +166,7 @@ export async function POST(request: NextRequest) {
       data: {
         id: data.id,
         igdbGameId,
-        userId: supabaseUserId,
+        clerkId: clerkUserId,
         initialDislikeCount: data.initial_dislike_count,
         isUpdate: false,
       },

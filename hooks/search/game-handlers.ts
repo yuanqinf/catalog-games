@@ -38,17 +38,6 @@ export const createGameHandlers = (
   };
 
   const handleSelectIgdbGame = (igdbGame: IgdbGame) => {
-    // Add to search history (IGDB games)
-    addToSearchHistory({
-      id: igdbGame.id,
-      name: igdbGame.name,
-      slug: igdbGame.slug,
-      cover_url: igdbGame.cover_url,
-    });
-
-    // Update search history state
-    setSearchHistory(getSearchHistory());
-
     // Clear search results, input and hide suggestions
     setSupabaseGames([]);
     setIgdbGames([]);
