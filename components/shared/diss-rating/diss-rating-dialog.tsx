@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { MessageSquarePlus, ThumbsDown } from 'lucide-react';
-import { GameService } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { DissRatingSkeleton } from './diss-rating-skeleton';
 import { useGameRating } from '@/hooks/useGameRating';
@@ -143,12 +142,22 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
 
     setIsSaving(true);
     try {
-      const gameService = new GameService();
-      await gameService.saveUserRating(
-        parseInt(gameId),
-        user.id,
-        currentRating,
-      );
+      const response = await fetch('/api/games/rating', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gameId: parseInt(gameId),
+          rating: currentRating,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to save rating');
+      }
 
       // Force revalidate the SWR cache to fetch fresh data
       await mutate();

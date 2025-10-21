@@ -1,4 +1,5 @@
 import useSWR from 'swr';
+import { useSession } from '@clerk/nextjs';
 import { GameService } from '@/lib/supabase/client';
 import type { GameRating } from '@/types';
 
@@ -50,15 +51,7 @@ const fetchUserRating = async (
 ): Promise<GameRating> => {
   const gameService = new GameService();
 
-  // Convert Clerk ID to Supabase UUID
-  const supabaseUserId =
-    await gameService.getSupabaseUserIdFromClerkId(clerkUserId);
-
-  if (!supabaseUserId) {
-    return defaultRating;
-  }
-
-  const userRating = await gameService.getUserRating(gameId, supabaseUserId);
+  const userRating = await gameService.getUserRating(gameId, clerkUserId);
 
   if (!userRating) {
     return defaultRating;
@@ -82,15 +75,17 @@ export function useGameRating(
   gameId: number | string | undefined,
   userId?: string | undefined,
 ): UseGameRatingReturn {
+  const { session } = useSession();
+  const clerkUserId = session?.user?.id ?? '';
   const isUserRating = !!userId;
   const numericGameId = typeof gameId === 'string' ? parseInt(gameId) : gameId;
 
   // Use separate SWR calls for different data types
   const userRatingResult = useSWR(
-    isUserRating && numericGameId
+    isUserRating && numericGameId && session
       ? ['user-rating', numericGameId, userId]
       : null,
-    ([, gId, uId]) => fetchUserRating(gId as number, uId as string),
+    ([, gId]) => fetchUserRating(gId as number, clerkUserId),
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,

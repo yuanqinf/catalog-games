@@ -2,6 +2,86 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClerkSupabaseClient } from '@/lib/supabase/client';
 import { currentUser } from '@clerk/nextjs/server';
 
+export async function POST(request: NextRequest) {
+  try {
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 },
+      );
+    }
+
+    const body = await request.json();
+    const { gameId, rating } = body;
+
+    if (!gameId || !rating) {
+      return NextResponse.json(
+        { success: false, error: 'Game ID and rating are required' },
+        { status: 400 },
+      );
+    }
+
+    const supabase = createClerkSupabaseClient(null);
+    const clerkUserId = clerkUser.id;
+
+    // Check if rating already exists
+    const { data: existingRating } = await supabase
+      .from('game_ratings')
+      .select('id')
+      .eq('game_id', parseInt(gameId))
+      .eq('clerk_id', clerkUserId)
+      .maybeSingle();
+
+    if (existingRating) {
+      // Delete old rating before inserting new one
+      const { error: deleteError } = await supabase
+        .from('game_ratings')
+        .delete()
+        .eq('id', existingRating.id);
+
+      if (deleteError) {
+        console.error('Error deleting old rating:', deleteError);
+        return NextResponse.json(
+          { success: false, error: 'Failed to update rating' },
+          { status: 500 },
+        );
+      }
+    }
+
+    // Insert new rating
+    const { data, error } = await supabase
+      .from('game_ratings')
+      .insert({
+        game_id: parseInt(gameId),
+        clerk_id: clerkUserId,
+        story: rating.story,
+        music: rating.music,
+        graphics: rating.graphics,
+        gameplay: rating.gameplay,
+        longevity: rating.longevity,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error saving rating:', error);
+      return NextResponse.json(
+        { success: false, error: 'Failed to save rating' },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    console.error('Error in POST /api/games/rating:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 },
+    );
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -23,71 +103,21 @@ export async function DELETE(request: NextRequest) {
     }
 
     const supabase = createClerkSupabaseClient(null);
+    const clerkUserId = clerkUser.id;
 
-    // Get user ID from database
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('clerk_id', clerkUser.id)
-      .single();
+    // Delete rating using clerk_id
+    const { error: deleteError } = await supabase
+      .from('game_ratings')
+      .delete()
+      .eq('clerk_id', clerkUserId)
+      .eq('game_id', parseInt(gameId));
 
-    if (userError || !userData) {
-      console.error('Error fetching user data:', userError);
+    if (deleteError) {
+      console.error('Error removing rating:', deleteError);
       return NextResponse.json(
-        { success: false, error: 'User not found in database' },
-        { status: 404 },
+        { success: false, error: 'Failed to remove rating' },
+        { status: 500 },
       );
-    }
-
-    // Use PostgreSQL function for atomic operation
-    const { data: result, error: rpcError } = await supabase.rpc(
-      'remove_user_rating',
-      {
-        p_user_id: userData.id,
-        p_game_id: parseInt(gameId),
-      },
-    );
-
-    if (rpcError) {
-      console.error('Failed to remove rating via RPC:', rpcError);
-
-      // Fallback to manual deletion if RPC function doesn't exist
-      const { error: deleteError } = await supabase
-        .from('game_ratings')
-        .delete()
-        .eq('user_id', userData.id)
-        .eq('game_id', parseInt(gameId));
-
-      if (deleteError) {
-        console.error('Error removing rating:', deleteError);
-        return NextResponse.json(
-          { success: false, error: 'Failed to remove rating' },
-          { status: 500 },
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: 'Rating removed successfully (fallback)',
-      });
-    }
-
-    // Check RPC result
-    if (result && typeof result === 'object' && 'success' in result) {
-      if (result.success) {
-        return NextResponse.json({
-          success: true,
-          message: 'Rating removed successfully',
-          removed_count: result.removed_count,
-        });
-      } else {
-        // RPC function returned success: false, but this is expected if no rating exists
-        return NextResponse.json({
-          success: false,
-          error: result.error || 'No rating found to remove',
-          isExpected: true,
-        });
-      }
     }
 
     return NextResponse.json({
@@ -95,6 +125,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Rating removed successfully',
     });
   } catch (error) {
+    console.error('Error in DELETE /api/games/rating:', error);
     return NextResponse.json(
       {
         success: false,

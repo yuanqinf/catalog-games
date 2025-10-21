@@ -7,52 +7,29 @@ import { fetchSteamTags } from '@/utils/steam-integration';
 
 type ClerkSession = ReturnType<typeof useSession>['session'];
 
-// Singleton pattern for Supabase client
-let supabaseInstance: SupabaseClient | null = null;
-
 export function createClerkSupabaseClient(session?: ClerkSession | null) {
-  // For server-side usage without session, create a new instance
-  if (typeof window === 'undefined' || session !== undefined) {
-    return createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          fetch: async (url, options = {}) => {
-            // Only add auth header if session exists
-            if (session) {
-              const clerkToken = await session.getToken({
-                template: 'supabase',
-              });
-              const headers = new Headers(options?.headers);
-              headers.set('Authorization', `Bearer ${clerkToken}`);
-              return fetch(url, { ...options, headers });
-            }
-            // Use default fetch for unauthenticated requests
-            return fetch(url, options);
-          },
+  // Always create a new instance with the provided session
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      global: {
+        fetch: async (url, options = {}) => {
+          // Only add auth header if session exists
+          if (session) {
+            const clerkToken = await session.getToken({
+              template: 'supabase',
+            });
+            const headers = new Headers(options?.headers);
+            headers.set('Authorization', `Bearer ${clerkToken}`);
+            return fetch(url, { ...options, headers });
+          }
+          // Use default fetch for unauthenticated requests
+          return fetch(url, options);
         },
       },
-    );
-  }
-
-  // For client-side, use singleton pattern
-  if (!supabaseInstance) {
-    supabaseInstance = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          fetch: async (url, options = {}) => {
-            // Use default fetch for unauthenticated requests
-            return fetch(url, options);
-          },
-        },
-      },
-    );
-  }
-
-  return supabaseInstance;
+    },
+  );
 }
 
 export class GameService {
@@ -294,12 +271,12 @@ export class GameService {
    * @param gameId - The game ID
    * @param supabaseUserId - The Supabase user UUID (not Clerk ID)
    */
-  async getUserRating(gameId: number, supabaseUserId: string) {
+  async getUserRating(gameId: number, clerkId: string) {
     const { data, error } = await this.supabase
       .from('game_ratings')
       .select('*')
       .eq('game_id', gameId)
-      .eq('user_id', supabaseUserId)
+      .eq('clerk_id', clerkId)
       .maybeSingle();
 
     if (error) {
@@ -333,8 +310,15 @@ export class GameService {
       .eq('clerk_id', clerkUserId)
       .single();
 
-    if (userError || !userData) {
-      throw new Error('User not found in database');
+    if (userError) {
+      console.error('Failed to query users table:', userError);
+      throw new Error(`User lookup failed: ${userError.message}`);
+    }
+
+    if (!userData) {
+      throw new Error(
+        `User not found in database for Clerk ID: ${clerkUserId}`,
+      );
     }
 
     const supabaseUserId = userData.id;
