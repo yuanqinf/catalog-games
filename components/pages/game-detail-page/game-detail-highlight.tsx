@@ -73,6 +73,11 @@ export default function GameDetailHighlight({
   isSignedIn = false,
 }: GameDetailHighlightProps) {
   const { t } = useTranslation();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const {
     rating,
@@ -131,7 +136,7 @@ export default function GameDetailHighlight({
 
           {/* Column 2: User Dislike Count / Sign In Button */}
           <div className="hidden items-center justify-center 2xl:flex">
-            {isSignedIn ? (
+            {isClient && isSignedIn ? (
               <div className="flex items-center gap-2">
                 <Angry className="h-4 w-4 text-orange-400" />
                 {isLoadingUserDislike ? (
@@ -145,7 +150,7 @@ export default function GameDetailHighlight({
                   {t('game_detail_yours_dislikes')}
                 </span>
               </div>
-            ) : (
+            ) : isClient ? (
               <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
                 <Button
                   variant="outline"
@@ -155,6 +160,8 @@ export default function GameDetailHighlight({
                   <span>{t('game_detail_sign_in_to_track_dislikes')}</span>
                 </Button>
               </SignInButton>
+            ) : (
+              <div className="h-8 w-32" />
             )}
           </div>
 
@@ -192,7 +199,7 @@ export default function GameDetailHighlight({
         </div>
 
         <div className="mt-4 flex items-center justify-center 2xl:hidden">
-          {isSignedIn ? (
+          {isClient && isSignedIn ? (
             <div className="flex items-center gap-2">
               <Angry className="h-4 w-4 text-orange-400" />
               {isLoadingUserDislike ? (
@@ -206,7 +213,7 @@ export default function GameDetailHighlight({
                 {t('game_detail_yours_dislikes')}
               </span>
             </div>
-          ) : (
+          ) : isClient ? (
             <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
               <Button
                 variant="outline"
@@ -216,6 +223,8 @@ export default function GameDetailHighlight({
                 <span>{t('game_detail_sign_in_to_track_dislikes')}</span>
               </Button>
             </SignInButton>
+          ) : (
+            <div className="h-8 w-32" />
           )}
         </div>
       </>
