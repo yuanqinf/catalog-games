@@ -101,7 +101,7 @@ export default function ProfileGameCard({
           fetch(`/api/games/dislike?gameId=${game.id}`, {
             method: 'DELETE',
           }),
-          fetch(`/api/games/emoji-reaction?gameId=${game.id}`, {
+          fetch(`/api/games/update-emoji-reaction?gameId=${game.id}`, {
             method: 'DELETE',
           }),
           fetch(`/api/games/rating?gameId=${game.id}`, {

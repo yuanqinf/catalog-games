@@ -112,7 +112,7 @@ export function useGameReactions(
     mutate: mutateEmojiReactions,
     isLoading: isLoadingEmojiReactions,
   } = useSWR(
-    gameId ? `/api/games/emoji-reaction?gameId=${gameId}` : null,
+    gameId ? `/api/games/update-emoji-reaction?gameId=${gameId}` : null,
     (url) =>
       fetch(url).then((res) => {
         if (!res.ok) throw new Error('Failed to fetch emoji reactions');

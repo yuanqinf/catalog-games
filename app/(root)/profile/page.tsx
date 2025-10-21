@@ -78,7 +78,7 @@ const UserProfilePage = () => {
 
   const fetchUserEmojiReactions = async () => {
     try {
-      const response = await fetch('/api/users/emoji-reactions');
+      const response = await fetch('/api/users/get-emoji-reactions');
       const result = await response.json();
 
       if (result.success) {

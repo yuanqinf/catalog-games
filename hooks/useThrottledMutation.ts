@@ -78,7 +78,7 @@ interface ThrottledMutationReturn {
  * @example
  * // For emoji reactions
  * const { mutate: sendEmoji } = useThrottledMutation({
- *   endpoint: '/api/games/emoji-reaction',
+ *   endpoint: '/api/games/update-emoji-reaction',
  *   buildPayload: (key, increment) => {
  *     const [gameId, emojiName] = key.split(':');
  *     return {
