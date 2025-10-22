@@ -408,7 +408,7 @@ const GameDetail = ({
       <main className="container-3xl container mx-auto px-8">
         {/* Top Navigation - Back Button (Left) and Share Button (Right) */}
         <div className="mb-6 flex items-center justify-between">
-          <Link href="/explore?view=graveyard">
+          <Link href={`/explore?view=${isDeadGame ? 'graveyard' : 'disliked'}`}>
             <Button variant="ghost" className="text-gray-300 hover:text-white">
               <ArrowLeft className="mr-2 h-4 w-4" />
               {isDeadGame

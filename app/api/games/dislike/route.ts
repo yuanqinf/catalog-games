@@ -147,28 +147,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Increment the dislike count
-    const newDislikeCount = await gameService.incrementGameDislike(
-      game.id,
-      incrementBy,
-    );
-
-    // Record the user's dislike in the dislikes table (optional, only for authenticated users)
     const clerkUser = await currentUser();
+    const supabase = createClerkSupabaseClient(null);
+    let newDislikeCount: number;
+
     if (clerkUser) {
-      const supabase = createClerkSupabaseClient(null);
+      // For authenticated users: use upsert_user_dislike (updates both dislikes and games tables)
       const clerkUserId = clerkUser.id;
 
-      // Use PostgreSQL's INSERT ... ON CONFLICT for atomic upsert
-      const { error: upsertError } = await supabase.rpc('upsert_user_dislike', {
-        p_clerk_id: clerkUserId,
-        p_game_id: game.id,
-        p_increment: incrementBy,
-      });
+      const { data: result, error: upsertError } = await supabase.rpc(
+        'upsert_user_dislike',
+        {
+          p_clerk_id: clerkUserId,
+          p_game_id: game.id,
+          p_increment: incrementBy,
+        },
+      );
 
       if (upsertError) {
-        console.error('Failed to upsert user dislike:', upsertError);
-        // Fallback to manual upsert if RPC function doesn't exist
+        console.error('Failed to upsert user dislike via RPC:', upsertError);
+        // Fallback to manual upsert
         const { data: existingDislike } = await supabase
           .from('dislikes')
           .select('count')
@@ -189,7 +187,35 @@ export async function POST(request: NextRequest) {
             count: incrementBy,
           });
         }
+
+        // Manually increment game dislike count
+        newDislikeCount = await gameService.incrementGameDislike(
+          game.id,
+          incrementBy,
+        );
+      } else if (!result.success) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: result.error || 'Failed to update dislike',
+          },
+          { status: 500 },
+        );
+      } else {
+        // Get updated dislike count from games table
+        const { data: gameData } = await supabase
+          .from('games')
+          .select('dislike_count')
+          .eq('id', game.id)
+          .single();
+        newDislikeCount = gameData?.dislike_count || 0;
       }
+    } else {
+      // For anonymous users: only increment game dislike count
+      newDislikeCount = await gameService.incrementGameDislike(
+        game.id,
+        incrementBy,
+      );
     }
 
     return NextResponse.json({

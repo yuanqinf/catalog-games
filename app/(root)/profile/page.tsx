@@ -14,8 +14,9 @@ import ProfileGameCard from '@/components/shared/cards/profile-game-card';
 import type { GameDbData } from '@/types';
 import { useTranslation } from '@/lib/i18n/client';
 
-interface DislikedGame extends GameDbData {
+interface InteractedGame extends GameDbData {
   user_dislike_count: number;
+  user_emoji_count: number;
 }
 
 const UserProfilePage = () => {
@@ -24,11 +25,8 @@ const UserProfilePage = () => {
   const router = useRouter();
   const [totalDislikes, setTotalDislikes] = useState<number>(0);
   const [isLoadingDislikes, setIsLoadingDislikes] = useState(true);
-  const [dislikedGames, setDislikedGames] = useState<DislikedGame[]>([]);
+  const [interactedGames, setInteractedGames] = useState<InteractedGame[]>([]);
   const [isLoadingGames, setIsLoadingGames] = useState(true);
-  const [gameEmojiCounts, setGameEmojiCounts] = useState<
-    Record<number, number>
-  >({});
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -39,8 +37,7 @@ const UserProfilePage = () => {
   useEffect(() => {
     if (isLoaded && isSignedIn) {
       fetchUserDislikeCount();
-      fetchDislikedGames();
-      fetchUserEmojiReactions();
+      fetchInteractedGames();
     }
   }, [isLoaded, isSignedIn]);
 
@@ -60,32 +57,19 @@ const UserProfilePage = () => {
     }
   };
 
-  const fetchDislikedGames = async () => {
+  const fetchInteractedGames = async () => {
     try {
       setIsLoadingGames(true);
-      const response = await fetch('/api/users/dislikes');
+      const response = await fetch('/api/users/interacted-games');
       const result = await response.json();
 
       if (result.success) {
-        setDislikedGames(result.data);
+        setInteractedGames(result.data);
       }
     } catch (error) {
-      console.error('Failed to fetch disliked games:', error);
+      console.error('Failed to fetch interacted games:', error);
     } finally {
       setIsLoadingGames(false);
-    }
-  };
-
-  const fetchUserEmojiReactions = async () => {
-    try {
-      const response = await fetch('/api/users/get-emoji-reactions');
-      const result = await response.json();
-
-      if (result.success) {
-        setGameEmojiCounts(result.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch emoji reactions:', error);
     }
   };
 
@@ -197,14 +181,14 @@ const UserProfilePage = () => {
           <div className="flex justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
-        ) : dislikedGames.length > 0 ? (
+        ) : interactedGames.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 2xl:grid-cols-4">
-            {dislikedGames.map((game) => (
+            {interactedGames.map((game) => (
               <ProfileGameCard
                 key={game.id}
                 game={game}
                 userGameDislikeCount={game.user_dislike_count}
-                userGameEmojiCount={game.id ? gameEmojiCounts[game.id] || 0 : 0}
+                userGameEmojiCount={game.user_emoji_count}
               />
             ))}
           </div>
