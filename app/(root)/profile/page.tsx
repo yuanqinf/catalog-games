@@ -73,7 +73,17 @@ const UserProfilePage = () => {
     }
   };
 
-  if (!isLoaded || !isSignedIn) return null;
+  if (!isLoaded) {
+    return (
+      <div className="container mx-auto flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    return null;
+  }
 
   return (
     <div className="container mx-auto space-y-8 px-4 py-6 sm:space-y-12 sm:py-8">

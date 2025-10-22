@@ -103,9 +103,6 @@ const GameDetailHeadline = ({
                 <div className="h-5 w-28 animate-pulse rounded bg-gray-700" />
               </div>
             </div>
-
-            {/* Skeleton Button */}
-            <div className="h-10 w-24 animate-pulse rounded bg-gray-700" />
           </div>
         </div>
       </section>
