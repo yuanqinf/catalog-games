@@ -19,8 +19,8 @@ export default function PrivacyPolicyPage() {
             Last Updated: October 20, 2025
           </p>
           <p className="mt-4 text-lg text-gray-300">
-            Hey there! Dissgame is an indie project, so let's keep this simple
-            and transparent. Here's what we do with your data.
+            Hey there! Dissgame is an indie project, so let&apos;s keep this
+            simple and transparent. Here&apos;s what we do with your data.
           </p>
         </div>
 
@@ -29,7 +29,8 @@ export default function PrivacyPolicyPage() {
           <h2 className="mb-3 text-xl font-semibold text-purple-400">TL;DR</h2>
           <ul className="space-y-2 text-gray-300">
             <li>
-              ✓ We collect minimal data - just what's needed to run the site
+              ✓ We collect minimal data - just what&apos;s needed to run the
+              site
             </li>
             <li>
               ✓ Your game ratings and dislikes are anonymous and aggregated
@@ -38,7 +39,7 @@ export default function PrivacyPolicyPage() {
             <li>
               ✓ Your search history stays in your browser, not our servers
             </li>
-            <li>✓ We don't sell your data to anyone, period</li>
+            <li>✓ We don&apos;t sell your data to anyone, period</li>
             <li>✓ You can delete your account anytime</li>
           </ul>
         </section>
@@ -70,8 +71,8 @@ export default function PrivacyPolicyPage() {
                 </li>
                 <li>Emoji reactions on dead games</li>
                 <li>
-                  Search history (stored locally in your browser, we don't see
-                  it!)
+                  Search history (stored locally in your browser, we don&apos;t
+                  see it!)
                 </li>
                 <li>
                   A session ID so we can show how many people are online and
@@ -101,7 +102,7 @@ export default function PrivacyPolicyPage() {
           <p className="text-gray-300">Pretty straightforward:</p>
           <ul className="list-inside list-disc space-y-2 text-gray-300">
             <li>Make the site work (duh)</li>
-            <li>Show you're logged in</li>
+            <li>Show you&apos;re logged in</li>
             <li>Display game stats and ratings</li>
             <li>
               Count how many people are online (your session ID expires after 24
@@ -129,22 +130,22 @@ export default function PrivacyPolicyPage() {
             <div>
               <p className="text-gray-300">
                 <strong className="text-purple-400">Supabase:</strong> Our
-                database. It's a PostgreSQL database with row-level security, so
-                your data is protected.
+                database. It&apos;s a PostgreSQL database with row-level
+                security, so your data is protected.
               </p>
             </div>
             <div>
               <p className="text-gray-300">
                 <strong className="text-purple-400">Clerk:</strong> Handles all
-                the login stuff. They're pros at this.
+                the login stuff. They&apos;re pros at this.
               </p>
             </div>
             <div>
               <p className="text-gray-300">
                 <strong className="text-purple-400">Your Browser:</strong> Your
-                search history and preferences (like whether you've seen the
-                welcome dialog) stay on your device. You can clear it anytime in
-                your browser settings.
+                search history and preferences (like whether you&apos;ve seen
+                the welcome dialog) stay on your device. You can clear it
+                anytime in your browser settings.
               </p>
             </div>
           </div>
@@ -153,7 +154,7 @@ export default function PrivacyPolicyPage() {
             <p className="text-sm text-gray-300">
               <strong>Security note:</strong> We use HTTPS, database security
               rules, and rate limiting. But honestly? No system is 100% secure.
-              We do our best, but can't guarantee perfection.
+              We do our best, but can&apos;t guarantee perfection.
             </p>
           </div>
         </section>
@@ -182,7 +183,7 @@ export default function PrivacyPolicyPage() {
         {/* 5. What's Public */}
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold text-white">
-            5. What's Public vs Private
+            5. What&apos;s Public vs Private
           </h2>
 
           <div className="space-y-3">
@@ -203,8 +204,8 @@ export default function PrivacyPolicyPage() {
                 Private:
               </h3>
               <p className="text-gray-300">
-                Which specific games you disliked or rated. We don't show that
-                to anyone.
+                Which specific games you disliked or rated. We don&apos;t show
+                that to anyone.
               </p>
             </div>
           </div>
@@ -231,12 +232,12 @@ export default function PrivacyPolicyPage() {
             </li>
             <li>
               <strong>IGDB & Steam</strong> - We fetch game data from them, but
-              don't send them your personal info
+              don&apos;t send them your personal info
             </li>
           </ul>
           <p className="mt-3 text-gray-300">
             We might share data if legally required (like a court order), but
-            that's it.
+            that&apos;s it.
           </p>
         </section>
 
@@ -248,7 +249,8 @@ export default function PrivacyPolicyPage() {
             <li>Request to see what data we have about you</li>
             <li>Ask us to correct wrong information</li>
             <li>
-              Delete your account (and we'll remove your data within 30 days)
+              Delete your account (and we&apos;ll remove your data within 30
+              days)
             </li>
             <li>Export your data</li>
             <li>
@@ -272,7 +274,7 @@ export default function PrivacyPolicyPage() {
             </li>
             <li>
               <strong>Game ratings/dislikes:</strong> We keep these to maintain
-              accurate stats, even if you delete your account (but they're
+              accurate stats, even if you delete your account (but they&apos;re
               anonymous anyway)
             </li>
             <li>
@@ -310,8 +312,8 @@ export default function PrivacyPolicyPage() {
               </h3>
               <p className="text-gray-300">
                 You have rights to know what we collect, delete your data, and
-                opt-out of sales. <strong>Good news:</strong> We don't sell your
-                data, so nothing to opt out of.
+                opt-out of sales. <strong>Good news:</strong> We don&apos;t sell
+                your data, so nothing to opt out of.
               </p>
             </div>
 
@@ -320,8 +322,9 @@ export default function PrivacyPolicyPage() {
                 Kids:
               </h3>
               <p className="text-gray-300">
-                Dissgame isn't for anyone under 13. If you're a parent and think
-                your kid signed up, let us know and we'll delete their data.
+                Dissgame isn&apos;t for anyone under 13. If you&apos;re a parent
+                and think your kid signed up, let us know and we&apos;ll delete
+                their data.
               </p>
             </div>
 
@@ -343,9 +346,9 @@ export default function PrivacyPolicyPage() {
             10. Links to Other Sites
           </h2>
           <p className="text-gray-300">
-            We link to Steam pages, IGDB, and game developer sites. We're not
-            responsible for their privacy practices - check their policies if
-            you're curious.
+            We link to Steam pages, IGDB, and game developer sites. We&apos;re
+            not responsible for their privacy practices - check their policies
+            if you&apos;re curious.
           </p>
         </section>
 
@@ -355,17 +358,17 @@ export default function PrivacyPolicyPage() {
             11. Changes to This Policy
           </h2>
           <p className="text-gray-300">
-            If we update this policy, we'll change the "Last Updated" date at
-            the top. For big changes, we might post a notice on the homepage or
-            send an email.
+            If we update this policy, we&apos;ll change the &quot;Last
+            Updated&quot; date at the top. For big changes, we might post a
+            notice on the homepage or send an email.
           </p>
         </section>
 
         {/* Footer */}
         <section className="space-y-4">
           <p className="text-gray-300">
-            By using Dissgame, you're cool with this privacy policy. For more
-            info about how to use the site responsibly, check out our{' '}
+            By using Dissgame, you&apos;re cool with this privacy policy. For
+            more info about how to use the site responsibly, check out our{' '}
             <Link
               href="/about/terms"
               className="text-purple-400 underline hover:text-purple-300"

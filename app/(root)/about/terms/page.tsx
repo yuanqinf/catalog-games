@@ -24,14 +24,14 @@ export default function TermsOfUsePage() {
       <section className="mb-8 rounded-lg bg-purple-900/20 p-6">
         <h2 className="mb-3 text-xl font-semibold text-purple-400">TL;DR</h2>
         <ul className="space-y-2 text-gray-300">
-          <li>✓ Don't use bots or spam the site</li>
-          <li>✓ Don't create fake accounts to manipulate votes</li>
+          <li>✓ Don&apos;t use bots or spam the site</li>
+          <li>✓ Don&apos;t create fake accounts to manipulate votes</li>
           <li>✓ We have rate limits to keep things fair</li>
           <li>✓ Your ratings and reactions are public (but anonymous)</li>
           <li>✓ We can ban abusive accounts</li>
           <li>
-            ✓ The site is provided "as is" - we do our best but can't guarantee
-            perfection
+            ✓ The site is provided &quot;as is&quot; - we do our best but
+            can&apos;t guarantee perfection
           </li>
         </ul>
       </section>
@@ -49,7 +49,8 @@ export default function TermsOfUsePage() {
               <li>Dislike games and see what others dislike</li>
               <li>Rate games and view community ratings</li>
               <li>
-                Mark games as "dead" and react with emojis (RIP, skull, etc.)
+                Mark games as &quot;dead&quot; and react with emojis (RIP,
+                skull, etc.)
               </li>
               <li>Search for games and browse stats</li>
               <li>Submit feedback about the site</li>
@@ -82,10 +83,10 @@ export default function TermsOfUsePage() {
         {/* 3. The Rules */}
         <section>
           <h2 className="mb-4 text-2xl font-semibold text-white">
-            3. What You Can't Do
+            3. What You Can&apos;t Do
           </h2>
           <div className="space-y-3 leading-relaxed">
-            <p className="font-medium">Please don't:</p>
+            <p className="font-medium">Please don&apos;t:</p>
             <ul className="list-inside list-disc space-y-2 pl-4">
               <li>
                 <strong>Use bots or scripts</strong> to auto-click dislikes or
@@ -115,7 +116,7 @@ export default function TermsOfUsePage() {
               </li>
             </ul>
             <p className="mt-3 text-sm">
-              Basically: be cool, don't be a jerk, and play fair.
+              Basically: be cool, don&apos;t be a jerk, and play fair.
             </p>
           </div>
         </section>
@@ -139,8 +140,8 @@ export default function TermsOfUsePage() {
               </li>
             </ul>
             <p className="mt-3">
-              If you hit these limits, you'll get a timeout. Repeatedly abusing
-              them can get you banned.
+              If you hit these limits, you&apos;ll get a timeout. Repeatedly
+              abusing them can get you banned.
             </p>
           </div>
         </section>
@@ -154,7 +155,7 @@ export default function TermsOfUsePage() {
             <p>When you rate games, dislike stuff, or send feedback:</p>
             <ul className="list-inside list-disc space-y-2 pl-4">
               <li>
-                <strong>It's public:</strong> Your dislikes and ratings are
+                <strong>It&apos;s public:</strong> Your dislikes and ratings are
                 visible (but aggregated and anonymous)
               </li>
               <li>
@@ -162,8 +163,8 @@ export default function TermsOfUsePage() {
                 to display and use it
               </li>
               <li>
-                <strong>We can moderate:</strong> We'll remove spam, offensive
-                stuff, or content that breaks the rules
+                <strong>We can moderate:</strong> We&apos;ll remove spam,
+                offensive stuff, or content that breaks the rules
               </li>
             </ul>
           </div>
@@ -180,8 +181,8 @@ export default function TermsOfUsePage() {
                 Our stuff:
               </h3>
               <p>
-                The Dissgame website, design, and features are ours. Don't copy
-                or steal them.
+                The Dissgame website, design, and features are ours. Don&apos;t
+                copy or steal them.
               </p>
             </div>
             <div>
@@ -190,8 +191,8 @@ export default function TermsOfUsePage() {
               </h3>
               <p>
                 We get game info, images, and stats from IGDB, Steam, and other
-                sources. We don't own this - it belongs to the respective game
-                publishers and platforms.
+                sources. We don&apos;t own this - it belongs to the respective
+                game publishers and platforms.
               </p>
             </div>
           </div>
@@ -209,7 +210,7 @@ export default function TermsOfUsePage() {
               >
                 Privacy Policy
               </Link>{' '}
-              for the full details, but here's the quick version:
+              for the full details, but here&apos;s the quick version:
             </p>
             <ul className="list-inside list-disc space-y-2 pl-4">
               <li>We use Clerk for login, Supabase for database storage</li>
@@ -218,7 +219,7 @@ export default function TermsOfUsePage() {
               </li>
               <li>We track which games you dislike/rate (anonymously)</li>
               <li>We count online users with session IDs (expire after 24h)</li>
-              <li>We don't sell your data</li>
+              <li>We don&apos;t sell your data</li>
             </ul>
           </div>
         </section>
@@ -248,8 +249,8 @@ export default function TermsOfUsePage() {
               </li>
             </ul>
             <p className="mt-3">
-              We're not responsible if these services go down or have issues.
-              Check their own terms/policies if you're curious.
+              We&apos;re not responsible if these services go down or have
+              issues. Check their own terms/policies if you&apos;re curious.
             </p>
           </div>
         </section>
@@ -265,8 +266,9 @@ export default function TermsOfUsePage() {
                 <strong className="text-purple-400">
                   Important - Read This:
                 </strong>{' '}
-                Dissgame is provided "AS IS" without any guarantees. We do our
-                best to keep things running smoothly, but we can't promise:
+                Dissgame is provided &quot;AS IS&quot; without any guarantees.
+                We do our best to keep things running smoothly, but we
+                can&apos;t promise:
               </p>
               <ul className="mt-2 list-inside list-disc space-y-1 pl-4 text-sm">
                 <li>The site will always be available (servers can go down)</li>
@@ -286,8 +288,8 @@ export default function TermsOfUsePage() {
                 Limitation of Liability:
               </h3>
               <p>
-                We're not liable for any damages from using (or not being able
-                to use) Dissgame. This includes:
+                We&apos;re not liable for any damages from using (or not being
+                able to use) Dissgame. This includes:
               </p>
               <ul className="list-inside list-disc space-y-1 pl-4 text-sm">
                 <li>Lost data or content</li>
@@ -306,8 +308,8 @@ export default function TermsOfUsePage() {
               </h3>
               <p className="text-sm">
                 If you break the rules and someone sues us because of it, you
-                agree to cover the costs. Don't make us deal with legal trouble
-                because you did something dumb.
+                agree to cover the costs. Don&apos;t make us deal with legal
+                trouble because you did something dumb.
               </p>
             </div>
           </div>
@@ -320,13 +322,13 @@ export default function TermsOfUsePage() {
           </h2>
           <div className="space-y-3 leading-relaxed">
             <p>
-              We might update these terms occasionally. If we do, we'll update
-              the "Last Updated" date at the top. For major changes, we might
-              post a notice on the homepage.
+              We might update these terms occasionally. If we do, we&apos;ll
+              update the &quot;Last Updated&quot; date at the top. For major
+              changes, we might post a notice on the homepage.
             </p>
             <p>
-              By continuing to use Dissgame after changes, you're agreeing to
-              the new terms.
+              By continuing to use Dissgame after changes, you&apos;re agreeing
+              to the new terms.
             </p>
           </div>
         </section>
@@ -341,7 +343,7 @@ export default function TermsOfUsePage() {
             >
               Privacy Policy
             </Link>
-            . If you don't agree, please don't use the site.
+            . If you don&apos;t agree, please don&apos;t use the site.
           </p>
           <p className="mt-3 text-sm text-gray-400">
             Thanks for being part of the community!
