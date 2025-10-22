@@ -124,41 +124,6 @@ export class GameService {
   }
 
   /**
-   * Get games for explore page with pagination, sorted by dislike count
-   * @param offset - Number of games to skip
-   * @param limit - Number of games to fetch (default: 15)
-   * @param numberOfGames - Total number of top games to consider (default: 100)
-   */
-  async getGamesForExplorePage(
-    offset: number = 0,
-    limit: number = 15,
-    numberOfGames: number = 100,
-  ) {
-    let query = this.supabase.from('games').select('*').order('dislike_count', {
-      ascending: false,
-      nullsFirst: false,
-    });
-
-    // First limit to top numberOfGames, then apply pagination
-    const maxOffset = Math.min(offset + limit - 1, numberOfGames - 1);
-    if (offset >= numberOfGames) {
-      return []; // Return empty if requesting beyond the top numberOfGames
-    }
-
-    query = query.range(offset, maxOffset);
-
-    const { data, error } = await query;
-
-    if (error) {
-      throw new Error(
-        error.message || 'Failed to fetch games for explore page',
-      );
-    }
-
-    return data;
-  }
-
-  /**
    * Get game ranking for game detail page
    * @param gameId - The game ID to get ranking for
    * @returns Ranking data with current game (if within top 100)
@@ -215,21 +180,6 @@ export class GameService {
   }
 
   /**
-   * Get total count of games for pagination calculation
-   */
-  async getTotalGamesCount(): Promise<number> {
-    const { count, error } = await this.supabase
-      .from('games')
-      .select('*', { count: 'exact', head: true });
-
-    if (error) {
-      throw new Error(error.message || 'Failed to get total games count');
-    }
-
-    return count || 0;
-  }
-
-  /**
    * Get a game by IGDB ID
    */
   async getGameBySlugId(slug: string) {
@@ -244,132 +194,6 @@ export class GameService {
     }
 
     return data;
-  }
-
-  /**
-   * Convert Clerk user ID to Supabase user UUID
-   */
-  async getSupabaseUserIdFromClerkId(
-    clerkUserId: string,
-  ): Promise<string | null> {
-    const { data, error } = await this.supabase
-      .from('users')
-      .select('id')
-      .eq('clerk_id', clerkUserId)
-      .single();
-
-    if (error || !data) {
-      console.error('Failed to get Supabase user ID:', error);
-      return null;
-    }
-
-    return data.id;
-  }
-
-  /**
-   * Get user rating for a specific game
-   * @param gameId - The game ID
-   * @param supabaseUserId - The Supabase user UUID (not Clerk ID)
-   */
-  async getUserRating(gameId: number, clerkId: string) {
-    const { data, error } = await this.supabase
-      .from('game_ratings')
-      .select('*')
-      .eq('game_id', gameId)
-      .eq('clerk_id', clerkId)
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(error.message || 'Failed to fetch user rating');
-    }
-
-    return data;
-  }
-
-  /**
-   * Save or update user rating for a game
-   * @param gameId - The game ID
-   * @param clerkUserId - The Clerk user ID (will be converted to Supabase UUID)
-   * @param rating - The rating object
-   */
-  async saveUserRating(
-    gameId: number,
-    clerkUserId: string,
-    rating: {
-      story: number;
-      music: number;
-      graphics: number;
-      gameplay: number;
-      longevity: number;
-    },
-  ) {
-    // Convert Clerk ID to Supabase user UUID
-    const { data: userData, error: userError } = await this.supabase
-      .from('users')
-      .select('id')
-      .eq('clerk_id', clerkUserId)
-      .single();
-
-    if (userError) {
-      console.error('Failed to query users table:', userError);
-      throw new Error(`User lookup failed: ${userError.message}`);
-    }
-
-    if (!userData) {
-      throw new Error(
-        `User not found in database for Clerk ID: ${clerkUserId}`,
-      );
-    }
-
-    const supabaseUserId = userData.id;
-
-    // Check if rating already exists
-    const existingRating = await this.getUserRating(gameId, supabaseUserId);
-
-    if (existingRating) {
-      // Update existing rating
-      const { data, error } = await this.supabase
-        .from('game_ratings')
-        .update({
-          story: rating.story,
-          music: rating.music,
-          graphics: rating.graphics,
-          gameplay: rating.gameplay,
-          longevity: rating.longevity,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('game_id', gameId)
-        .eq('user_id', supabaseUserId)
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(error.message || 'Failed to update rating');
-      }
-
-      return data;
-    } else {
-      // Insert new rating
-      const { data, error } = await this.supabase
-        .from('game_ratings')
-        .insert({
-          game_id: gameId,
-          user_id: supabaseUserId,
-          story: rating.story,
-          music: rating.music,
-          graphics: rating.graphics,
-          gameplay: rating.gameplay,
-          longevity: rating.longevity,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(error.message || 'Failed to save rating');
-      }
-
-      return data;
-    }
   }
 
   /**
@@ -521,58 +345,6 @@ export class GameService {
       console.error('Search failed:', error);
       throw new Error('Failed to search games');
     }
-  }
-
-  /**
-   * Get averaged user ratings for each rating type for a specific game
-   */
-  async getAverageGameRatingsByGameId(gameId: number): Promise<GameRating> {
-    const { data, error } = await this.supabase
-      .from('game_ratings')
-      .select('story, music, graphics, gameplay, longevity')
-      .eq('game_id', gameId);
-
-    if (error) {
-      throw new Error(error.message || 'Failed to fetch game ratings');
-    }
-
-    if (!data || data.length === 0) {
-      return {
-        story: 0,
-        music: 0,
-        graphics: 0,
-        gameplay: 0,
-        longevity: 0,
-      };
-    }
-
-    // Calculate averages for each rating type
-    const totalRatings = data.length;
-    const averages = {
-      story: 0,
-      music: 0,
-      graphics: 0,
-      gameplay: 0,
-      longevity: 0,
-    };
-
-    // Sum up all ratings for each category
-    data.forEach((rating) => {
-      averages.story += rating.story || 0;
-      averages.music += rating.music || 0;
-      averages.graphics += rating.graphics || 0;
-      averages.gameplay += rating.gameplay || 0;
-      averages.longevity += rating.longevity || 0;
-    });
-
-    // Calculate averages
-    Object.keys(averages).forEach((key) => {
-      averages[key as keyof typeof averages] = Number(
-        (averages[key as keyof typeof averages] / totalRatings).toFixed(1),
-      );
-    });
-
-    return averages;
   }
 
   /**

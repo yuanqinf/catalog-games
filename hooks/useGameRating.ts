@@ -1,6 +1,4 @@
 import useSWR from 'swr';
-import { useSession } from '@clerk/nextjs';
-import { GameService } from '@/lib/supabase/client';
 import type { GameRating } from '@/types';
 
 interface UseGameRatingReturn {
@@ -30,12 +28,18 @@ const calculateOverallAverage = (ratings: GameRating): number => {
   return total > 0 ? Number((total / 5).toFixed(1)) : 0;
 };
 
-// Fetch average ratings from all users
+// Fetch average ratings from all users via API
 const fetchAverageRating = async (
   gameId: number,
 ): Promise<AverageRatingData> => {
-  const gameService = new GameService();
-  const averageRating = await gameService.getAverageGameRatingsByGameId(gameId);
+  const response = await fetch(`/api/games/${gameId}/average-rating`);
+  const result = await response.json();
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || 'Failed to fetch average rating');
+  }
+
+  const averageRating = result.data;
   const overall = calculateOverallAverage(averageRating);
 
   return {
@@ -44,25 +48,25 @@ const fetchAverageRating = async (
   };
 };
 
-// Fetch specific user's rating
-const fetchUserRating = async (
-  gameId: number,
-  clerkUserId: string,
-): Promise<GameRating> => {
-  const gameService = new GameService();
+// Fetch specific user's rating via API
+const fetchUserRating = async (gameId: number): Promise<GameRating> => {
+  const response = await fetch(`/api/games/${gameId}/user-rating`);
+  const result = await response.json();
 
-  const userRating = await gameService.getUserRating(gameId, clerkUserId);
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || 'Failed to fetch user rating');
+  }
 
-  if (!userRating) {
+  if (!result.data) {
     return defaultRating;
   }
 
   return {
-    story: userRating.story,
-    music: userRating.music,
-    graphics: userRating.graphics,
-    gameplay: userRating.gameplay,
-    longevity: userRating.longevity,
+    story: result.data.story,
+    music: result.data.music,
+    graphics: result.data.graphics,
+    gameplay: result.data.gameplay,
+    longevity: result.data.longevity,
   };
 };
 
@@ -75,17 +79,15 @@ export function useGameRating(
   gameId: number | string | undefined,
   userId?: string | undefined,
 ): UseGameRatingReturn {
-  const { session } = useSession();
-  const clerkUserId = session?.user?.id ?? '';
   const isUserRating = !!userId;
   const numericGameId = typeof gameId === 'string' ? parseInt(gameId) : gameId;
 
   // Use separate SWR calls for different data types
   const userRatingResult = useSWR(
-    isUserRating && numericGameId && session
+    isUserRating && numericGameId
       ? ['user-rating', numericGameId, userId]
       : null,
-    ([, gId]) => fetchUserRating(gId as number, clerkUserId),
+    ([, gId]) => fetchUserRating(gId as number),
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,

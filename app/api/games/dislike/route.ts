@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GameService, createClerkSupabaseClient } from '@/lib/supabase/client';
-import { getAuthenticatedUser } from '@/lib/auth/helpers';
+import { currentUser } from '@clerk/nextjs/server';
 import { rateLimit } from '@/lib/api/rate-limit';
 import { getClientIP } from '@/lib/api/get-client-ip';
 import { validateBodySize, BODY_SIZE_LIMITS } from '@/lib/api/body-size-limit';
@@ -153,45 +153,41 @@ export async function POST(request: NextRequest) {
       incrementBy,
     );
 
-    // Record the user's dislike in the dislikes table
-    const authResult = await getAuthenticatedUser();
-    if (!('error' in authResult)) {
-      const { internalUserId, supabase } = authResult;
+    // Record the user's dislike in the dislikes table (optional, only for authenticated users)
+    const clerkUser = await currentUser();
+    if (clerkUser) {
+      const supabase = createClerkSupabaseClient(null);
+      const clerkUserId = clerkUser.id;
 
-      if (internalUserId) {
-        // Use PostgreSQL's INSERT ... ON CONFLICT for atomic upsert
-        const { error: upsertError } = await supabase.rpc(
-          'upsert_user_dislike',
-          {
-            p_user_id: internalUserId,
-            p_game_id: game.id,
-            p_increment: incrementBy,
-          },
-        );
+      // Use PostgreSQL's INSERT ... ON CONFLICT for atomic upsert
+      const { error: upsertError } = await supabase.rpc('upsert_user_dislike', {
+        p_clerk_id: clerkUserId,
+        p_game_id: game.id,
+        p_increment: incrementBy,
+      });
 
-        if (upsertError) {
-          console.error('Failed to upsert user dislike:', upsertError);
-          // Fallback to manual upsert if RPC function doesn't exist
-          const { data: existingDislike } = await supabase
+      if (upsertError) {
+        console.error('Failed to upsert user dislike:', upsertError);
+        // Fallback to manual upsert if RPC function doesn't exist
+        const { data: existingDislike } = await supabase
+          .from('dislikes')
+          .select('count')
+          .eq('clerk_id', clerkUserId)
+          .eq('game_id', game.id)
+          .maybeSingle();
+
+        if (existingDislike) {
+          await supabase
             .from('dislikes')
-            .select('count')
-            .eq('user_id', internalUserId)
-            .eq('game_id', game.id)
-            .maybeSingle();
-
-          if (existingDislike) {
-            await supabase
-              .from('dislikes')
-              .update({ count: existingDislike.count + incrementBy })
-              .eq('user_id', internalUserId)
-              .eq('game_id', game.id);
-          } else {
-            await supabase.from('dislikes').insert({
-              user_id: internalUserId,
-              game_id: game.id,
-              count: incrementBy,
-            });
-          }
+            .update({ count: existingDislike.count + incrementBy })
+            .eq('clerk_id', clerkUserId)
+            .eq('game_id', game.id);
+        } else {
+          await supabase.from('dislikes').insert({
+            clerk_id: clerkUserId,
+            game_id: game.id,
+            count: incrementBy,
+          });
         }
       }
     }
@@ -233,24 +229,25 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const authResult = await getAuthenticatedUser();
-    if ('error' in authResult) {
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
       return NextResponse.json(
         {
           success: false,
-          error: authResult.error,
+          error: 'User not authenticated',
         },
-        { status: authResult.status },
+        { status: 401 },
       );
     }
 
-    const { internalUserId, supabase } = authResult;
+    const supabase = createClerkSupabaseClient(null);
+    const clerkUserId = clerkUser.id;
 
     // Use PostgreSQL function for atomic operation
     const { data: result, error: rpcError } = await supabase.rpc(
       'remove_user_dislike',
       {
-        p_user_id: internalUserId,
+        p_clerk_id: clerkUserId,
         p_game_id: parseInt(gameId),
       },
     );
@@ -262,7 +259,7 @@ export async function DELETE(request: NextRequest) {
       const { data: existingDislike } = await supabase
         .from('dislikes')
         .select('count')
-        .eq('user_id', internalUserId)
+        .eq('clerk_id', clerkUserId)
         .eq('game_id', parseInt(gameId))
         .maybeSingle();
 
@@ -282,7 +279,7 @@ export async function DELETE(request: NextRequest) {
       const { error: deleteError } = await supabase
         .from('dislikes')
         .delete()
-        .eq('user_id', internalUserId)
+        .eq('clerk_id', clerkUserId)
         .eq('game_id', parseInt(gameId));
 
       if (deleteError) {

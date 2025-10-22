@@ -63,7 +63,7 @@ const OnlineUsersBadge = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            user_id: user?.id || null,
+            clerk_id: user?.id || null,
             session_id: sessionId,
           }),
         });

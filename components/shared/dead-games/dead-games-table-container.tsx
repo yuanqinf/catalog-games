@@ -5,7 +5,6 @@ import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Ghost, Loader2 } from 'lucide-react';
 import { DeadGameFromAPI, DeadGame } from '@/types';
-import { GameService } from '@/lib/supabase/client';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 import { DeadGamesTable } from './dead-games-table';
 import { useThrottledDeadGameReaction } from '@/hooks/useThrottledDeadGameReaction';
@@ -23,7 +22,7 @@ export const DeadGamesTableContainer: React.FC<
   DeadGamesTableContainerProps
 > = ({ limit, showSorting = false, showAddDeadGameRow = false }) => {
   const { t } = useTranslation();
-  // Fetch dead games data directly from Supabase with short polling for real-time updates
+  // Fetch dead games data via API with short polling for real-time updates
   const {
     data: deadGamesData,
     error,
@@ -32,9 +31,14 @@ export const DeadGamesTableContainer: React.FC<
   } = useSWR<DeadGameFromAPI[]>(
     'dead-games',
     async () => {
-      const gameService = new GameService();
-      const data = await gameService.getDeadGames();
-      return data as unknown as DeadGameFromAPI[];
+      const response = await fetch('/api/dead-games/list');
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to fetch dead games');
+      }
+
+      return result.data;
     },
     {
       revalidateOnFocus: false,

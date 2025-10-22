@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth/helpers';
+import { currentUser } from '@clerk/nextjs/server';
+import { createClerkSupabaseClient } from '@/lib/supabase/client';
 
 /**
  * Consolidated user dislikes endpoint
@@ -22,35 +23,26 @@ export async function GET(request: NextRequest) {
 
     // Handle unauthenticated users for gameId query (return 0)
     if (gameId) {
-      const authResult = await getAuthenticatedUser();
+      const clerkUser = await currentUser();
 
-      if ('error' in authResult) {
-        // Return 0 count for unauthenticated users instead of error
-        if (authResult.status === 401) {
-          return NextResponse.json({
-            success: true,
-            data: {
-              userDislikeCount: 0,
-            },
-          });
-        }
-
-        return NextResponse.json(
-          {
-            success: false,
-            error: authResult.error,
+      if (!clerkUser) {
+        // Return 0 count for unauthenticated users
+        return NextResponse.json({
+          success: true,
+          data: {
+            userDislikeCount: 0,
           },
-          { status: authResult.status },
-        );
+        });
       }
 
-      const { internalUserId, supabase } = authResult;
+      const supabase = createClerkSupabaseClient(null);
+      const clerkUserId = clerkUser.id;
 
       // Get the user's dislike count for this specific game
       const { data: dislikeData, error: dislikeError } = await supabase
         .from('dislikes')
         .select('count')
-        .eq('user_id', internalUserId)
+        .eq('clerk_id', clerkUserId)
         .eq('game_id', gameId)
         .maybeSingle();
 
@@ -69,26 +61,27 @@ export async function GET(request: NextRequest) {
     }
 
     // For total and list queries, require authentication
-    const authResult = await getAuthenticatedUser();
+    const clerkUser = await currentUser();
 
-    if ('error' in authResult) {
+    if (!clerkUser) {
       return NextResponse.json(
         {
           success: false,
-          error: authResult.error,
+          error: 'User not authenticated',
         },
-        { status: authResult.status },
+        { status: 401 },
       );
     }
 
-    const { internalUserId, supabase } = authResult;
+    const supabase = createClerkSupabaseClient(null);
+    const clerkUserId = clerkUser.id;
 
     // Get user's total dislike count
     if (total === 'true') {
       const { data: dislikes, error: dislikesError } = await supabase
         .from('dislikes')
         .select('count')
-        .eq('user_id', internalUserId);
+        .eq('clerk_id', clerkUserId);
 
       if (dislikesError) {
         throw new Error(dislikesError.message || 'Failed to fetch dislikes');
@@ -130,7 +123,7 @@ export async function GET(request: NextRequest) {
         )
       `,
       )
-      .eq('user_id', internalUserId)
+      .eq('clerk_id', clerkUserId)
       .order('count', { ascending: false });
 
     if (dislikesError) {

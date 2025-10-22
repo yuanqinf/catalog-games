@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { user_id, session_id } = body;
+    const { clerk_id, session_id } = body;
 
     if (!session_id) {
       return NextResponse.json(
@@ -27,17 +27,17 @@ export async function POST(req: Request) {
     }
 
     // Update the users table for authenticated users
-    if (user_id) {
+    if (clerk_id) {
       await supabase
         .from('users')
         .update({ last_seen: new Date().toISOString() })
-        .eq('clerk_id', user_id);
+        .eq('clerk_id', clerk_id);
     }
 
     // Upsert active session for both authenticated and anonymous users
     const { error } = await supabase.rpc('upsert_active_session', {
       p_session_id: session_id,
-      p_clerk_id: user_id || null, // Pass clerk_id (or null for anonymous)
+      p_clerk_id: clerk_id || null,
     });
 
     if (error) {

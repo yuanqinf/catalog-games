@@ -4,7 +4,6 @@ import useSWR from 'swr';
 import { useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GameService } from '@/lib/supabase/client';
 import { useTranslation } from '@/lib/i18n/client';
 import { DeadGamesTableContainer } from '@/components/shared/dead-games/dead-games-table-container';
 import { ExplorePageHeader } from '@/components/pages/explore-game/explore-page-header';
@@ -28,14 +27,17 @@ const GameExplorePage = () => {
   const { data: games, isLoading } = useSWR<GameDbData[]>(
     view === 'disliked' ? ['explore-games', currentPage] : null,
     async ([, page]: [string, number]) => {
-      const gameService = new GameService();
       const offset = (page - 1) * GAMES_PER_PAGE;
-      const pageGames = await gameService.getGamesForExplorePage(
-        offset,
-        GAMES_PER_PAGE,
-        TOP_GAMES_LIMIT,
+      const response = await fetch(
+        `/api/games/explore?offset=${offset}&limit=${GAMES_PER_PAGE}&numberOfGames=${TOP_GAMES_LIMIT}`,
       );
-      return pageGames;
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to fetch games');
+      }
+
+      return result.data;
     },
     {
       revalidateOnFocus: false,
