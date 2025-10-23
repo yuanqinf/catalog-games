@@ -14,10 +14,11 @@ export async function useTranslation(
   options: { keyPrefix?: string } = {},
 ) {
   const i18nextInstance = await initI18next(lng, ns);
-  const response = await fetch(`/locales/${lng}/${ns}.json`);
-  const resources = await response.json();
 
-  i18nextInstance.addResourceBundle(lng, ns, resources);
+  // Use dynamic import instead of fetch for better performance
+  const resources = await import(`../../public/locales/${lng}/${ns}.json`);
+
+  i18nextInstance.addResourceBundle(lng, ns, resources.default || resources);
 
   return {
     t: i18nextInstance.getFixedT(
