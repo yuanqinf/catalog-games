@@ -133,6 +133,7 @@ body {
     @apply flex cursor-pointer items-center gap-2.5 transition-all duration-200 hover:scale-110 hover:opacity-80;
   }
 
+  /* Search Components */
   .search-input-wrapper {
     @apply relative flex h-10 flex-grow items-center rounded-md border border-transparent bg-zinc-700 transition-colors duration-200 hover:border-zinc-500;
   }
@@ -149,33 +150,12 @@ body {
     @apply absolute top-full right-0 left-0 z-50 mt-1.5 max-h-[calc(100vh-10rem)] overflow-y-auto rounded-md bg-zinc-800 shadow-lg;
   }
 
-  .search-inactive {
-    @apply w-auto transition-all duration-300 ease-in-out;
-  }
-
-  .search-active {
-    @apply w-full transition-all duration-300 ease-in-out;
-  }
-
   /* Game Card Components */
   .game-card {
     @apply relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-zinc-800 transition-all duration-300 hover:bg-zinc-700 hover:shadow-lg;
   }
 
-  .game-card-base {
-    @apply overflow-hidden border-zinc-700 bg-zinc-800;
-  }
-
-  /* Rank Game Card Components */
-  .rank-card-comment-container {
-    @apply ml-auto hidden max-w-[200px] min-w-[150px] flex-shrink-0 items-start gap-2 pr-2 pl-4 text-sm text-zinc-400 md:flex;
-  }
-
-  /* Carousel Components */
-  .carousel-nav-button-base {
-    @apply absolute top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 text-white sm:flex;
-  }
-
+  /* Pagination Components */
   .pagination-dot {
     @apply h-2 w-2 rounded-full transition-all;
   }
@@ -188,17 +168,13 @@ body {
     @apply bg-zinc-500;
   }
 
-  /* Highlight Game Card Components */
+  /* Highlight Card Components */
   .highlight-card {
     @apply mx-auto w-full max-w-sm rounded-lg bg-neutral-900 p-4 font-sans text-white shadow-xl md:max-w-md lg:max-w-lg;
   }
 
   .highlight-card-section {
     @apply rounded-md bg-neutral-800 p-3;
-  }
-
-  .highlight-card-comment-tag {
-    @apply max-w-full truncate rounded-full bg-neutral-700 px-2.5 py-1 text-xs text-neutral-300 sm:max-w-[calc(50%-0.375rem)];
   }
 
   .highlight-card-footer {
