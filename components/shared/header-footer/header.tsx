@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import SearchBar from '@/components/shared/search';
+import SearchBar from '@/components/shared/search/search-bar';
 import ClerkAuth from '@/components/shared/clerk-auth';
 import { useTranslation } from '@/lib/i18n/client';
 
