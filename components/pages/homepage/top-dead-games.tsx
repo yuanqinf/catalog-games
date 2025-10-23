@@ -5,8 +5,13 @@ import { Ghost } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DeadGamesTableContainer } from '@/components/shared/dead-games/dead-games-table-container';
 import { useTranslation } from '@/lib/i18n/client';
+import type { DeadGameFromAPI } from '@/types';
 
-const TopDeadGames = () => {
+interface TopDeadGamesProps {
+  initialData?: DeadGameFromAPI[];
+}
+
+const TopDeadGames = ({ initialData }: TopDeadGamesProps) => {
   const { t } = useTranslation();
   return (
     <section className="relative mb-16 px-4 sm:px-6 lg:px-8">
@@ -25,7 +30,7 @@ const TopDeadGames = () => {
       <DeadGamesTableContainer
         limit={5}
         showSorting={false}
-        showGameCount={false}
+        initialData={initialData}
       />
 
       {/* Explore More Button */}

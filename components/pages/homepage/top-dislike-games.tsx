@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ThumbsDown, Loader2, ExternalLink } from 'lucide-react';
@@ -13,7 +15,11 @@ import { GameCarousel } from './components/game-carousel';
 import { VoteSidebar } from './components/vote-sidebar';
 import { useTranslation } from '@/lib/i18n/client';
 
-const TopDislikeGames = () => {
+interface TopDislikeGamesProps {
+  initialData?: any;
+}
+
+const TopDislikeGames = ({ initialData }: TopDislikeGamesProps) => {
   const { t } = useTranslation();
   const [activeIndex, setActiveIndex] = useState(0);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
@@ -28,7 +34,7 @@ const TopDislikeGames = () => {
     error,
     isLoading,
     mutate,
-  } = useTopDislikedGames();
+  } = useTopDislikedGames({ initialData });
 
   const {
     userVoteState,

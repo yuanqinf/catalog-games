@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       exists,
-      steamAppId: exists ? steamApp.steamAppId : null,
-      steamName: exists ? steamApp.steamName : null,
+      steamAppId: exists ? steamApp?.steamAppId : null,
+      steamName: exists ? steamApp?.steamName : null,
       query: query.trim(),
     });
   } catch (error) {

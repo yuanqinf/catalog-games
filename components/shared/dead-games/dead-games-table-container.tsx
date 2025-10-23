@@ -16,11 +16,17 @@ interface DeadGamesTableContainerProps {
   limit?: number; // undefined = show all games
   showSorting?: boolean;
   showAddDeadGameRow?: boolean;
+  initialData?: DeadGameFromAPI[];
 }
 
 export const DeadGamesTableContainer: React.FC<
   DeadGamesTableContainerProps
-> = ({ limit, showSorting = false, showAddDeadGameRow = false }) => {
+> = ({
+  limit,
+  showSorting = false,
+  showAddDeadGameRow = false,
+  initialData,
+}) => {
   const { t } = useTranslation();
   // Fetch dead games data via API with short polling for real-time updates
   const {
@@ -41,6 +47,7 @@ export const DeadGamesTableContainer: React.FC<
       return result.data;
     },
     {
+      fallbackData: initialData,
       revalidateOnFocus: false,
       refreshInterval: 5000,
       dedupingInterval: 2000,

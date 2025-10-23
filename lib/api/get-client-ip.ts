@@ -17,8 +17,8 @@ import { NextRequest } from 'next/server';
  */
 export function getClientIP(request: NextRequest): string {
   // On Vercel production, request.ip is already validated and trusted
-  if (request.ip) {
-    return request.ip;
+  if ((request as any).ip) {
+    return (request as any).ip;
   }
 
   // x-forwarded-for can contain multiple IPs (client, proxy1, proxy2, ...)

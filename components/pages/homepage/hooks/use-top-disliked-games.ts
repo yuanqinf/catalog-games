@@ -37,9 +37,18 @@ interface FloatingThumb {
   isPowerMode?: boolean;
 }
 
-export function useTopDislikedGames() {
+interface UseTopDislikedGamesOptions {
+  initialData?: TopDislikedGame[];
+}
+
+export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
   const [dissGameData, setDissGameData] = useState<DissGameEntry[]>([]);
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
+
+  // Transform initialData if provided
+  const initialResponse = options?.initialData
+    ? { success: true, data: options.initialData }
+    : undefined;
 
   const {
     data: topDislikedGamesResponse,
@@ -54,6 +63,7 @@ export function useTopDislikedGames() {
         return res.json();
       }),
     {
+      fallbackData: initialResponse,
       revalidateOnFocus: false,
       refreshInterval: 5000,
       dedupingInterval: 2000,

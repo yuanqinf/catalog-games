@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThumbsDown, Ghost } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FloatingThumb, FloatingEmoji } from '../hooks/use-game-reactions';
 import { FloatingGhost } from '../hooks/use-dead-game-reactions';
 
@@ -118,7 +119,7 @@ export function FloatingAnimations({
             }}
           >
             <FontAwesomeIcon
-              icon={emoji.icon}
+              icon={emoji.icon as IconProp}
               className="h-10 w-10 text-yellow-400 drop-shadow-2xl"
             />
           </motion.div>
