@@ -16,7 +16,7 @@ import { mutate as globalMutate } from 'swr';
 import { Button } from '@/components/ui/button';
 import { SignInButton } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
-import DynamicTrendChart from '@/components/shared/cards/dynamic-trend-chart';
+import DynamicTrendChart from '@/components/pages/game-detail-page/components/dynamic-trend-chart';
 import DissRating from '@/components/shared/diss-rating/diss-rating';
 import NumberFlow from '@number-flow/react';
 
