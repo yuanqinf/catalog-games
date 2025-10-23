@@ -5,7 +5,6 @@ import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Ghost, Loader2 } from 'lucide-react';
 import { DeadGameFromAPI, DeadGame } from '@/types';
-import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 import { DeadGamesTable } from './dead-games-table';
 import { useThrottledDeadGameReaction } from '@/hooks/useThrottledDeadGameReaction';
 import { FeedbackDialog } from '@/components/shared/feedback-dialog';
@@ -148,7 +147,7 @@ export const DeadGamesTableContainer: React.FC<
     showSorting,
   ]);
 
-  // Initialize reaction counts when data loads and trigger animations on count increases
+  // Sync reaction counts from server data (smart merge to preserve optimistic updates)
   useEffect(() => {
     if (deadGamesData && deadGamesData.length > 0) {
       setReactionCounts((prevCounts) => {
@@ -163,30 +162,6 @@ export const DeadGamesTableContainer: React.FC<
           // This prevents overwriting optimistic updates with stale data
           if (serverCount > localCount) {
             newCounts[deadGame.id] = serverCount;
-
-            // Trigger animations only when server count actually increases
-            const oldCount = localCount;
-            const newCount = serverCount;
-
-            // Create floating ghost animation centered on screen with random offset
-            const randomOffsetX =
-              ((Math.random() - 0.5) * window.innerWidth) / 2;
-            const randomOffsetY = (Math.random() - 0.5) * 300; // ±150px vertical
-            // Use the utility function to trigger animations
-            triggerCountIncreaseAnimations(
-              deadGame.id,
-              oldCount,
-              newCount,
-              setFloatingGhosts,
-              (itemId, animationId) => ({
-                id: animationId,
-                gameId: itemId,
-                timestamp: Date.now(),
-                startX: window.innerWidth / 2 + randomOffsetX,
-                startY: window.innerHeight / 2 + randomOffsetY,
-              }),
-              'ghost-polling',
-            );
           } else if (!prevCounts[deadGame.id]) {
             // Initialize new entries that don't exist in local state yet
             newCounts[deadGame.id] = serverCount;
