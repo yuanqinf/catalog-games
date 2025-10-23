@@ -180,14 +180,23 @@ export class GameService {
   }
 
   /**
-   * Get a game by IGDB ID
+   * Get a game by slug or ID
    */
-  async getGameBySlugId(slug: string) {
-    const { data, error } = await this.supabase
-      .from('games')
-      .select('*')
-      .eq('slug', slug)
-      .maybeSingle();
+  async getGameBySlugId(slugOrId: string) {
+    // Check if slugOrId is a number (ID) or string (slug)
+    const isNumeric = /^\d+$/.test(slugOrId);
+
+    let query = this.supabase.from('games').select('*');
+
+    if (isNumeric) {
+      // If numeric, search by ID
+      query = query.eq('id', parseInt(slugOrId, 10));
+    } else {
+      // If not numeric, search by slug
+      query = query.eq('slug', slugOrId);
+    }
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) {
       throw new Error(error.message || 'Failed to fetch game');
@@ -349,8 +358,9 @@ export class GameService {
 
   /**
    * Get top disliked games ordered by dislike count
+   * Note: For SSR/ISR usage, use ServerGameService.getTopDislikedGames instead
    */
-  async getTopDislikedGames(limit: number = 5) {
+  async getTopDislikedGames(limit: number = 10) {
     const { data, error } = await this.supabase
       .from('games')
       .select(
@@ -447,6 +457,8 @@ export class GameService {
 
   /**
    * Get all dead games for the graveyard page
+   * Note: Ordered by dead_date (most recent first), no limit
+   * For homepage top dead games (ordered by reaction count), use ServerGameService.getDeadGames
    */
   async getDeadGames() {
     const { data, error } = await this.supabase

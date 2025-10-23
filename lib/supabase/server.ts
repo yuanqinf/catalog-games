@@ -50,7 +50,9 @@ export class ServerGameService {
   }
 
   /**
-   * Get dead games (used in homepage SSR)
+   * Get top dead games for homepage (used in homepage SSR)
+   * Note: Ordered by user_reaction_count (most popular first), limited to 10
+   * For all dead games by date, use GameService.getDeadGames
    */
   async getDeadGames() {
     const { data, error } = await this.supabase
@@ -61,7 +63,8 @@ export class ServerGameService {
         dead_date,
         dead_status,
         user_reaction_count,
-        games!inner (
+        created_at,
+        games:game_id (
           id,
           igdb_id,
           name,
@@ -81,19 +84,27 @@ export class ServerGameService {
       return [];
     }
 
-    // Type assertion to match DeadGameFromAPI - Supabase returns correct structure
-    return (data || []) as any;
+    return data || [];
   }
 
   /**
    * Get game by slug or ID (used in detail page SSR)
    */
   async getGameBySlugId(slugOrId: string) {
-    const { data, error } = await this.supabase
-      .from('games')
-      .select('*')
-      .or(`slug.eq.${slugOrId},id.eq.${slugOrId}`)
-      .maybeSingle();
+    // Check if slugOrId is a number (ID) or string (slug)
+    const isNumeric = /^\d+$/.test(slugOrId);
+
+    let query = this.supabase.from('games').select('*');
+
+    if (isNumeric) {
+      // If numeric, search by ID
+      query = query.eq('id', parseInt(slugOrId, 10));
+    } else {
+      // If not numeric, search by slug
+      query = query.eq('slug', slugOrId);
+    }
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) {
       console.error('Failed to fetch game:', error);

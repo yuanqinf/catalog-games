@@ -12,6 +12,7 @@ import {
   Ghost,
   LogIn,
 } from 'lucide-react';
+import { mutate as globalMutate } from 'swr';
 import { Button } from '@/components/ui/button';
 import { SignInButton } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
@@ -79,11 +80,11 @@ export default function GameDetailHighlight({
     setIsClient(true);
   }, []);
 
+  // Get average rating from all users (for DissRating component display and footer)
   const {
     rating,
     overallAverage,
     isLoading: isLoadingRating,
-    mutate: mutateRating,
   } = useGameRating(game.id);
 
   const renderReactionPanel = () => {
@@ -311,7 +312,11 @@ export default function GameDetailHighlight({
               rating={rating}
               gameId={game.id?.toString()}
               isLoading={isLoadingRating}
-              onSaveSuccess={() => mutateRating()}
+              onSaveSuccess={() => {
+                // Force revalidate the average rating cache
+                // This bypasses the 5-minute deduping interval
+                globalMutate(['average-rating', game.id]);
+              }}
             />
           </div>
 

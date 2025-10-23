@@ -71,7 +71,7 @@ export default async function GameExplorePage({
     <Suspense fallback={<ExplorePageLoading />}>
       <ExplorePageContent
         initialDislikedGames={initialDislikedGames as any}
-        initialDeadGames={initialDeadGames}
+        initialDeadGames={initialDeadGames as any}
       />
     </Suspense>
   );
