@@ -78,12 +78,15 @@ Open [http://localhost:3000](http://localhost:3000)
 ## Key Features Implementation
 
 ### ISR (Incremental Static Regeneration)
+
 Pages use `export const revalidate = 60` for automatic cache revalidation.
 
 ### Optimistic Updates
+
 User interactions update instantly with SWR optimistic updates, syncing with server data in the background.
 
 ### Smart Caching
+
 Implements conflict resolution to prevent stale data from overwriting fresh optimistic updates.
 
 ## Scripts
