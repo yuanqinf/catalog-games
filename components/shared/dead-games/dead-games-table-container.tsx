@@ -152,37 +152,45 @@ export const DeadGamesTableContainer: React.FC<
   useEffect(() => {
     if (deadGamesData && deadGamesData.length > 0) {
       setReactionCounts((prevCounts) => {
-        const newCounts = deadGamesData.reduce(
-          (acc, deadGame) => ({
-            ...acc,
-            [deadGame.id]: deadGame.user_reaction_count,
-          }),
-          {},
-        );
+        // Smart merge: preserve local optimistic updates, only update when server data is greater
+        const newCounts = { ...prevCounts };
 
-        // Check for reaction count increases and trigger animations
         deadGamesData.forEach((deadGame) => {
-          const oldCount = prevCounts[deadGame.id] || 0;
-          const newCount = deadGame.user_reaction_count / 10; // Divide by 10 to reduce the number of animations
+          const serverCount = deadGame.user_reaction_count;
+          const localCount = prevCounts[deadGame.id] || 0;
 
-          // Create floating ghost animation centered on screen with random offset
-          const randomOffsetX = ((Math.random() - 0.5) * window.innerWidth) / 2;
-          const randomOffsetY = (Math.random() - 0.5) * 300; // ±150px vertical
-          // Use the utility function to trigger animations
-          triggerCountIncreaseAnimations(
-            deadGame.id,
-            oldCount,
-            newCount,
-            setFloatingGhosts,
-            (itemId, animationId) => ({
-              id: animationId,
-              gameId: itemId,
-              timestamp: Date.now(),
-              startX: window.innerWidth / 2 + randomOffsetX,
-              startY: window.innerHeight / 2 + randomOffsetY,
-            }),
-            'ghost-polling',
-          );
+          // Only update if server count is greater than local count
+          // This prevents overwriting optimistic updates with stale data
+          if (serverCount > localCount) {
+            newCounts[deadGame.id] = serverCount;
+
+            // Trigger animations only when server count actually increases
+            const oldCount = localCount;
+            const newCount = serverCount;
+
+            // Create floating ghost animation centered on screen with random offset
+            const randomOffsetX =
+              ((Math.random() - 0.5) * window.innerWidth) / 2;
+            const randomOffsetY = (Math.random() - 0.5) * 300; // ±150px vertical
+            // Use the utility function to trigger animations
+            triggerCountIncreaseAnimations(
+              deadGame.id,
+              oldCount,
+              newCount,
+              setFloatingGhosts,
+              (itemId, animationId) => ({
+                id: animationId,
+                gameId: itemId,
+                timestamp: Date.now(),
+                startX: window.innerWidth / 2 + randomOffsetX,
+                startY: window.innerHeight / 2 + randomOffsetY,
+              }),
+              'ghost-polling',
+            );
+          } else if (!prevCounts[deadGame.id]) {
+            // Initialize new entries that don't exist in local state yet
+            newCounts[deadGame.id] = serverCount;
+          }
         });
 
         return newCounts;
