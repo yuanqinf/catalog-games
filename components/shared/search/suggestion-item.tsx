@@ -24,10 +24,17 @@ const extractDeveloper = (game: GameDbData | IgdbGame): string => {
   }
 
   if ('involved_companies' in game) {
+    // Find company marked as developer, or first company if roles are undefined
     const developerCompany = game.involved_companies?.find(
-      (company) => company.developer || !company.publisher,
+      (company) => company.developer === true,
     );
-    return developerCompany?.company.name || '';
+
+    // Fallback: if no explicit developer, return first company
+    const firstCompany = game.involved_companies?.sort((a, b) =>
+      a.company.name.localeCompare(b.company.name),
+    )[0];
+
+    return developerCompany?.company.name || firstCompany?.company.name || '';
   }
 
   return '';
