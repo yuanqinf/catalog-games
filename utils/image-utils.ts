@@ -3,33 +3,6 @@
  */
 
 /**
- * Get a banner URL with cache busting if needed
- * @param bannerUrl - The original banner URL from database
- * @param forceCacheBust - Whether to force add cache busting parameter
- * @returns URL with cache busting parameter if needed
- */
-export function getBannerUrl(
-  bannerUrl: string | null,
-  forceCacheBust: boolean = false,
-): string | null {
-  if (!bannerUrl) return null;
-
-  // If URL already has cache busting parameter, return as-is
-  if (bannerUrl.includes('?updated=') && !forceCacheBust) {
-    return bannerUrl;
-  }
-
-  // If forcing cache bust or no cache bust parameter exists, add current timestamp
-  if (forceCacheBust || !bannerUrl.includes('?')) {
-    const timestamp = Date.now();
-    const separator = bannerUrl.includes('?') ? '&' : '?';
-    return `${bannerUrl}${separator}v=${timestamp}`;
-  }
-
-  return bannerUrl;
-}
-
-/**
  * Get image dimensions info for logging/debugging
  * @param file - The image file
  * @returns Promise with image dimensions
