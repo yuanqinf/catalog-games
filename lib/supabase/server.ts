@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { DeadGameFromAPI } from '@/types';
 
 /**
  * Create a Supabase client for server-side operations (SSR/ISR)
@@ -54,7 +55,7 @@ export class ServerGameService {
    * Note: Ordered by user_reaction_count (most popular first), limited to 10
    * For all dead games by date, use GameService.getDeadGames
    */
-  async getDeadGames() {
+  async getDeadGames(): Promise<DeadGameFromAPI[]> {
     const { data, error } = await this.supabase
       .from('dead_games')
       .select(
@@ -63,7 +64,6 @@ export class ServerGameService {
         dead_date,
         dead_status,
         user_reaction_count,
-        created_at,
         games:game_id (
           id,
           igdb_id,
@@ -84,7 +84,16 @@ export class ServerGameService {
       return [];
     }
 
-    return data || [];
+    // Transform Supabase array format to single object format
+    return (
+      data?.map((item) => ({
+        id: item.id,
+        dead_date: item.dead_date,
+        dead_status: item.dead_status,
+        user_reaction_count: item.user_reaction_count,
+        games: Array.isArray(item.games) ? item.games[0] : item.games,
+      })) || []
+    );
   }
 
   /**

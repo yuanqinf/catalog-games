@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Loader2 } from 'lucide-react';
 import { ServerGameService } from '@/lib/supabase/server';
 import { ExplorePageContent } from '@/components/pages/explore-game/explore-page-content';
+import { DeadGameFromAPI } from '@/types';
 
 // ISR: Revalidate every 60 seconds
 export const revalidate = 60;
@@ -81,8 +82,8 @@ export default async function GameExplorePage({
   return (
     <Suspense fallback={<ExplorePageLoading />}>
       <ExplorePageContent
-        initialDislikedGames={initialDislikedGames as any}
-        initialDeadGames={initialDeadGames as any}
+        initialDislikedGames={initialDislikedGames}
+        initialDeadGames={initialDeadGames as DeadGameFromAPI[] | undefined}
       />
     </Suspense>
   );

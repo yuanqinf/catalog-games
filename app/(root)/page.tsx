@@ -1,8 +1,9 @@
+import type { Metadata } from 'next';
 import TopDislikeGames from '@/components/pages/homepage/top-dislike-games';
 import TopDeadGames from '@/components/pages/homepage/top-dead-games';
 import { WelcomeDialog } from '@/components/shared/welcome-dialog';
 import { ServerGameService } from '@/lib/supabase/server';
-import type { Metadata } from 'next';
+import { DeadGameFromAPI } from '@/types';
 
 // ISR: Revalidate every 60 seconds
 export const revalidate = 60;
@@ -63,7 +64,7 @@ const HomePage = async () => {
       <WelcomeDialog />
       <div className="container mx-auto space-y-12 px-4 py-8">
         <TopDislikeGames initialData={topDislikedGames} />
-        <TopDeadGames initialData={deadGames as any} />
+        <TopDeadGames initialData={deadGames as unknown as DeadGameFromAPI[]} />
       </div>
     </>
   );

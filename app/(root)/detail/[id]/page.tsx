@@ -91,14 +91,12 @@ const GameDetailPage = async ({
 
   // Check if this game is in the dead games list
   const allDeadGames = await gameService.getDeadGames();
-  const deadGame = allDeadGames?.find(
-    (dg: any) =>
-      (dg.games as any).id === game.id || (dg.games as any).slug === game.slug,
-  );
+  const deadGame =
+    allDeadGames?.find(
+      (dg) => dg.games.id === game.id || dg.games.slug === game.slug,
+    ) || null;
 
-  return (
-    <GameDetail game={game} deadGame={deadGame ? (deadGame as any) : null} />
-  );
+  return <GameDetail game={game} deadGame={deadGame} />;
 };
 
 export default GameDetailPage;
