@@ -137,3 +137,14 @@ export interface DeadGame {
   coverUrl?: string;
   reactionCount: number;
 }
+
+export interface TopDislikedGame {
+  id: number;
+  igdb_id: number;
+  name: string;
+  slug: string;
+  cover_url: string | null;
+  banner_url: string | null;
+  developers: string[] | null;
+  dislike_count: number;
+}

@@ -59,13 +59,13 @@ export interface SteamIntegrationResult {
 
 // Simple in-memory cache (could be replaced with Redis in production)
 class SteamCache {
-  private cache = new Map<string, { data: any; timestamp: number }>();
+  private cache = new Map<string, { data: unknown; timestamp: number }>();
   private readonly TTL = 5 * 60 * 1000; // 5 minutes
 
   get<T>(key: string): T | null {
     const cached = this.cache.get(key);
     if (cached && Date.now() - cached.timestamp < this.TTL) {
-      return cached.data;
+      return cached.data as T;
     }
     this.cache.delete(key);
     return null;

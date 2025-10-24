@@ -14,10 +14,10 @@ import { FloatingThumbs } from './components/floating-thumbs';
 import { GameCarousel } from './components/game-carousel';
 import { VoteSidebar } from './components/vote-sidebar';
 import { useTranslation } from '@/lib/i18n/client';
-import { DeadGameFromAPI } from '@/types';
+import type { TopDislikedGame } from '@/types';
 
 interface TopDislikeGamesProps {
-  initialData?: DeadGameFromAPI[];
+  initialData?: TopDislikedGame[];
 }
 
 const TopDislikeGames = ({ initialData }: TopDislikeGamesProps) => {
@@ -35,7 +35,7 @@ const TopDislikeGames = ({ initialData }: TopDislikeGamesProps) => {
     error,
     isLoading,
     mutate,
-  } = useTopDislikedGames({ initialData });
+  } = useTopDislikedGames({ initialData: initialData as TopDislikedGame[] });
 
   const {
     userVoteState,

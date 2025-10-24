@@ -13,7 +13,7 @@ import { useTranslation } from '@/lib/i18n/client';
 
 interface SuggestionItemProps {
   item: SuggestionItemType;
-  onSelect: (value: any) => void;
+  onSelect: (value: GameDbData | IgdbGame | string) => void;
   isGame?: boolean;
   isHistory?: boolean;
 }

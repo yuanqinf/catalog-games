@@ -124,7 +124,7 @@ class IgdbClient {
           '/t_thumb/',
           '/t_1080p/',
         );
-        (game as any).cover_url = game.cover.url;
+        (game as unknown as { cover_url: string }).cover_url = game.cover.url;
       }
 
       return game;

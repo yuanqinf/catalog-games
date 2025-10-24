@@ -1,6 +1,14 @@
 import { NextRequest } from 'next/server';
 
 /**
+ * Extended NextRequest type that includes Vercel's ip property
+ * This property is available in Vercel production environments
+ */
+interface NextRequestWithIP extends NextRequest {
+  ip?: string;
+}
+
+/**
  * Safely extracts the client's IP address from a Next.js request
  *
  * This function prioritizes trusted sources and validates the IP format
@@ -17,8 +25,9 @@ import { NextRequest } from 'next/server';
  */
 export function getClientIP(request: NextRequest): string {
   // On Vercel production, request.ip is already validated and trusted
-  if ((request as any).ip) {
-    return (request as any).ip;
+  const requestWithIP = request as NextRequestWithIP;
+  if (requestWithIP.ip) {
+    return requestWithIP.ip;
   }
 
   // x-forwarded-for can contain multiple IPs (client, proxy1, proxy2, ...)

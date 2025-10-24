@@ -5,22 +5,21 @@ import {
   CommandEmpty,
   CommandGroup,
 } from '@/components/ui/command';
-import { GameDbData, IgdbGame, SearchHistoryItem } from '@/types';
+import type { GameDbData, IgdbGame, SearchHistoryItem } from '@/types';
 import { useTranslation } from '@/lib/i18n/client';
 import { Button } from '@/components/ui/button';
 import { MessageCircle } from 'lucide-react';
 import { SuggestionItem } from './suggestion-item';
 
 interface SearchSuggestionsProps {
-  onSelectGame: (game: any) => void;
-  onSelectIgdbGame: (game: any) => void;
+  onSelectGame: (game: GameDbData | IgdbGame) => void;
+  onSelectIgdbGame: (game: IgdbGame) => void;
   supabaseGames: GameDbData[];
   igdbGames: IgdbGame[];
   searchHistory: SearchHistoryItem[];
   isLoading: boolean;
   onOpenFeedback: () => void;
   onClearHistory: () => void;
-  inputValue: string;
 }
 
 export const SearchSuggestions = ({
@@ -32,7 +31,6 @@ export const SearchSuggestions = ({
   isLoading,
   onOpenFeedback,
   onClearHistory,
-  inputValue,
 }: SearchSuggestionsProps) => {
   const { t } = useTranslation();
 
@@ -91,7 +89,9 @@ export const SearchSuggestions = ({
                   cover_url: historyItem.cover_url,
                   igdb_id: historyItem.id,
                 }}
-                onSelect={onSelectGame}
+                onSelect={(value) =>
+                  onSelectGame(value as GameDbData | IgdbGame)
+                }
                 isGame={true}
                 isHistory={true}
               />
@@ -107,7 +107,9 @@ export const SearchSuggestions = ({
               <SuggestionItem
                 key={`supabase-${game.id}`}
                 item={game}
-                onSelect={onSelectGame}
+                onSelect={(value) =>
+                  onSelectGame(value as GameDbData | IgdbGame)
+                }
                 isGame={true}
               />
             ))}
@@ -117,7 +119,7 @@ export const SearchSuggestions = ({
               <SuggestionItem
                 key={`igdb-${game.id}`}
                 item={game}
-                onSelect={onSelectIgdbGame}
+                onSelect={(value) => onSelectIgdbGame(value as IgdbGame)}
                 isGame={true}
               />
             ))}

@@ -1,6 +1,6 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import { useSession } from '@clerk/nextjs';
-import type { IgdbGameData, GameRating } from '@/types';
+import type { IgdbGameData } from '@/types';
 import { transformIgdbData } from '@/utils/igdb-transform';
 import { uploadBanner } from '@/utils/banner-upload';
 import { fetchSteamTags } from '@/utils/steam-integration';

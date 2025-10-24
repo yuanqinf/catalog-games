@@ -7,10 +7,10 @@ interface SteamSearchItem {
   id: number;
   type: string;
   name: string;
-  price?: any;
+  price?: number;
   tiny_image?: string;
   metascore?: string;
-  platforms?: any;
+  platforms?: string[];
   streamingvideo?: boolean;
   controller_support?: string;
 }
@@ -157,6 +157,7 @@ function isValidGameCandidate(item: SteamSearchItem): boolean {
 
     return isValid;
   } catch (error) {
+    console.error('Error validating Steam game candidate:', error);
     return false;
   }
 }

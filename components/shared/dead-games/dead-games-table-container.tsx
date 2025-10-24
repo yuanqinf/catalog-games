@@ -69,7 +69,7 @@ export const DeadGamesTableContainer: React.FC<
 
   // Use throttled reaction hook for optimized API calls
   const { sendReaction } = useThrottledDeadGameReaction({
-    onError: (error, increment) => {
+    onError: (error) => {
       console.error('Failed to update reaction count:', error);
       // Note: Error handling per-game is done in handleReaction
     },

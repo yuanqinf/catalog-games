@@ -47,7 +47,7 @@ export class ServerGameService {
     }
 
     // Type assertion to match expected structure
-    return (data || []) as any;
+    return data || [];
   }
 
   /**

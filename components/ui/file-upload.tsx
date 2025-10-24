@@ -1,4 +1,5 @@
-import { ChangeEvent, useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import Image from 'next/image';
 import { cn } from '@/utils/cn';
 import {
   validateImageFile,
@@ -158,10 +159,12 @@ export function FileUpload({
 
         {previewUrl ? (
           <div className="space-y-2">
-            <img
+            <Image
               src={previewUrl}
               alt="Preview"
               className="mx-auto max-h-32 rounded object-cover"
+              width={128}
+              height={128}
             />
             <div className="text-center">
               <p className="text-muted-foreground text-sm">
