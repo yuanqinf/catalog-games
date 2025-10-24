@@ -211,7 +211,7 @@ export default function FAQPage() {
                 What data do you collect?
               </h3>
               <div className="space-y-3 text-gray-300">
-                <p>Only what's necessary:</p>
+                <p>Only what&apos;s necessary:</p>
                 <ul className="list-inside list-disc space-y-1 pl-4">
                   <li>Email and username (if you sign up)</li>
                   <li>Games you dislike/rate (anonymized in stats)</li>
@@ -319,9 +319,9 @@ export default function FAQPage() {
                 What happens if I abuse the system?
               </h3>
               <p className="text-gray-300">
-                Don't be that person. If you use bots, create fake accounts to
-                manipulate votes, or spam the site, we'll ban you. Simple as
-                that. Check our{' '}
+                Don&apos;t be that person. If you use bots, create fake accounts
+                to manipulate votes, or spam the site, we&apos;ll ban you.
+                Simple as that. Check our{' '}
                 <Link
                   href="/about/terms"
                   className="text-purple-400 underline hover:text-purple-300"
@@ -345,7 +345,7 @@ export default function FAQPage() {
                   <li>Manual moderation when needed</li>
                 </ul>
                 <p className="text-sm text-gray-400">
-                  No system is perfect, but we're constantly improving.
+                  No system is perfect, but we&apos;re constantly improving.
                 </p>
               </div>
             </div>
