@@ -19,6 +19,7 @@ import {
   faSteam,
   faAndroid,
 } from '@fortawesome/free-brands-svg-icons';
+import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { Badge } from '@/components/ui/badge';
 import {
   Tooltip,
@@ -26,15 +27,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import type { GameDbData } from '@/types';
 import { unifyPlatforms, type UnifiedPlatform } from '@/utils/platform-utils';
 import { Button } from '@/components/ui/button';
 import { useThrottledDislikeReaction } from '@/hooks/useThrottledDislikeReaction';
+import type { GameDbData } from '@/types';
 
 type PlatformIconData =
   | {
       type: 'fontawesome';
-      icon: any;
+      icon: IconProp;
     }
   | {
       type: 'badge';
@@ -67,46 +68,42 @@ interface PlaceholderConfig {
   href: string;
 }
 
-const MiniGameCard = ({
+// Placeholder card component
+const PlaceholderCard = ({ config }: { config: PlaceholderConfig }) => {
+  return (
+    <div className="p-1">
+      <Link href={config.href}>
+        <div className="group relative flex h-full cursor-pointer flex-col rounded-lg border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-900 p-4 transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:border-zinc-600 hover:shadow-2xl">
+          <div
+            className="relative mb-2 flex items-center justify-center overflow-hidden rounded bg-zinc-700/50 transition-all duration-300 group-hover:bg-zinc-600/50"
+            style={{ aspectRatio: '672/895' }}
+          >
+            <Gamepad2 className="h-16 w-16 text-gray-400 transition-all duration-300 group-hover:scale-110 group-hover:text-gray-300" />
+          </div>
+
+          <div className="mt-2 flex flex-col items-center justify-center gap-1 text-center">
+            <h3 className="line-clamp-1 font-bold text-white transition-colors duration-300 group-hover:text-gray-100">
+              {config.title}
+            </h3>
+            <p className="line-clamp-1 text-sm text-gray-400 transition-colors duration-300 group-hover:text-gray-300">
+              {config.description}
+            </p>
+            <ExternalLink className="mt-1 h-4 w-4 text-gray-500 transition-all duration-300 group-hover:translate-x-1 group-hover:text-gray-400" />
+          </div>
+        </div>
+      </Link>
+    </div>
+  );
+};
+
+// Regular game card component
+const RegularGameCard = ({
   game,
   ranking,
-  placeholder,
 }: {
-  game?: GameDbData;
+  game: GameDbData;
   ranking?: number;
-  placeholder?: PlaceholderConfig;
 }) => {
-  // If placeholder is provided, render placeholder card
-  if (placeholder) {
-    return (
-      <div className="p-1">
-        <Link href={placeholder.href}>
-          <div className="group relative flex h-full cursor-pointer flex-col rounded-lg border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-900 p-4 transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:border-zinc-600 hover:shadow-2xl">
-            <div
-              className="relative mb-2 flex items-center justify-center overflow-hidden rounded bg-zinc-700/50 transition-all duration-300 group-hover:bg-zinc-600/50"
-              style={{ aspectRatio: '672/895' }}
-            >
-              <Gamepad2 className="h-16 w-16 text-gray-400 transition-all duration-300 group-hover:scale-110 group-hover:text-gray-300" />
-            </div>
-
-            <div className="mt-2 flex flex-col items-center justify-center gap-1 text-center">
-              <h3 className="line-clamp-1 font-bold text-white transition-colors duration-300 group-hover:text-gray-100">
-                {placeholder.title}
-              </h3>
-              <p className="line-clamp-1 text-sm text-gray-400 transition-colors duration-300 group-hover:text-gray-300">
-                {placeholder.description}
-              </p>
-              <ExternalLink className="mt-1 h-4 w-4 text-gray-500 transition-all duration-300 group-hover:translate-x-1 group-hover:text-gray-400" />
-            </div>
-          </div>
-        </Link>
-      </div>
-    );
-  }
-
-  // Regular game card
-  if (!game) return null;
-
   const [isClicking, setIsClicking] = useState(false);
   const [localDislikeCount, setLocalDislikeCount] = useState(
     game.dislike_count || 0,
@@ -119,7 +116,7 @@ const MiniGameCard = ({
     if (propCount > localDislikeCount) {
       setLocalDislikeCount(propCount);
     }
-  }, [game.dislike_count]);
+  }, [game.dislike_count, localDislikeCount]);
 
   // Get unified platforms and their icons
   const unifiedPlatforms = unifyPlatforms(game.platforms);
@@ -288,6 +285,27 @@ const MiniGameCard = ({
       </Link>
     </div>
   );
+};
+
+// Main component that decides which card to render
+const MiniGameCard = ({
+  game,
+  ranking,
+  placeholder,
+}: {
+  game?: GameDbData;
+  ranking?: number;
+  placeholder?: PlaceholderConfig;
+}) => {
+  // If placeholder is provided, render placeholder card
+  if (placeholder) {
+    return <PlaceholderCard config={placeholder} />;
+  }
+
+  // Regular game card
+  if (!game) return null;
+
+  return <RegularGameCard game={game} ranking={ranking} />;
 };
 
 export default MiniGameCard;

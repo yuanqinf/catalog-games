@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClerkSupabaseClient } from '@/lib/supabase/client';
 import { currentUser } from '@clerk/nextjs/server';
 
 // GET endpoint to fetch all games the user has interacted with
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const clerkUser = await currentUser();
     if (!clerkUser) {

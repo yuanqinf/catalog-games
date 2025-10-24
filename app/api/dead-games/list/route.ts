@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
 
     const supabase = createClerkSupabaseClient(null);
 
-    let query = supabase
+    const query = supabase
       .from('dead_games')
       .select(
         `

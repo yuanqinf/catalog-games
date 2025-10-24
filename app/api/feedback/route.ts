@@ -39,7 +39,8 @@ export async function POST(req: Request) {
       locale,
       'common.json',
     );
-    let translations: any = {};
+
+    let translations: Record<string, string> = {};
 
     try {
       const fileContents = fs.readFileSync(translationsPath, 'utf8');

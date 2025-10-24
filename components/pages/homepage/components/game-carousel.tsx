@@ -7,6 +7,7 @@ import NumberFlow from '@number-flow/react';
 import { motion } from 'framer-motion';
 import {
   Carousel,
+  CarouselApi,
   CarouselContent,
   CarouselItem,
 } from '@/components/ui/carousel';
@@ -17,7 +18,7 @@ interface GameCarouselProps {
   games: DissGameEntry[];
   activeIndex: number;
   clickingButtons: Set<string>;
-  onApiReady: (api: any) => void;
+  onApiReady: (api: CarouselApi) => void;
   onVote: (gameId: string) => void;
 }
 

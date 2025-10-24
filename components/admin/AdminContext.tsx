@@ -9,7 +9,7 @@ export interface GameResult {
   igdbId: number;
   existsInDb: boolean;
   isInSteam?: boolean;
-  igdbData?: any;
+  igdbData?: Record<string, unknown>;
   error?: string;
   selected?: boolean;
   bannerFile?: File | null;
