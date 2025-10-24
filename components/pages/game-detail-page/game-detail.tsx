@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import NumberFlow from '@number-flow/react';
 import {
   Gamepad2,
   Hammer,
@@ -27,9 +28,10 @@ import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
 import GameDetailSection from '@/components/pages/game-detail-page/game-detail-section';
 
-import GameDetailHighlight, { StatisticItem } from './game-detail-highlight';
-import GameDetailHeadline from './game-detail-headline';
-import NumberFlow from '@number-flow/react';
+import GameDetailHighlight, {
+  StatisticItem,
+} from '@/components/pages/game-detail-page/game-detail-highlight';
+import GameDetailHeadline from '@/components/pages/game-detail-page/game-detail-headline';
 
 import { GameDbData, DeadGameFromAPI } from '@/types';
 import {
@@ -42,12 +44,15 @@ import {
   useGameReactions,
   type FloatingThumb,
   type FloatingEmoji,
-} from './hooks/use-game-reactions';
-import { useGameStats } from './hooks/use-game-stats';
-import { useDeadGameReactions } from './hooks/use-dead-game-reactions';
-import { FloatingAnimations } from './components/floating-animations';
-import { EmojiPickerContent, availableEmojis } from './components/emoji-picker';
-import { SignInDialog } from './components/sign-in-dialog';
+} from '@/components/pages/game-detail-page/hooks/use-game-reactions';
+import { useGameStats } from '@/components/pages/game-detail-page/hooks/use-game-stats';
+import { useDeadGameReactions } from '@/components/pages/game-detail-page/hooks/use-dead-game-reactions';
+import { FloatingAnimations } from '@/components/pages/game-detail-page/components/floating-animations';
+import {
+  EmojiPickerContent,
+  availableEmojis,
+} from '@/components/pages/game-detail-page/components/emoji-picker';
+import { SignInDialog } from '@/components/pages/game-detail-page/components/sign-in-dialog';
 
 const GameDetail = ({
   game,
@@ -397,7 +402,7 @@ const GameDetail = ({
     isLoadingPlaytracker;
 
   return (
-    <main className="bg-background text-foreground min-h-screen w-full p-4">
+    <main className="detail-page-main">
       <div className="container-3xl container mx-auto px-8">
         {/* Top Navigation - Back Button (Left) and Share Button (Right) */}
         <div className="mb-6 flex items-center justify-between">
@@ -489,7 +494,7 @@ const GameDetail = ({
                         onClick={() => {
                           handleEmojiClick(emoji.icon, emoji.name);
                         }}
-                        className="flex items-center gap-2 bg-zinc-900/50 px-3 py-1 transition-all hover:scale-105 hover:bg-zinc-800"
+                        className="hover:scale-105 hover:bg-zinc-800/50"
                       >
                         <FontAwesomeIcon
                           icon={emoji.icon}
@@ -512,7 +517,7 @@ const GameDetail = ({
                       <Button
                         variant="outline"
                         size="lg"
-                        className="flex items-center gap-2 border-dashed bg-zinc-900/30 px-3 py-1 transition-all hover:bg-zinc-800/50"
+                        className="border-dashed hover:bg-zinc-800/50"
                         aria-label="Add emoji reaction"
                       >
                         <SmilePlus className="!h-5 !w-5" />
@@ -523,7 +528,7 @@ const GameDetail = ({
                 </div>
               ) : (
                 // Empty state - encourage first reaction
-                <div className="flex items-center gap-3 rounded-lg border-2 border-dashed border-zinc-700 bg-zinc-900/30 p-3">
+                <div className="flex items-center rounded-lg border-2 border-dashed border-zinc-700 bg-zinc-900/30 p-3">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-300">
                       {t('game_detail_no_reactions_yet')}

@@ -30,7 +30,7 @@ export default function GameDetailSection({
   if (isLoading) {
     return (
       <div className={className}>
-        <h4 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
+        <h4 className="game-detail-title">
           <Icon className="h-4 w-4" />
           {title}
         </h4>
@@ -46,7 +46,7 @@ export default function GameDetailSection({
 
   return (
     <div className={className}>
-      <h4 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
+      <h4 className="game-detail-title">
         <Icon className="h-4 w-4" />
         {title}
         {showTooltip && tooltipContent && (

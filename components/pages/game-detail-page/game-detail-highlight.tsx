@@ -123,7 +123,7 @@ export default function GameDetailHighlight({
     // Normal game panel - dislike button with counts
     return (
       <>
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center justify-items-center gap-4 2xl:grid-cols-[1fr_auto_1fr_auto_1fr]">
+        <div className="game-reaction-panel">
           {/* Column 1: Total Dislike Count */}
           <div className="flex items-center gap-2">
             <ThumbsDown className="h-5 w-5 text-red-400" />

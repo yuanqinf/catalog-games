@@ -6,9 +6,9 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n/client';
 import { DeadGamesTableContainer } from '@/components/shared/dead-games/dead-games-table-container';
-import { ExplorePageHeader } from './explore-page-header';
-import { DislikedGamesGrid } from './disliked-games-grid';
-import { PaginationControls } from './pagination-controls';
+import { ExplorePageHeader } from '@/components/pages/explore-game/explore-page-header';
+import { DislikedGamesGrid } from '@/components/pages/explore-game/disliked-games-grid';
+import { PaginationControls } from '@/components/pages/explore-game/pagination-controls';
 
 import type { GameDbData, DeadGameFromAPI } from '@/types';
 

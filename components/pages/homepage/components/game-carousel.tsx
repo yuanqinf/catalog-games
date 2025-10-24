@@ -40,7 +40,7 @@ export function GameCarousel({
       <CarouselContent>
         {games.slice(0, 5).map((game) => (
           <CarouselItem key={game.id}>
-            <div className="game-card relative aspect-[16/9] overflow-hidden rounded-lg">
+            <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
               <Link href={`/detail/${game.slug}`}>
                 <div className="absolute inset-0 cursor-pointer transition-transform hover:scale-[1.02]">
                   <div className="absolute top-4 left-4 z-20 rounded-lg bg-black/70 px-3 py-2">

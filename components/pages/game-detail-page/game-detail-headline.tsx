@@ -1,9 +1,9 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { ThumbsDown, Gamepad2, Calendar, Ghost, MonitorX } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import Image from 'next/image';
 import NumberFlow from '@number-flow/react';
 import { useTranslation } from '@/lib/i18n/client';
 
