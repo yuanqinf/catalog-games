@@ -8,15 +8,6 @@
 
 /* Root variables */
 :root {
-  /* Colors */
-  --cta: #2c2c2c;
-  --cta-gold: #fccc41;
-  --empty-color: #1e1f22;
-  --center-layer-color: #b83737;
-  --second-layer-color: #ba7232;
-  --third-layer-color: #bc9c36;
-  --fourth-layer-color: #31bd7c;
-
   /* Border radius */
   --radius: 0.625rem;
 }
@@ -74,8 +65,6 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
-  --color-cta: var(--cta);
-  --color-cta-gold: var(--cta-gold);
 
   /* Border radius variants */
   --radius-sm: calc(var(--radius) - 4px);
@@ -106,15 +95,6 @@ body {
 }
 
 @layer utilities {
-  /* Hide scrollbar utilities */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
   /* Custom 3xl breakpoint utilities */
   @media (min-width: 1920px) {
     .container-3xl {

@@ -19,9 +19,7 @@ const PaginationDots = ({
         <button
           key={`dot-${index}`}
           className={`h-2 w-2 rounded-full transition-all ${
-            activeIndex === index
-              ? 'scale-125 bg-white'
-              : 'bg-zinc-500'
+            activeIndex === index ? 'scale-125 bg-white' : 'bg-zinc-500'
           }`}
           onClick={() => {
             carouselApi?.scrollTo(index);
