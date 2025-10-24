@@ -307,7 +307,7 @@ export default function GameDetailHighlight({
 
       {!isDeadGame && (
         <>
-          <div className="highlight-card-section">
+          <div className="rounded-md bg-neutral-800 p-3">
             <DissRating
               rating={rating}
               gameId={game.id?.toString()}

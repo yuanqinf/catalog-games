@@ -18,10 +18,10 @@ const PaginationDots = ({
       {Array.from({ length: totalItems }).map((_, index) => (
         <button
           key={`dot-${index}`}
-          className={`pagination-dot ${
+          className={`h-2 w-2 rounded-full transition-all ${
             activeIndex === index
-              ? 'pagination-dot-active'
-              : 'pagination-dot-inactive'
+              ? 'scale-125 bg-white'
+              : 'bg-zinc-500'
           }`}
           onClick={() => {
             carouselApi?.scrollTo(index);

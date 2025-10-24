@@ -247,7 +247,7 @@ export default function ProfileGameCard({
         )}
 
         {/* Diss Rating Section */}
-        <div className="highlight-card-section mb-4">
+        <div className="mb-4 rounded-md bg-neutral-800 p-3">
           <DissRating
             rating={rating}
             gameId={game.id?.toString()}
