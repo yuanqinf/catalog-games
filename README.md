@@ -98,7 +98,3 @@ npm run start      # Start production server
 npm run lint       # Run ESLint
 npm run prettier   # Format code
 ```
-
-## License
-
-Private project
