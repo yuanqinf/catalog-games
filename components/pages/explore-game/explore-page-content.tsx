@@ -77,7 +77,7 @@ export function ExplorePageContent({
   );
 
   return (
-    <div className="container-3xl container mx-auto p-4 pt-0">
+    <main className="container-3xl container mx-auto p-4 pt-0">
       {/* Header with view switch */}
       <ExplorePageHeader
         view={view as 'disliked' | 'graveyard'}
@@ -150,6 +150,6 @@ export function ExplorePageContent({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </main>
   );
 }

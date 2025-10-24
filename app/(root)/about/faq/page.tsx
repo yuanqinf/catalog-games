@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function FAQPage() {
   return (
-    <div className="mx-auto min-h-screen max-w-4xl px-4 py-12">
+    <main className="mx-auto min-h-screen max-w-4xl px-4 py-12">
       <div className="space-y-8">
         {/* Header */}
         <div className="border-b border-gray-700 pb-6">
@@ -392,6 +392,6 @@ export default function FAQPage() {
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

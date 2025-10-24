@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function TermsOfUsePage() {
   return (
-    <div className="mx-auto min-h-screen max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+    <main className="mx-auto min-h-screen max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="mb-8 border-b border-gray-700 pb-6">
         <h1 className="mb-4 text-4xl font-bold text-white">Terms of Use</h1>
@@ -360,6 +360,6 @@ export default function TermsOfUsePage() {
           Back to Home
         </Link>
       </div>
-    </div>
+    </main>
   );
 }

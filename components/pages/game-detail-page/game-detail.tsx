@@ -18,20 +18,12 @@ import {
   Share2,
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { dark } from '@clerk/themes';
 import { useTranslation } from '@/lib/i18n/client';
 
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger } from '@/components/ui/popover';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SignInButton, useUser } from '@clerk/nextjs';
+import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
 import GameDetailSection from '@/components/pages/game-detail-page/game-detail-section';
 
@@ -55,6 +47,7 @@ import { useGameStats } from './hooks/use-game-stats';
 import { useDeadGameReactions } from './hooks/use-dead-game-reactions';
 import { FloatingAnimations } from './components/floating-animations';
 import { EmojiPickerContent, availableEmojis } from './components/emoji-picker';
+import { SignInDialog } from './components/sign-in-dialog';
 
 const GameDetail = ({
   game,
@@ -404,8 +397,8 @@ const GameDetail = ({
     isLoadingPlaytracker;
 
   return (
-    <div className="bg-background text-foreground min-h-screen w-full p-4">
-      <main className="container-3xl container mx-auto px-8">
+    <main className="bg-background text-foreground min-h-screen w-full p-4">
+      <div className="container-3xl container mx-auto px-8">
         {/* Top Navigation - Back Button (Left) and Share Button (Right) */}
         <div className="mb-6 flex items-center justify-between">
           <Link href={`/explore?view=${isDeadGame ? 'graveyard' : 'disliked'}`}>
@@ -610,31 +603,14 @@ const GameDetail = ({
             isSignedIn={isSignedIn}
           />
         </section>
-      </main>
+      </div>
 
       {/* Sign In Dialog */}
-      <Dialog open={showSignInDialog} onOpenChange={setShowSignInDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('game_detail_sign_in_to_react')}</DialogTitle>
-            <DialogDescription>
-              {t('game_detail_sign_in_to_react_description')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center py-4">
-            <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
-              <Button
-                onClick={() => {
-                  setShowSignInDialog(false);
-                }}
-              >
-                {t('auth_login')}
-              </Button>
-            </SignInButton>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+      <SignInDialog
+        open={showSignInDialog}
+        onOpenChange={setShowSignInDialog}
+      />
+    </main>
   );
 };
 

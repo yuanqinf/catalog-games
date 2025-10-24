@@ -1,9 +1,9 @@
 'use client';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { ThumbsDown, Loader2 } from 'lucide-react';
+import { useUser } from '@clerk/nextjs';
 import {
   Card,
   CardContent,
@@ -11,8 +11,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import ProfileGameCard from '@/components/shared/cards/profile-game-card';
-import type { GameDbData } from '@/types';
 import { useTranslation } from '@/lib/i18n/client';
+import type { GameDbData } from '@/types';
 
 interface InteractedGame extends GameDbData {
   user_dislike_count: number;
@@ -86,7 +86,7 @@ const UserProfilePage = () => {
   }
 
   return (
-    <div className="container mx-auto space-y-8 px-4 py-6 sm:space-y-12 sm:py-8">
+    <main className="container mx-auto space-y-8 px-4 py-6 sm:space-y-12 sm:py-8">
       <Card className="w-full">
         <CardContent className="p-4 sm:p-6">
           {/* Mobile Layout (< lg) */}
@@ -208,7 +208,7 @@ const UserProfilePage = () => {
           </p>
         )}
       </section>
-    </div>
+    </main>
   );
 };
 

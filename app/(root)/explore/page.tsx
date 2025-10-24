@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { Loader2 } from 'lucide-react';
 import { ServerGameService } from '@/lib/supabase/server';
 import { ExplorePageContent } from '@/components/pages/explore-game/explore-page-content';
-import { Loader2 } from 'lucide-react';
 
 // ISR: Revalidate every 60 seconds
 export const revalidate = 60;
@@ -43,6 +43,17 @@ interface ExplorePageProps {
   searchParams: Promise<{ view?: string }>;
 }
 
+function ExplorePageLoading() {
+  return (
+    <div className="container-3xl container mx-auto flex min-h-[60vh] items-center justify-center p-4">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="h-12 w-12 animate-spin text-purple-500" />
+        <p className="text-gray-400">Loading explore page...</p>
+      </div>
+    </div>
+  );
+}
+
 export default async function GameExplorePage({
   searchParams,
 }: ExplorePageProps) {
@@ -74,16 +85,5 @@ export default async function GameExplorePage({
         initialDeadGames={initialDeadGames as any}
       />
     </Suspense>
-  );
-}
-
-function ExplorePageLoading() {
-  return (
-    <div className="container-3xl container mx-auto flex min-h-[60vh] items-center justify-center p-4">
-      <div className="flex flex-col items-center gap-4">
-        <Loader2 className="h-12 w-12 animate-spin text-purple-500" />
-        <p className="text-gray-400">Loading explore page...</p>
-      </div>
-    </div>
   );
 }

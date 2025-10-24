@@ -63,7 +63,7 @@ const HomePage = async () => {
       <WelcomeDialog />
       <div className="container mx-auto space-y-12 px-4 py-8">
         <TopDislikeGames initialData={topDislikedGames} />
-        <TopDeadGames initialData={deadGames} />
+        <TopDeadGames initialData={deadGames as any} />
       </div>
     </>
   );

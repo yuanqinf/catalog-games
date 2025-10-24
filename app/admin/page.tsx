@@ -65,7 +65,7 @@ export default function AdminPage() {
 
   return (
     <AdminProvider>
-      <div className="mx-auto max-w-6xl space-y-12 p-6">
+      <main className="mx-auto max-w-6xl space-y-12 p-6">
         <div className="mb-8">
           <h1 className="mb-2 text-3xl font-bold">Game Administration</h1>
           <p className="text-gray-400">Manage games and dead games</p>
@@ -90,7 +90,7 @@ export default function AdminPage() {
           </div>
           <DeadGameAdd />
         </section>
-      </div>
+      </main>
     </AdminProvider>
   );
 }
