@@ -95,3 +95,5 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key' }}
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'placeholder-key' }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY || 'placeholder-key' }}
+          IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID || 'placeholder-igdb-client-id' }}
+          IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET || 'placeholder-igdb-client-secret' }}
