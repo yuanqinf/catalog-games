@@ -14,13 +14,13 @@ export const createGameHandlers = (
   setSupabaseGames: (games: GameDbData[]) => void,
   setIgdbGames: (games: IgdbGame[]) => void,
 ) => {
-  const handleSelectSuggestion = (game: GameDbData) => {
+  const handleSelectSuggestion = (game: GameDbData | IgdbGame) => {
     // Add to search history
     addToSearchHistory({
-      id: game.id || game.igdb_id,
+      id: 'igdb_id' in game ? game.id || game.igdb_id : game.id,
       name: game.name,
       slug: game.slug || '',
-      cover_url: game.cover_url,
+      cover_url: 'cover_url' in game ? game.cover_url : undefined,
     });
 
     // Update search history state

@@ -65,15 +65,7 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npm run test:coverage
-
-      - name: Check coverage thresholds
-        run: |
-          echo "Checking coverage thresholds..."
-          if ! npm run test:coverage 2>&1 | grep -q "All files"; then
-            echo "Coverage check failed!"
-            exit 1
-          fi
+        run: npm run test:run -- --coverage
 
       - name: Upload coverage reports
         if: always()
@@ -85,9 +77,6 @@ jobs:
       - name: Coverage Report Comment
         if: github.event_name == 'pull_request'
         uses: davelosert/vitest-coverage-report-action@v2
-        with:
-          json-summary-path: ./coverage/coverage-summary.json
-          json-final-path: ./coverage/coverage-final.json
 
   build:
     name: Build Check
