@@ -3,8 +3,6 @@ name: CI
 on:
   push:
     branches: ['**']
-  pull_request:
-    branches: [main]
 
 jobs:
   lint-and-format:
@@ -73,10 +71,6 @@ jobs:
         with:
           name: coverage-report
           path: coverage/
-
-      - name: Coverage Report Comment
-        if: github.event_name == 'pull_request'
-        uses: davelosert/vitest-coverage-report-action@v2
 
   build:
     name: Build Check
