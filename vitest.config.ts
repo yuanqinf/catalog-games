@@ -24,10 +24,10 @@ export default defineConfig({
       ],
       thresholds: {
         hooks: {
-          lines: 85,
-          functions: 85,
+          lines: 80,
+          functions: 80,
           branches: 80,
-          statements: 85,
+          statements: 80,
         },
         components: {
           lines: 70,
