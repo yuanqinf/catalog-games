@@ -24,6 +24,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${bricolage.variable} antialiased`}>
         <ClerkProvider
+          publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
           localization={{
             userButton: {
               action__manageAccount: 'Profile',
