@@ -18,6 +18,7 @@ import {
   searchAndProcessGameById,
   validateIgdbId,
 } from './AdminContext';
+import type { IgdbGameData } from '@/types';
 
 export const SingleGameAdd = () => {
   const { gameService } = useAdmin();
@@ -93,9 +94,14 @@ export const SingleGameAdd = () => {
     try {
       const isUpdate = idSearchResult.existsInDb;
 
+      // Validate igdbData exists
+      if (!idSearchResult.igdbData) {
+        throw new Error('No IGDB data available');
+      }
+
       // Add or update the game in database
       await gameService.addOrUpdateGame(
-        idSearchResult.igdbData,
+        idSearchResult.igdbData as unknown as IgdbGameData,
         idSearchResult.bannerFile || undefined,
       );
 
@@ -147,8 +153,13 @@ export const SingleGameAdd = () => {
     );
 
     try {
+      // Validate igdbData exists
+      if (!idSearchResult.igdbData) {
+        throw new Error('No IGDB data available');
+      }
+
       await gameService.addOrUpdateGame(
-        idSearchResult.igdbData,
+        idSearchResult.igdbData as unknown as IgdbGameData,
         idSearchResult.bannerFile || undefined,
       );
 
@@ -339,37 +350,41 @@ export const SingleGameAdd = () => {
               <div className="mt-4 border-t border-zinc-700 pt-4">
                 <h5 className="mb-2 text-sm font-medium">Game Details:</h5>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  {idSearchResult.igdbData.summary && (
+                  {(idSearchResult.igdbData.summary as string) && (
                     <div className="col-span-2">
                       <span className="font-medium text-gray-300">
                         Summary:
                       </span>
                       <p className="mt-1 line-clamp-3 text-gray-400">
-                        {idSearchResult.igdbData.summary}
+                        {String(idSearchResult.igdbData.summary)}
                       </p>
                     </div>
                   )}
 
-                  {idSearchResult.igdbData.first_release_date && (
+                  {(idSearchResult.igdbData.first_release_date as number) && (
                     <div>
                       <span className="font-medium text-gray-300">
                         Release Date:
                       </span>
                       <p className="text-gray-400">
                         {new Date(
-                          idSearchResult.igdbData.first_release_date * 1000,
+                          Number(idSearchResult.igdbData.first_release_date) *
+                            1000,
                         ).getFullYear()}
                       </p>
                     </div>
                   )}
 
-                  {idSearchResult.igdbData.total_rating && (
+                  {(idSearchResult.igdbData.total_rating as number) && (
                     <div>
                       <span className="font-medium text-gray-300">
                         IGDB Rating:
                       </span>
                       <p className="text-gray-400">
-                        {Math.round(idSearchResult.igdbData.total_rating)}/100
+                        {Math.round(
+                          Number(idSearchResult.igdbData.total_rating),
+                        )}
+                        /100
                       </p>
                     </div>
                   )}

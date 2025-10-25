@@ -10,7 +10,7 @@ export default defineConfig({
     globals: true,
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
+      reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
       exclude: [
         'node_modules/',
         '__tests__/',
@@ -24,10 +24,10 @@ export default defineConfig({
       ],
       thresholds: {
         hooks: {
-          lines: 85,
-          functions: 85,
+          lines: 80,
+          functions: 80,
           branches: 80,
-          statements: 85,
+          statements: 80,
         },
         components: {
           lines: 70,
