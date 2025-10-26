@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClerkSupabaseClient } from '@/lib/supabase/client';
 
-// Consider a user online if they've been seen in the last 5 minutes
-const ONLINE_THRESHOLD_MINUTES = 5;
+// Consider a user online if they've been seen in the last 30 minutes
+const ONLINE_THRESHOLD_MINUTES = 30;
 
 export async function GET() {
   try {
