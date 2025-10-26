@@ -11,6 +11,7 @@ import {
   Info,
   Ghost,
   LogIn,
+  CircleAlert,
 } from 'lucide-react';
 import { mutate as globalMutate } from 'swr';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ import {
 } from '@/components/ui/tooltip';
 import { RATING_BLOCK_COLORS } from '@/constants/colors';
 import { useTranslation } from '@/lib/i18n/client';
+import { convertDissAvg } from '@/utils/convertDissAvg';
 
 export interface StatisticItem {
   title: string;
@@ -322,10 +324,7 @@ export default function GameDetailHighlight({
 
           <div className="highlight-card-footer">
             {/* Diss Rating */}
-            <div
-              title={`User Rating: ${overallAverage}`}
-              className="flex items-center"
-            >
+            <div className="flex items-center">
               <Image
                 src="/images/logo.png"
                 alt="Logo"
@@ -333,8 +332,8 @@ export default function GameDetailHighlight({
                 height={24}
                 className="mr-1"
               />
-              <span className="inline-block">
-                {t('game_detail_diss_avg_rating')}:{' '}
+              <span className="mr-1 inline-block">
+                {t('game_detail_diss_avg_rating')}
                 <span
                   className="font-bold"
                   style={{
@@ -343,9 +342,23 @@ export default function GameDetailHighlight({
                       : '#9CA3AF',
                   }}
                 >
-                  {overallAverage ? overallAverage : 'N/A'}
+                  {overallAverage ? convertDissAvg(overallAverage, t) : 'N/A'}
                 </span>
               </span>
+              {overallAverage ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <CircleAlert className="h-3 w-3 cursor-pointer text-gray-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="font-semibold">
+                        {overallAverage.toFixed(1)}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : null}
             </div>
           </div>
         </>

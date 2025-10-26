@@ -13,6 +13,7 @@ import {
   Hammer,
   CircleX,
   SmilePlus,
+  CircleAlert,
 } from 'lucide-react';
 import DissRating from '@/components/shared/diss-rating/diss-rating';
 import { useGameRating } from '@/hooks/useGameRating';
@@ -29,6 +30,13 @@ import {
 } from '@/components/ui/dialog';
 import { RATING_BLOCK_COLORS } from '@/constants/colors';
 import { useTranslation } from '@/lib/i18n/client';
+import { convertDissAvg } from '@/utils/convertDissAvg';
+import {
+  Tooltip,
+  TooltipProvider,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
 
 interface ProfileGameCardProps {
   game: GameDbData;
@@ -271,8 +279,7 @@ export default function ProfileGameCard({
             height={24}
             className="mr-1"
           />
-          <span className="inline-block">
-            {t('profile_card_diss_avg_rating')}{' '}
+          <span className="mr-1 inline-block">
             <span
               className="font-bold"
               style={{
@@ -281,9 +288,21 @@ export default function ProfileGameCard({
                   : '#9CA3AF',
               }}
             >
-              {overallAverage ? overallAverage : 'N/A'}
+              {overallAverage ? convertDissAvg(overallAverage, t) : 'N/A'}
             </span>
           </span>
+          {overallAverage ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <CircleAlert className="h-3 w-3 cursor-pointer text-gray-400" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-semibold">{overallAverage.toFixed(1)}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : null}
         </div>
 
         {/* Undo Button */}

@@ -105,7 +105,7 @@
   "game_detail_source_steam": "Source: Steam (Live)",
   "game_detail_source_twitch": "Source: Twitch",
   "game_detail_sign_in_to_track_dislikes": "Track your dislikes",
-  "game_detail_diss_avg_rating": "Diss Avg. Rating",
+  "game_detail_diss_avg_rating": "Diss Avg. Rating: ",
   "game_detail_link_copied": "Link copied!",
   "game_detail_failed_copy_link": "Failed to copy link",
   "game_detail_failed_load_ranking": "Failed to load ranking data",
@@ -139,7 +139,7 @@
   "profile_total_dislikes": "total dislikes",
   "profile_quote": "Ultimately, the player's experience is the truth. If the game does not feel right to them, then it is not right.",
   "profile_quote_author": "— Jesse Schell, The Art of Game Design",
-  "profile_card_diss_avg_rating": "Diss Avg. Rating:",
+  "profile_card_diss_avg_rating": "Diss Avg. Rating: ",
   "profile_card_remove_button": "Remove",
   "profile_card_remove_dialog_title": "Remove All Interactions",
   "profile_card_remove_dialog_description": "Are you sure you want to remove all your dislikes and emoji reactions for",
@@ -174,5 +174,9 @@
   "feedback_error": "Failed to send feedback. Please try again.",
 
   "_comment_errors": "==== MESSAGES ====",
-  "error_unknown": "Unknown error occurred"
+  "error_unknown": "Unknown error occurred",
+  "convert_diss_avg_1": "Not bad, honestly",
+  "convert_diss_avg_2": "Kinda mid",
+  "convert_diss_avg_3": "Pretty bad",
+  "convert_diss_avg_4": "Straight-up trash"
 }
