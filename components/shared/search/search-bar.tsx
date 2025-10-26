@@ -176,6 +176,8 @@ const SearchBar = () => {
               isLoading={props.isLoading}
               onOpenFeedback={() => setIsFeedbackOpen(true)}
               onClearHistory={props.handleClearHistory}
+              hasSearchInput={props.inputValue.trim().length > 0}
+              hasSearched={props.hasSearched}
             />
           )}
         </Command>
