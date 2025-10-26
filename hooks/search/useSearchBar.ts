@@ -28,6 +28,7 @@ export const useSearchBar = () => {
   const [selectedIgdbGame, setSelectedIgdbGame] = useState<IgdbGame | null>(
     null,
   );
+  const [hasSearched, setHasSearched] = useState(false);
 
   // Refs
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -83,6 +84,7 @@ export const useSearchBar = () => {
       setSupabaseGames([]);
       setIgdbGames([]);
       setIsLoading(false);
+      setHasSearched(false);
       return;
     }
 
@@ -100,11 +102,13 @@ export const useSearchBar = () => {
         setIgdbGames([...data.igdbGames]);
         // Show results panel after search completes
         setShowSuggestions(true);
+        setHasSearched(true);
       } else {
         setSupabaseGames([]);
         setIgdbGames([]);
         // Show panel even with no results (will display "No results found")
         setShowSuggestions(true);
+        setHasSearched(true);
       }
     } catch (error) {
       console.error('Search failed:', error);
@@ -112,6 +116,7 @@ export const useSearchBar = () => {
       setIgdbGames([]);
       // Show panel on search failure (will display error info)
       setShowSuggestions(true);
+      setHasSearched(true);
     } finally {
       setIsLoading(false);
     }
@@ -165,6 +170,7 @@ export const useSearchBar = () => {
     if (value.trim() !== inputValue.trim()) {
       setSupabaseGames([]);
       setIgdbGames([]);
+      setHasSearched(false);
     }
   };
 
@@ -186,6 +192,7 @@ export const useSearchBar = () => {
     showDislikeModal,
     selectedIgdbGame,
     setShowDislikeModal,
+    hasSearched,
 
     // Refs
     wrapperRef,

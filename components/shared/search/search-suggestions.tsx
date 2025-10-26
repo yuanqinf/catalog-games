@@ -20,6 +20,8 @@ interface SearchSuggestionsProps {
   isLoading: boolean;
   onOpenFeedback: () => void;
   onClearHistory: () => void;
+  hasSearchInput?: boolean;
+  hasSearched?: boolean;
 }
 
 export const SearchSuggestions = ({
@@ -31,6 +33,8 @@ export const SearchSuggestions = ({
   isLoading,
   onOpenFeedback,
   onClearHistory,
+  hasSearchInput = false,
+  hasSearched = false,
 }: SearchSuggestionsProps) => {
   const { t } = useTranslation();
 
@@ -38,6 +42,9 @@ export const SearchSuggestions = ({
   // Show history when: not loading, no search results yet, and has history
   const showHistory =
     !isLoading && !hasSearchResults && searchHistory.length > 0;
+  // Show "no results" message only when search has completed and no results found
+  const showNoResultsMessage =
+    !isLoading && hasSearchInput && !hasSearchResults && hasSearched;
 
   return (
     <div className="search-dropdown">
@@ -58,6 +65,28 @@ export const SearchSuggestions = ({
             </Button>
           </div>
         </CommandEmpty>
+
+        {/* Show "No results" message before showing search history */}
+        {showNoResultsMessage && searchHistory.length > 0 && (
+          <div className="border-b border-gray-700 px-4 py-3">
+            <p className="text-center text-sm text-gray-300">
+              {t('search_no_results_found')}
+            </p>
+            <div className="mt-2 flex items-center justify-center gap-2">
+              <p className="text-xs text-gray-400">
+                {t('search_missing_game_lets_know')}
+              </p>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onOpenFeedback}
+                className="!h-3.5 !w-3.5 text-white transition-all duration-200 hover:scale-110"
+              >
+                <MessageCircle className="!h-4 !w-4 fill-current" />
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Show search history when no input */}
         {showHistory && (
