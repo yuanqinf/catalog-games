@@ -49,6 +49,10 @@
   "explore_no_dead_games_yet": "No dead games have been added yet",
   "explore_know_another_game": "Know another game that belongs here?",
   "explore_let_us_know": "Let us know",
+  "explore_top_50_most_disliked_games": "Top 50 Most Disliked Games",
+  "explore_last_page_title": "That's All Folks!",
+  "explore_last_page_message": "Didn't find your game here? Try using the search bar.",
+  "explore_last_page_message_author": "And hey, good news! The games you've played are pretty solid!",
 
   "_comment_table": "==== TABLE HEADERS ====",
   "table_header_game": "Game",

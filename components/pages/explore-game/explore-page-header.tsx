@@ -1,4 +1,12 @@
-import { ViewSwitchButton } from './view-switch-button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n/client';
+import { ViewSwitchButton } from '@/components/pages/explore-game/view-switch-button';
 
 interface ExplorePageHeaderProps {
   view: 'disliked' | 'graveyard';
@@ -17,6 +25,7 @@ export function ExplorePageHeader({
   dislikedLabel,
   graveyardLabel,
 }: ExplorePageHeaderProps) {
+  const { t } = useTranslation();
   const isGraveyard = view === 'graveyard';
 
   return (
@@ -47,16 +56,32 @@ export function ExplorePageHeader({
 
         {/* Content */}
         <div className="relative z-10 mt-4 text-center">
-          <h1
-            className={`mb-4 bg-gradient-to-r bg-clip-text text-2xl font-black text-transparent md:text-4xl ${
-              isGraveyard
-                ? 'from-gray-400 to-gray-600'
-                : 'from-[#ff4757] to-[#ff8894]'
-            }`}
-            style={{ fontWeight: 900 }}
-          >
-            {title}
-          </h1>
+          <div className="flex justify-center gap-2">
+            <h1
+              className={`mb-4 bg-gradient-to-r bg-clip-text text-2xl font-black text-transparent md:text-4xl ${
+                isGraveyard
+                  ? 'from-gray-400 to-gray-600'
+                  : 'from-[#ff4757] to-[#ff8894]'
+              }`}
+              style={{ fontWeight: 900 }}
+            >
+              {title}
+            </h1>
+            {!isGraveyard ? (
+              <TooltipProvider>
+                <Tooltip delayDuration={0}>
+                  <TooltipContent>
+                    <p className="text-sm text-gray-400 md:text-base">
+                      {t('explore_top_50_most_disliked_games')}
+                    </p>
+                  </TooltipContent>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 cursor-pointer text-gray-400" />
+                  </TooltipTrigger>
+                </Tooltip>
+              </TooltipProvider>
+            ) : null}
+          </div>
           <p className="text-base text-gray-400 md:text-lg">{description}</p>
         </div>
 
