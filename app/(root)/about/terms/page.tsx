@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Metadata } from 'next';
+import { AboutPageLayout } from '@/components/layouts/about-page-layout';
 
 export const metadata: Metadata = {
   title: 'Terms of Use - Dissgame',
@@ -9,17 +10,11 @@ export const metadata: Metadata = {
 
 export default function TermsOfUsePage() {
   return (
-    <main className="mx-auto min-h-screen max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="mb-8 border-b border-gray-700 pb-6">
-        <h1 className="mb-4 text-4xl font-bold text-white">Terms of Use</h1>
-        <p className="text-sm text-gray-400">Last Updated: October 20, 2025</p>
-        <p className="mt-4 text-lg text-gray-300">
-          Welcome! Here are the rules for using Dissgame. We tried to keep it
-          simple and straightforward.
-        </p>
-      </div>
-
+    <AboutPageLayout
+      title="Terms of Use"
+      description="Welcome! Here are the rules for using Dissgame. We tried to keep it simple and straightforward."
+      lastUpdated="October 20, 2025"
+    >
       {/* TL;DR */}
       <section className="mb-8 rounded-lg bg-purple-900/20 p-6">
         <h2 className="mb-3 text-xl font-semibold text-purple-400">TL;DR</h2>
@@ -350,16 +345,6 @@ export default function TermsOfUsePage() {
           </p>
         </section>
       </div>
-
-      {/* Back to Home Link */}
-      <div className="mt-12 text-center">
-        <Link
-          href="/"
-          className="inline-block rounded-lg bg-purple-600 px-6 py-3 text-white transition-colors hover:bg-purple-700"
-        >
-          Back to Home
-        </Link>
-      </div>
-    </main>
+    </AboutPageLayout>
   );
 }
