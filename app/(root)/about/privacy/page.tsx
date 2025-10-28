@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { AboutPageLayout } from '@/components/layouts/about-page-layout';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy - Dissgame',
@@ -10,21 +11,12 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="mx-auto min-h-screen max-w-4xl px-4 py-12">
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="border-b border-gray-700 pb-6">
-          <h1 className="mb-4 text-4xl font-bold text-white">Privacy Policy</h1>
-          <p className="text-sm text-gray-400">
-            Last Updated: October 20, 2025
-          </p>
-          <p className="mt-4 text-lg text-gray-300">
-            Hey there! Dissgame is an indie project, so let&apos;s keep this
-            simple and transparent. Here&apos;s what we do with your data.
-          </p>
-        </div>
-
-        {/* TL;DR */}
+    <AboutPageLayout
+      title="Privacy Policy"
+      description="Hey there! Dissgame is an indie project, so let's keep this simple and transparent. Here's what we do with your data."
+      lastUpdated="October 20, 2025"
+    >
+      {/* TL;DR */}
         <section className="rounded-lg bg-purple-900/20 p-6">
           <h2 className="mb-3 text-xl font-semibold text-purple-400">TL;DR</h2>
           <ul className="space-y-2 text-gray-300">
@@ -378,17 +370,6 @@ export default function PrivacyPolicyPage() {
             .
           </p>
         </section>
-
-        {/* Back to Home Link */}
-        <div className="border-t border-gray-700 pt-6">
-          <Link
-            href="/"
-            className="inline-block rounded-lg bg-purple-600 px-6 py-3 text-white transition-colors hover:bg-purple-700"
-          >
-            Back to Home
-          </Link>
-        </div>
-      </div>
-    </main>
+    </AboutPageLayout>
   );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { AboutPageLayout } from '@/components/layouts/about-page-layout';
 
 export const metadata: Metadata = {
   title: 'FAQ - Dissgame',
@@ -10,19 +11,11 @@ export const metadata: Metadata = {
 
 export default function FAQPage() {
   return (
-    <main className="mx-auto min-h-screen max-w-4xl px-4 py-12">
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="border-b border-gray-700 pb-6">
-          <h1 className="mb-4 text-4xl font-bold text-white">
-            Frequently Asked Questions
-          </h1>
-          <p className="text-lg text-gray-300">
-            Got questions? We&apos;ve got answers!
-          </p>
-        </div>
-
-        {/* About Dissgame */}
+    <AboutPageLayout
+      title="Frequently Asked Questions"
+      description="Got questions? We've got answers!"
+    >
+      {/* About Dissgame */}
         <section className="space-y-6">
           <h2 className="text-2xl font-semibold text-purple-400">
             About Dissgame
@@ -381,17 +374,6 @@ export default function FAQPage() {
             </Link>
           </div>
         </section>
-
-        {/* Back to Home Link */}
-        <div className="border-t border-gray-700 pt-6">
-          <Link
-            href="/"
-            className="inline-block rounded-lg bg-purple-600 px-6 py-3 text-white transition-colors hover:bg-purple-700"
-          >
-            Back to Home
-          </Link>
-        </div>
-      </div>
-    </main>
+    </AboutPageLayout>
   );
 }
