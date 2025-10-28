@@ -13,7 +13,7 @@ import { PaginationControls } from '@/components/pages/explore-game/pagination-c
 import type { GameDbData, DeadGameFromAPI } from '@/types';
 
 const GAMES_PER_PAGE = 15;
-const TOP_GAMES_LIMIT = 100;
+const TOP_GAMES_LIMIT = 50;
 
 interface ExplorePageContentProps {
   initialDislikedGames?: GameDbData[];
@@ -139,6 +139,7 @@ export function ExplorePageContent({
               gamesPerPage={GAMES_PER_PAGE}
               isLoading={isLoading}
               loadingText={t('explore_loading_games')}
+              isLastPage={currentPage === totalPages}
             />
 
             {/* Pagination */}
