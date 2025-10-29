@@ -94,7 +94,9 @@ export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
         // 1. First update (initial fallbackData)
         // 2. Second update (first real fetch after fallbackData)
         // Only show animations from the 3rd update onwards (polling updates)
-        const shouldSkipAnimation = options?.initialData ? updateCount < 2 : updateCount < 1;
+        const shouldSkipAnimation = options?.initialData
+          ? updateCount < 2
+          : updateCount < 1;
 
         if (!shouldSkipAnimation && prevData.length > 0) {
           transformedData.forEach((newGame) => {
