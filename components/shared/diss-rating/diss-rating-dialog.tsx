@@ -129,21 +129,26 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
     }));
   };
 
-  // Update current rating when dialog opens or when user rating is loaded from server
+  // Update current rating when dialog opens or when user rating changes while closed
   useEffect(() => {
     if (isOpen) {
+      // When dialog opens, load the current user rating
+      setCurrentRating(userRating);
+      setHoverRating(userRating);
+    } else {
+      // When dialog is closed, keep currentRating in sync with userRating
+      // This ensures next time dialog opens, it shows the latest saved rating
       setCurrentRating(userRating);
       setHoverRating(userRating);
     }
-  }, [isOpen, userRating]); // Only depend on isOpen, not userRating
-
-  // Sync with userRating only when dialog is closed
-  useEffect(() => {
-    if (!isOpen) {
-      setCurrentRating(userRating);
-      setHoverRating(userRating);
-    }
-  }, [userRating, isOpen]);
+  }, [
+    isOpen,
+    userRating.story,
+    userRating.music,
+    userRating.graphics,
+    userRating.gameplay,
+    userRating.longevity,
+  ]);
 
   const handleSave = async () => {
     if (!user || !gameId) return;
