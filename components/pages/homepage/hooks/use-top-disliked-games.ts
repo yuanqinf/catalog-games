@@ -44,6 +44,7 @@ interface UseTopDislikedGamesOptions {
 export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
   const [dissGameData, setDissGameData] = useState<DissGameEntry[]>([]);
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
+  const [updateCount, setUpdateCount] = useState(0);
 
   // Transform initialData if provided
   const initialResponse = options?.initialData
@@ -86,30 +87,43 @@ export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
           }),
         );
 
-        transformedData.forEach((newGame) => {
-          const oldGame = prevData.find((g) => g.id === newGame.id);
-          if (oldGame && oldGame.dislikeCount < newGame.dislikeCount) {
-            triggerCountIncreaseAnimations(
-              newGame.id,
-              oldGame.dislikeCount,
-              newGame.dislikeCount,
-              setFloatingThumbs,
-              (itemId, animationId) => ({
-                id: animationId,
-                gameId: itemId,
-                timestamp: Date.now(),
-                startX: 20 + Math.random() * 60,
-                isPowerMode: false,
-              }),
-              'thumb-polling',
-            );
-          }
-        });
+        // Increment update counter
+        setUpdateCount((prev) => prev + 1);
+
+        // Skip animations for:
+        // 1. First update (initial fallbackData)
+        // 2. Second update (first real fetch after fallbackData)
+        // Only show animations from the 3rd update onwards (polling updates)
+        const shouldSkipAnimation = options?.initialData
+          ? updateCount < 2
+          : updateCount < 1;
+
+        if (!shouldSkipAnimation && prevData.length > 0) {
+          transformedData.forEach((newGame) => {
+            const oldGame = prevData.find((g) => g.id === newGame.id);
+            if (oldGame && oldGame.dislikeCount < newGame.dislikeCount) {
+              triggerCountIncreaseAnimations(
+                newGame.id,
+                oldGame.dislikeCount,
+                newGame.dislikeCount,
+                setFloatingThumbs,
+                (itemId, animationId) => ({
+                  id: animationId,
+                  gameId: itemId,
+                  timestamp: Date.now(),
+                  startX: 20 + Math.random() * 60,
+                  isPowerMode: false,
+                }),
+                'thumb-polling',
+              );
+            }
+          });
+        }
 
         return transformedData;
       });
     }
-  }, [topDislikedGamesResponse?.data]);
+  }, [topDislikedGamesResponse?.data, updateCount, options?.initialData]);
 
   return {
     dissGameData,
