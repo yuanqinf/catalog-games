@@ -314,10 +314,10 @@ export default function GameDetailHighlight({
               rating={rating}
               gameId={game.id?.toString()}
               isLoading={isLoadingRating}
-              onSaveSuccess={() => {
-                // Force revalidate the average rating cache
-                // This bypasses the 5-minute deduping interval
-                globalMutate(['average-rating', game.id]);
+              onSaveSuccess={async () => {
+                // Force revalidate to get the latest average rating immediately
+                // No HTTP cache means we always get fresh data from database
+                await globalMutate(['average-rating', game.id]);
               }}
             />
           </div>

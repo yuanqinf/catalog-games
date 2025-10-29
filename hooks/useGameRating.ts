@@ -6,7 +6,7 @@ interface UseGameRatingReturn {
   overallAverage?: number; // Only available for average ratings
   isLoading: boolean;
   error: any;
-  mutate: () => void;
+  mutate: (data?: any, shouldRevalidate?: boolean) => Promise<any>;
 }
 
 interface AverageRatingData {

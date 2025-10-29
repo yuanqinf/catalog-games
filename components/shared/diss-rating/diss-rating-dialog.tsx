@@ -129,9 +129,17 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
     }));
   };
 
-  // Update current rating when user rating is loaded
+  // Update current rating when dialog opens or when user rating is loaded from server
   useEffect(() => {
     if (isOpen) {
+      setCurrentRating(userRating);
+      setHoverRating(userRating);
+    }
+  }, [isOpen, userRating]); // Only depend on isOpen, not userRating
+
+  // Sync with userRating only when dialog is closed
+  useEffect(() => {
+    if (!isOpen) {
       setCurrentRating(userRating);
       setHoverRating(userRating);
     }
@@ -141,7 +149,14 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
     if (!user || !gameId) return;
 
     setIsSaving(true);
+
+    // Save the current rating to avoid closure issues
+    const ratingToSave = { ...currentRating };
+
     try {
+      // Optimistically update the UI immediately
+      mutate(ratingToSave, false);
+
       const response = await fetch('/api/games/rating', {
         method: 'POST',
         headers: {
@@ -149,7 +164,7 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
         },
         body: JSON.stringify({
           gameId: parseInt(gameId),
-          rating: currentRating,
+          rating: ratingToSave,
         }),
       });
 
@@ -159,7 +174,8 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
         throw new Error(result.error || 'Failed to save rating');
       }
 
-      // Force revalidate the SWR cache to fetch fresh data
+      // Revalidate after successful save to sync with server
+      // This ensures we get the latest data without race conditions
       await mutate();
 
       // Notify parent component to refresh if callback provided
@@ -172,6 +188,8 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
     } catch (error) {
       console.error('Failed to save rating:', error);
       toast.error(t('diss_rating_save_failed'));
+      // Rollback the optimistic update on error
+      await mutate();
     } finally {
       setIsSaving(false);
     }
