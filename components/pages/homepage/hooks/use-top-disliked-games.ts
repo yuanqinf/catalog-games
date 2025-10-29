@@ -44,7 +44,7 @@ interface UseTopDislikedGamesOptions {
 export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
   const [dissGameData, setDissGameData] = useState<DissGameEntry[]>([]);
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
-  const [shouldTriggerAnimations, setShouldTriggerAnimations] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Transform initialData if provided
   const initialResponse = options?.initialData
@@ -87,9 +87,9 @@ export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
           }),
         );
 
-        // Only trigger animations if explicitly enabled (e.g., after user vote sync)
-        // Prevents animations on initial load, stale cache updates, and background polling
-        if (shouldTriggerAnimations) {
+        // Trigger animations for count increases, but skip initial load
+        // This shows real-time updates from other users via polling
+        if (!isInitialLoad && prevData.length > 0) {
           transformedData.forEach((newGame) => {
             const oldGame = prevData.find((g) => g.id === newGame.id);
             if (oldGame && oldGame.dislikeCount < newGame.dislikeCount) {
@@ -109,15 +109,17 @@ export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
               );
             }
           });
+        }
 
-          // Reset flag after triggering animations
-          setShouldTriggerAnimations(false);
+        // Mark initial load as complete after first data processing
+        if (isInitialLoad) {
+          setIsInitialLoad(false);
         }
 
         return transformedData;
       });
     }
-  }, [topDislikedGamesResponse?.data, shouldTriggerAnimations]);
+  }, [topDislikedGamesResponse?.data, isInitialLoad]);
 
   return {
     dissGameData,
@@ -128,6 +130,5 @@ export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
     error,
     isLoading,
     mutate,
-    setShouldTriggerAnimations,
   };
 }
