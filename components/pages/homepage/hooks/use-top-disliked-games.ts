@@ -44,7 +44,7 @@ interface UseTopDislikedGamesOptions {
 export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
   const [dissGameData, setDissGameData] = useState<DissGameEntry[]>([]);
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [updateCount, setUpdateCount] = useState(0);
 
   // Transform initialData if provided
   const initialResponse = options?.initialData
@@ -87,9 +87,16 @@ export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
           }),
         );
 
-        // Trigger animations for count increases, but skip initial load
-        // This shows real-time updates from other users via polling
-        if (!isInitialLoad && prevData.length > 0) {
+        // Increment update counter
+        setUpdateCount((prev) => prev + 1);
+
+        // Skip animations for:
+        // 1. First update (initial fallbackData)
+        // 2. Second update (first real fetch after fallbackData)
+        // Only show animations from the 3rd update onwards (polling updates)
+        const shouldSkipAnimation = options?.initialData ? updateCount < 2 : updateCount < 1;
+
+        if (!shouldSkipAnimation && prevData.length > 0) {
           transformedData.forEach((newGame) => {
             const oldGame = prevData.find((g) => g.id === newGame.id);
             if (oldGame && oldGame.dislikeCount < newGame.dislikeCount) {
@@ -111,15 +118,10 @@ export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
           });
         }
 
-        // Mark initial load as complete after first data processing
-        if (isInitialLoad) {
-          setIsInitialLoad(false);
-        }
-
         return transformedData;
       });
     }
-  }, [topDislikedGamesResponse?.data, isInitialLoad]);
+  }, [topDislikedGamesResponse?.data, updateCount, options?.initialData]);
 
   return {
     dissGameData,
