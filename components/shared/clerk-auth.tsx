@@ -64,7 +64,7 @@ const ClerkAuth = () => {
         .cl-userButtonPopoverActionButton__manageAccount::before {
           content: 'Account' !important;
           position: absolute !important;
-          left: 57 !important;
+          margin-left: 36px !important;
           width: 100% !important;
           height: 100% !important;
           display: flex !important;
