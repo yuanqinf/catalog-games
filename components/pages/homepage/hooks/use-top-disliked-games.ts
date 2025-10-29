@@ -44,6 +44,7 @@ interface UseTopDislikedGamesOptions {
 export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
   const [dissGameData, setDissGameData] = useState<DissGameEntry[]>([]);
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
+  const [shouldTriggerAnimations, setShouldTriggerAnimations] = useState(false);
 
   // Transform initialData if provided
   const initialResponse = options?.initialData
@@ -86,30 +87,37 @@ export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
           }),
         );
 
-        transformedData.forEach((newGame) => {
-          const oldGame = prevData.find((g) => g.id === newGame.id);
-          if (oldGame && oldGame.dislikeCount < newGame.dislikeCount) {
-            triggerCountIncreaseAnimations(
-              newGame.id,
-              oldGame.dislikeCount,
-              newGame.dislikeCount,
-              setFloatingThumbs,
-              (itemId, animationId) => ({
-                id: animationId,
-                gameId: itemId,
-                timestamp: Date.now(),
-                startX: 20 + Math.random() * 60,
-                isPowerMode: false,
-              }),
-              'thumb-polling',
-            );
-          }
-        });
+        // Only trigger animations if explicitly enabled (e.g., after user vote sync)
+        // Prevents animations on initial load, stale cache updates, and background polling
+        if (shouldTriggerAnimations) {
+          transformedData.forEach((newGame) => {
+            const oldGame = prevData.find((g) => g.id === newGame.id);
+            if (oldGame && oldGame.dislikeCount < newGame.dislikeCount) {
+              triggerCountIncreaseAnimations(
+                newGame.id,
+                oldGame.dislikeCount,
+                newGame.dislikeCount,
+                setFloatingThumbs,
+                (itemId, animationId) => ({
+                  id: animationId,
+                  gameId: itemId,
+                  timestamp: Date.now(),
+                  startX: 20 + Math.random() * 60,
+                  isPowerMode: false,
+                }),
+                'thumb-polling',
+              );
+            }
+          });
+
+          // Reset flag after triggering animations
+          setShouldTriggerAnimations(false);
+        }
 
         return transformedData;
       });
     }
-  }, [topDislikedGamesResponse?.data]);
+  }, [topDislikedGamesResponse?.data, shouldTriggerAnimations]);
 
   return {
     dissGameData,
@@ -120,5 +128,6 @@ export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
     error,
     isLoading,
     mutate,
+    setShouldTriggerAnimations,
   };
 }

@@ -35,6 +35,7 @@ const TopDislikeGames = ({ initialData }: TopDislikeGamesProps) => {
     error,
     isLoading,
     mutate,
+    setShouldTriggerAnimations,
   } = useTopDislikedGames({ initialData: initialData as TopDislikedGame[] });
 
   const {
@@ -125,10 +126,14 @@ const TopDislikeGames = ({ initialData }: TopDislikeGamesProps) => {
 
   useEffect(() => {
     if (userVoteState.lastClickTime > 0) {
-      const syncTimer = setTimeout(() => mutate(), 2000);
+      const syncTimer = setTimeout(() => {
+        // Enable animations only for this specific sync after user votes
+        setShouldTriggerAnimations(true);
+        mutate();
+      }, 2000);
       return () => clearTimeout(syncTimer);
     }
-  }, [userVoteState.lastClickTime, mutate]);
+  }, [userVoteState.lastClickTime, mutate, setShouldTriggerAnimations]);
 
   // Scroll the active thumbnail into view when activeIndex changes
   useEffect(() => {
