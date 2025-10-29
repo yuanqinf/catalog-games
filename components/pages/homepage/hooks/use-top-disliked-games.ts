@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
 import { triggerCountIncreaseAnimations } from '@/utils/animation-utils';
 
@@ -44,7 +44,7 @@ interface UseTopDislikedGamesOptions {
 export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
   const [dissGameData, setDissGameData] = useState<DissGameEntry[]>([]);
   const [floatingThumbs, setFloatingThumbs] = useState<FloatingThumb[]>([]);
-  const [updateCount, setUpdateCount] = useState(0);
+  const updateCountRef = useRef(0);
 
   // Transform initialData if provided
   const initialResponse = options?.initialData
@@ -87,17 +87,18 @@ export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
           }),
         );
 
+        // Check if should skip animation BEFORE incrementing
+        const shouldSkipAnimation = options?.initialData
+          ? updateCountRef.current < 2
+          : updateCountRef.current < 1;
+
         // Increment update counter
-        setUpdateCount((prev) => prev + 1);
+        updateCountRef.current += 1;
 
         // Skip animations for:
         // 1. First update (initial fallbackData)
         // 2. Second update (first real fetch after fallbackData)
         // Only show animations from the 3rd update onwards (polling updates)
-        const shouldSkipAnimation = options?.initialData
-          ? updateCount < 2
-          : updateCount < 1;
-
         if (!shouldSkipAnimation && prevData.length > 0) {
           transformedData.forEach((newGame) => {
             const oldGame = prevData.find((g) => g.id === newGame.id);
@@ -123,7 +124,7 @@ export function useTopDislikedGames(options?: UseTopDislikedGamesOptions) {
         return transformedData;
       });
     }
-  }, [topDislikedGamesResponse?.data, updateCount, options?.initialData]);
+  }, [topDislikedGamesResponse?.data, options?.initialData]);
 
   return {
     dissGameData,
