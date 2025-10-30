@@ -3,7 +3,6 @@
 import {
   Search as SearchIconLucide,
   X as XIcon,
-  Loader2,
   ArrowLeft,
 } from 'lucide-react';
 import { CommandInput } from '@/components/ui/command';
@@ -19,7 +18,6 @@ interface SearchInputProps {
   onClear: (e: React.MouseEvent) => void;
   onBack?: () => void;
   isActive: boolean;
-  isLoading?: boolean;
   readOnly?: boolean;
 }
 
@@ -32,28 +30,23 @@ export const SearchInput = ({
   onClear,
   onBack,
   isActive,
-  isLoading = false,
   readOnly = false,
 }: SearchInputProps) => {
   const { t } = useTranslation();
 
   return (
     <div className="search-input-wrapper">
-      {isLoading ? (
-        <Loader2 className="search-icon animate-spin text-gray-400" />
-      ) : (
-        <>
-          {/* Mobile: Show ArrowLeft when active, Desktop: Always show Search icon */}
-          {isActive && onBack ? (
-            <Button variant="ghost" size="icon" onClick={onBack}>
-              <ArrowLeft />
-            </Button>
-          ) : null}
-          <SearchIconLucide
-            className={`search-icon ${isActive && onBack ? 'hidden md:block' : ''}`}
-          />
-        </>
-      )}
+      <>
+        {/* Mobile: Show ArrowLeft when active, Desktop: Always show Search icon */}
+        {isActive && onBack ? (
+          <Button variant="ghost" size="icon" onClick={onBack}>
+            <ArrowLeft />
+          </Button>
+        ) : null}
+        <SearchIconLucide
+          className={`search-icon ${isActive && onBack ? 'hidden md:block' : ''}`}
+        />
+      </>
       <CommandInput
         ref={inputRef}
         value={value}

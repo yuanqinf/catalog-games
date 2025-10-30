@@ -188,7 +188,6 @@ const SearchBar = () => {
             onClear={props.handleClearInput}
             onBack={isMobileExpanded ? props.handleDeactivate : undefined}
             isActive={isInputActive}
-            isLoading={props.isLoading}
           />
 
           {isInputActive && props.showSuggestions && (
@@ -215,10 +214,12 @@ const SearchBar = () => {
               animate={{ opacity: 1, scale: 1, width: 'auto' }}
               exit={{ opacity: 0, scale: 0.8, width: 0 }}
               transition={{ duration: 0.3 }}
-              className="md:hidden"
+              className="flex items-center gap-2 md:hidden"
             >
               <Button
-                onClick={handleButtonClick}
+                onClick={() => {
+                  props.handleSearchClick();
+                }}
                 disabled={props.isLoading}
                 size="icon"
                 className="flex shrink-0"
@@ -228,6 +229,17 @@ const SearchBar = () => {
                 ) : (
                   <Search className="h-4 w-4" />
                 )}
+              </Button>
+              <Button
+                onClick={() => {
+                  router.push('/explore');
+                  props.handleDeactivate();
+                }}
+                disabled={props.isLoading}
+                size="icon"
+                className="flex shrink-0"
+              >
+                <Gamepad2 className="h-4 w-4" />
               </Button>
             </motion.div>
           )}
