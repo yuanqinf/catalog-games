@@ -57,7 +57,7 @@ export const SearchInput = ({
         hideDefaultIcon
         readOnly={readOnly}
         wrapperClassName={`${isActive ? 'w-full' : ''} border-0 p-0 h-full`}
-        className={`${isActive ? '' : 'cursor-pointer'} h-full rounded-md border-0 bg-transparent pr-9 ${isActive && onBack ? 'pl-0' : 'pl-9'} text-sm text-gray-100 shadow-none placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0`}
+        className={`${isActive ? '' : 'cursor-pointer'} h-full rounded-md border-0 bg-transparent pr-9 ${isActive && onBack ? 'pl-0' : 'pl-9'} text-base text-gray-100 shadow-none placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 md:text-sm`}
       />
       {value && <XIcon className="search-clear-icon" onClick={onClear} />}
     </div>
