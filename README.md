@@ -1,3 +1,5 @@
+<img width="1024" height="1024" alt="logo 2" src="https://github.com/user-attachments/assets/57c65417-0265-419d-a3ad-0be406b714a0" />
+
 # DissGame.click
 
 **Hall of Shame for Bad Games** — Vote, roast, and bury the worst games of all time. No corporate BS, just raw opinions from real players.
