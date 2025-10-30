@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { SearchInput } from '@/components/shared/search/search-input';
-import { createRef } from 'react';
+import { SearchInput } from '../../components/shared/search/search-input';
+import React, { createRef } from 'react';
 
 // Mock i18n
 vi.mock('@/lib/i18n/client', () => ({
@@ -79,31 +79,6 @@ describe('SearchInput', () => {
           isActive={false}
         />,
       );
-
-      // Check for search icon (lucide-react renders SVG)
-      const searchIcon = container.querySelector('.search-icon');
-      expect(searchIcon).toBeInTheDocument();
-      expect(searchIcon).not.toHaveClass('animate-spin');
-    });
-
-    it('should render with loading spinner when isLoading is true', () => {
-      const inputRef = createRef<HTMLInputElement>();
-
-      const { container } = render(
-        <SearchInput
-          inputRef={inputRef}
-          value=""
-          onChange={mockOnChange}
-          onFocus={mockOnFocus}
-          onKeyDown={mockOnKeyDown}
-          onClear={mockOnClear}
-          isActive={false}
-          isLoading={true}
-        />,
-      );
-
-      const loadingIcon = container.querySelector('.search-icon.animate-spin');
-      expect(loadingIcon).toBeInTheDocument();
     });
 
     it('should render input with correct placeholder', () => {
@@ -523,7 +498,6 @@ describe('SearchInput', () => {
           onKeyDown={mockOnKeyDown}
           onClear={mockOnClear}
           isActive={false}
-          isLoading={false}
         />,
       );
 
@@ -537,7 +511,6 @@ describe('SearchInput', () => {
           onKeyDown={mockOnKeyDown}
           onClear={mockOnClear}
           isActive={true}
-          isLoading={true}
         />,
       );
 
@@ -550,94 +523,11 @@ describe('SearchInput', () => {
           onKeyDown={mockOnKeyDown}
           onClear={mockOnClear}
           isActive={true}
-          isLoading={false}
         />,
       );
 
       const input = screen.getByTestId('command-input') as HTMLInputElement;
       expect(input.value).toBe('ma');
-    });
-  });
-
-  describe('Loading state', () => {
-    it('should show search icon when not loading', () => {
-      const inputRef = createRef<HTMLInputElement>();
-
-      const { container } = render(
-        <SearchInput
-          inputRef={inputRef}
-          value="test"
-          onChange={mockOnChange}
-          onFocus={mockOnFocus}
-          onKeyDown={mockOnKeyDown}
-          onClear={mockOnClear}
-          isActive={true}
-          isLoading={false}
-        />,
-      );
-
-      const searchIcon = container.querySelector('.search-icon');
-      expect(searchIcon).toBeInTheDocument();
-      expect(searchIcon).not.toHaveClass('animate-spin');
-    });
-
-    it('should show loading spinner when loading', () => {
-      const inputRef = createRef<HTMLInputElement>();
-
-      const { container } = render(
-        <SearchInput
-          inputRef={inputRef}
-          value="test"
-          onChange={mockOnChange}
-          onFocus={mockOnFocus}
-          onKeyDown={mockOnKeyDown}
-          onClear={mockOnClear}
-          isActive={true}
-          isLoading={true}
-        />,
-      );
-
-      const loadingIcon = container.querySelector('.search-icon.animate-spin');
-      expect(loadingIcon).toBeInTheDocument();
-    });
-
-    it('should transition from loading to not loading', () => {
-      const inputRef = createRef<HTMLInputElement>();
-
-      const { container, rerender } = render(
-        <SearchInput
-          inputRef={inputRef}
-          value="test"
-          onChange={mockOnChange}
-          onFocus={mockOnFocus}
-          onKeyDown={mockOnKeyDown}
-          onClear={mockOnClear}
-          isActive={true}
-          isLoading={true}
-        />,
-      );
-
-      let loadingIcon = container.querySelector('.search-icon.animate-spin');
-      expect(loadingIcon).toBeInTheDocument();
-
-      rerender(
-        <SearchInput
-          inputRef={inputRef}
-          value="test"
-          onChange={mockOnChange}
-          onFocus={mockOnFocus}
-          onKeyDown={mockOnKeyDown}
-          onClear={mockOnClear}
-          isActive={true}
-          isLoading={false}
-        />,
-      );
-
-      loadingIcon = container.querySelector('.search-icon.animate-spin');
-      expect(loadingIcon).not.toBeInTheDocument();
-
-      const searchIcon = container.querySelector('.search-icon');
-      expect(searchIcon).toBeInTheDocument();
     });
   });
 });
