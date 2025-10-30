@@ -299,17 +299,6 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
       </div>
 
       <DialogFooter className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          onClick={() => {
-            setCurrentRating(defaultRating);
-            setHoverRating(defaultRating);
-          }}
-          className="text-xs"
-          disabled={isSaving}
-        >
-          {t('diss_rating_reset_all')}
-        </Button>
         <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
           {t('diss_rating_cancel')}
         </Button>

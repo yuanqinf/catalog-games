@@ -89,18 +89,23 @@ const GameDetailHeadline = ({
   if (isLoading) {
     return (
       <section className="mb-8">
-        <div className="p-6">
-          <div className="flex items-center gap-4">
-            {/* Skeleton Avatar */}
-            <div className="h-18 w-18 flex-shrink-0 animate-pulse rounded-full bg-gray-700" />
+        <div className="p-2 sm:p-6">
+          <div className="flex items-start gap-3 sm:items-center sm:gap-4">
+            {/* Skeleton Avatar with border */}
+            <div className="flex-shrink-0 rounded-full border-2 border-gray-700 p-1">
+              <div className="h-12 w-12 animate-pulse rounded-full bg-gray-700 sm:h-16 sm:w-16" />
+            </div>
 
             {/* Skeleton Content */}
-            <div className="flex flex-1 flex-col gap-6">
-              <div className="h-8 w-64 animate-pulse rounded bg-gray-700" />
-              <div className="flex items-center gap-4">
-                <div className="h-5 w-24 animate-pulse rounded bg-gray-700" />
-                <div className="h-5 w-32 animate-pulse rounded bg-gray-700" />
-                <div className="h-5 w-28 animate-pulse rounded bg-gray-700" />
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              {/* Skeleton Title */}
+              <div className="mb-1 h-7 w-48 animate-pulse rounded bg-gray-700 sm:h-8 sm:w-64" />
+
+              {/* Skeleton Info Items */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+                <div className="h-5 w-16 animate-pulse rounded bg-gray-700 sm:h-6 sm:w-20" />
+                <div className="h-5 w-12 animate-pulse rounded bg-gray-700 sm:h-6 sm:w-16" />
+                <div className="h-4 w-28 animate-pulse rounded bg-gray-700 sm:h-5 sm:w-36" />
               </div>
             </div>
           </div>
@@ -132,7 +137,7 @@ const GameDetailHeadline = ({
 
   return (
     <section className="mb-8">
-      <div className="p-4 sm:p-6">
+      <div className="p-2 sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           {/* Left: Game Info + Ranking Info */}
           <div className="flex items-start gap-3 sm:items-center sm:gap-4">
