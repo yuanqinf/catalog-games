@@ -59,132 +59,88 @@ const ClerkAuth = () => {
   }, []);
 
   return (
-    <>
-      <style jsx global>{`
-        .cl-userButtonPopoverActionButton__manageAccount::before {
-          content: 'Account' !important;
-          position: absolute !important;
-          left: 57 !important;
-          width: 100% !important;
-          height: 100% !important;
-          display: flex !important;
-          align-items: center !important;
-          padding: 8px 12px !important;
-        }
-        /* Hide the original Profile text */
-        .cl-userButtonPopoverActionButton__manageAccount {
-          text-indent: -9999px !important;
-          overflow: hidden !important;
-        }
-        .cl-userButtonPopoverActionButton__manageAccount::before {
-          text-indent: 0 !important;
-          font-size: 14px !important;
-        }
-      `}</style>
-      <AnimatePresence mode="wait">
-        {!isMounted ? (
-          <motion.div
-            key="loading"
-            className="flex items-center gap-4"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-          >
-            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-            {isSyncing && (
-              <span className="text-xs text-gray-400">{t('auth_syncing')}</span>
-            )}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="auth-content"
-            className="flex items-center gap-4"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, ease: 'easeOut', delay: 0.1 }}
-          >
-            <SignedOut>
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
-                      <Button>
-                        <LogIn className="h-3 w-3" />
-                        <p>{t('auth_login')}</p>
-                      </Button>
-                    </SignInButton>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    className="border-primary/20 bg-primary/95 text-primary-foreground shadow-lg backdrop-blur-sm"
-                    sideOffset={8}
+    <AnimatePresence mode="wait">
+      {!isMounted ? (
+        <motion.div
+          key="loading"
+          className="flex items-center gap-4"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
+        >
+          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+          {isSyncing && (
+            <span className="text-xs text-gray-400">{t('auth_syncing')}</span>
+          )}
+        </motion.div>
+      ) : (
+        <motion.div
+          key="auth-content"
+          className="flex items-center gap-4"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, ease: 'easeOut', delay: 0.1 }}
+        >
+          <SignedOut>
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SignInButton mode="modal" appearance={{ baseTheme: dark }}>
+                    <Button>
+                      <LogIn className="h-3 w-3" />
+                      <p>{t('auth_login')}</p>
+                    </Button>
+                  </SignInButton>
+                </TooltipTrigger>
+                <TooltipContent
+                  className="border-primary/20 bg-primary/95 text-primary-foreground shadow-lg backdrop-blur-sm"
+                  sideOffset={8}
+                >
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
                   >
-                    <motion.p
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, ease: 'easeOut' }}
-                    >
-                      {t('auth_ready_to_start')}
-                    </motion.p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </SignedOut>
-            <SignedIn>
-              <Link href={'/profile'}>
-                <Button>
-                  <User className="h-3 w-3" />
-                  <p className="hidden md:block">{t('auth_profile')}</p>
-                </Button>
-              </Link>
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: {
-                      width: '40px',
-                      height: '40px',
-                      '&:hover': {
-                        scale: 1.1,
-                        transition: 'all 0.2s ease-in-out',
-                      },
-                    },
-                    userPreviewMainIdentifier: {
-                      display: 'none',
-                    },
-                    userPreviewSecondaryIdentifier: {
-                      marginTop: '0',
-                      color: '#000000',
-                      fontSize: '14px',
-                    },
-                    userButtonPopoverActionButton__manageAccount: {
-                      '& [data-localization-key="userButtonPopover.manageAccount"]':
-                        {
-                          '&::before': {
-                            content: '"Account"',
-                            position: 'absolute',
-                            left: '0',
-                            top: '0',
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            color: 'inherit',
-                            zIndex: '999',
-                          },
-                        },
-                      '& [data-localization-key="userButtonPopover.manageAccount"] > *':
-                        {
-                          opacity: '0',
-                        },
+                    {t('auth_ready_to_start')}
+                  </motion.p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </SignedOut>
+          <SignedIn>
+            <Link href={'/profile'}>
+              <Button>
+                <User className="h-3 w-3" />
+                <p className="hidden md:block">{t('auth_profile')}</p>
+              </Button>
+            </Link>
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: {
+                    width: '40px',
+                    height: '40px',
+                    '&:hover': {
+                      scale: 1.1,
+                      transition: 'all 0.2s ease-in-out',
                     },
                   },
-                }}
-              />
-            </SignedIn>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+                  userPreviewMainIdentifier: {
+                    display: 'none',
+                  },
+                  userPreviewSecondaryIdentifier: {
+                    marginTop: '0',
+                    color: '#000000',
+                    fontSize: '14px',
+                  },
+                },
+              }}
+            />
+          </SignedIn>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

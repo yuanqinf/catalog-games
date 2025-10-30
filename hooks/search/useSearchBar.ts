@@ -159,6 +159,12 @@ export const useSearchBar = () => {
     setShowSuggestions(true);
   };
 
+  const handleDeactivate = () => {
+    setIsInputActive(false);
+    setShowSuggestions(false);
+    inputRef.current?.blur();
+  };
+
   const handleFocus = () => {
     // Show suggestions on focus (will show history if no input/results)
     setShowSuggestions(true);
@@ -205,6 +211,7 @@ export const useSearchBar = () => {
     handleClearHistory,
     handleInputKeyDown,
     handleActivate,
+    handleDeactivate,
     handleFocus,
     handleSearchClick,
   };

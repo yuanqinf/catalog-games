@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClerkSupabaseClient } from '@/lib/supabase/client';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function GET(
   request: NextRequest,
@@ -16,7 +16,7 @@ export async function GET(
       );
     }
 
-    const supabase = createClerkSupabaseClient(null);
+    const supabase = createServerSupabaseClient();
 
     // Fetch all ratings for this game
     const { data, error } = await supabase
@@ -47,7 +47,10 @@ export async function GET(
         },
         {
           headers: {
-            'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+            // No cache for rating data - always return fresh data
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+            Expires: '0',
           },
         },
       );
@@ -85,7 +88,10 @@ export async function GET(
       },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+          // No cache for rating data - always return fresh data
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
         },
       },
     );

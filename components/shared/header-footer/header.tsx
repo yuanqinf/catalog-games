@@ -5,11 +5,13 @@ import Image from 'next/image';
 import SearchBar from '@/components/shared/search/search-bar';
 import ClerkAuth from '@/components/shared/clerk-auth';
 import { useTranslation } from '@/lib/i18n/client';
+import { SearchProvider, useSearchContext } from '@/contexts/search-context';
 
-const Header = () => {
+function HeaderContent() {
   const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const { isMobileSearchActive } = useSearchContext();
 
   useEffect(() => {
     const controlNavbar = () => {
@@ -38,11 +40,16 @@ const Header = () => {
 
   return (
     <nav
-      className={`header sticky top-0 z-50 grid grid-cols-4 items-center gap-4 transition-transform duration-300 ${
+      className={`header sticky top-0 z-50 grid items-center gap-4 transition-all duration-300 ${
         isVisible ? 'translate-y-0' : '-translate-y-full'
-      }`}
+      } ${isMobileSearchActive ? 'grid-cols-1 md:grid-cols-4' : 'grid-cols-4'}`}
     >
-      <Link href="/" className="justify-self-start">
+      <Link
+        href="/"
+        className={`justify-self-start transition-opacity duration-300 ${
+          isMobileSearchActive ? 'hidden md:block' : 'block'
+        }`}
+      >
         <div className="header-logo">
           <Image
             src="/images/logo.png"
@@ -53,15 +60,28 @@ const Header = () => {
         </div>
       </Link>
       <div
-        // prettier-ignore
-        className="col-span-2 justify-self-center w-full"
+        className={`w-full justify-self-center transition-all duration-300 ${
+          isMobileSearchActive ? 'col-span-1' : 'col-span-2'
+        } md:col-span-2`}
       >
         <SearchBar />
       </div>
-      <div className="justify-self-end">
+      <div
+        className={`justify-self-end transition-opacity duration-300 ${
+          isMobileSearchActive ? 'opacity-0 md:opacity-100' : 'opacity-100'
+        }`}
+      >
         <ClerkAuth />
       </div>
     </nav>
+  );
+}
+
+const Header = () => {
+  return (
+    <SearchProvider>
+      <HeaderContent />
+    </SearchProvider>
   );
 };
 

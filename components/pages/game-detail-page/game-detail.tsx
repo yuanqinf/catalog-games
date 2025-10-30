@@ -403,7 +403,7 @@ const GameDetail = ({
 
   return (
     <main className="detail-page-main">
-      <div className="container-3xl container mx-auto px-8">
+      <div className="container-3xl container mx-auto px-2 md:px-8">
         {/* Top Navigation - Back Button (Left) and Share Button (Right) */}
         <div className="mb-6 flex items-center justify-between">
           <Link href={`/explore?view=${isDeadGame ? 'graveyard' : 'disliked'}`}>
