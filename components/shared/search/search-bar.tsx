@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Search, Loader2, Gamepad2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,6 +11,7 @@ import { SearchInput } from './search-input';
 import { SearchSuggestions } from './search-suggestions';
 import { CreateDislikeGameModal } from '../create-dislike-game-modal';
 import { FeedbackDialog } from '@/components/shared/feedback-dialog';
+import { useSearchContext } from '@/contexts/search-context';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n/client';
 
@@ -70,6 +71,27 @@ const SearchBar = () => {
   const isExplorePage = pathname === '/explore';
   const [isSubmittingDislike, setIsSubmittingDislike] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const { setIsMobileSearchActive } = useSearchContext();
+
+  // Detect mobile viewport (< 768px)
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Determine if mobile search is expanded (only on mobile screens)
+  const isMobileExpanded = isMobile && isInputActive && props.showSuggestions;
+
+  // Update context when mobile search state changes
+  useEffect(() => {
+    setIsMobileSearchActive(isMobileExpanded);
+  }, [isMobileExpanded, setIsMobileSearchActive]);
 
   const handleModalClose = () => {
     props.setShowDislikeModal(false);
@@ -147,7 +169,9 @@ const SearchBar = () => {
   return (
     <div
       ref={searchProps.wrapperRef}
-      className="relative mx-auto w-full max-w-xl"
+      className={`relative mx-auto transition-all duration-300 ease-in-out ${
+        isMobileExpanded ? 'w-full' : 'w-3/4'
+      } max-w-xl md:w-full`}
     >
       <div className="flex items-center gap-2">
         <Command
@@ -162,6 +186,7 @@ const SearchBar = () => {
             onFocus={props.handleFocus}
             onKeyDown={props.handleInputKeyDown}
             onClear={props.handleClearInput}
+            onBack={isMobileExpanded ? props.handleDeactivate : undefined}
             isActive={isInputActive}
             isLoading={props.isLoading}
           />
@@ -182,10 +207,37 @@ const SearchBar = () => {
           )}
         </Command>
 
+        {/* Mobile: Show button only when expanded, Desktop: Always show */}
+        <AnimatePresence>
+          {isMobileExpanded && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, width: 0 }}
+              animate={{ opacity: 1, scale: 1, width: 'auto' }}
+              exit={{ opacity: 0, scale: 0.8, width: 0 }}
+              transition={{ duration: 0.3 }}
+              className="md:hidden"
+            >
+              <Button
+                onClick={handleButtonClick}
+                disabled={props.isLoading}
+                size="icon"
+                className="flex shrink-0"
+              >
+                {props.isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4" />
+                )}
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Desktop button - always visible */}
         <Button
           onClick={handleButtonClick}
           disabled={props.isLoading}
-          className="flex items-center gap-2"
+          className="hidden items-center gap-2 md:flex"
         >
           {props.isLoading ? (
             <Loader2 className="animate-spin" />

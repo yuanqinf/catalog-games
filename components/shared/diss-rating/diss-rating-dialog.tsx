@@ -148,6 +148,7 @@ const DissRatingDialog: React.FC<DissRatingDialogProps> = ({
     userRating.graphics,
     userRating.gameplay,
     userRating.longevity,
+    userRating,
   ]);
 
   const handleSave = async () => {
