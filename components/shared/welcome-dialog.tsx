@@ -82,7 +82,7 @@ export function WelcomeDialog() {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md bg-gradient-to-b from-zinc-900 to-black">
+      <DialogContent className="bg-gradient-to-b from-zinc-900 to-black">
         <DialogHeader>
           <DialogTitle className="flex flex-col items-center text-3xl font-bold">
             <motion.div
@@ -149,7 +149,9 @@ export function WelcomeDialog() {
                     />
                   </motion.div>
                   <div>
-                    <h3 className={`mb-1 font-bold text-${feature.color}-400`}>
+                    <h3
+                      className={`mb-1 font-bold text-${feature.color}-400 hidden md:block`}
+                    >
                       {feature.title}
                     </h3>
                     <p className="text-sm text-gray-400">
