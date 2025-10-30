@@ -20,8 +20,11 @@ export async function GET(request: NextRequest) {
           name,
           slug,
           cover_url,
+          banner_url,
           first_release_date,
-          summary
+          summary,
+          developers,
+          publishers
         )
       `,
       )

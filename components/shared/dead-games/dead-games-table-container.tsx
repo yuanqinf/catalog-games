@@ -102,8 +102,8 @@ export const DeadGamesTableContainer: React.FC<
           slug: deadGame.games.slug,
           deadDate: formattedDate,
           status: deadGame.dead_status,
-          developer: deadGame.games.developers?.[0] || 'Unknown Developer',
-          publisher: deadGame.games.publishers?.[0] || 'Unknown Publisher',
+          developer: deadGame.games.developers?.[0] || '-',
+          publisher: deadGame.games.publishers?.[0] || '-',
           coverUrl:
             deadGame.games.cover_url || deadGame.games.banner_url || undefined,
           reactionCount: deadGame.user_reaction_count,
