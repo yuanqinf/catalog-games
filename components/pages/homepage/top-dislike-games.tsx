@@ -168,21 +168,11 @@ const TopDislikeGames = ({ initialData }: TopDislikeGamesProps) => {
               {t('homepage_hall_of_shame')}
             </h2>
           </div>
-          <Link href="/explore">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 border-zinc-600 bg-zinc-800 text-gray-300 hover:bg-zinc-700 hover:text-white"
-            >
-              <ExternalLink className="h-4 w-4" />
-              <span className="text-sm">{t('homepage_explore_more')}</span>
-            </Button>
-          </Link>
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-          {/* Main Banner Area */}
-          <div className="relative lg:col-span-3">
+          {/* Main Banner Area - Desktop Skeleton */}
+          <div className="relative block lg:col-span-3">
             <div className="flex aspect-[16/9] w-full items-center justify-center rounded-lg bg-zinc-800/50">
               <Loader2 className="h-8 w-8 animate-spin text-yellow-500" />
             </div>
@@ -200,6 +190,47 @@ const TopDislikeGames = ({ initialData }: TopDislikeGamesProps) => {
             </div>
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-yellow-500" />
+            </div>
+          </div>
+
+          {/* Mini Game Card Skeletons */}
+          <div className="mt-8 lg:col-span-4">
+            <div className="mb-6 flex items-center justify-end">
+              <div className="h-9 w-32 animate-pulse rounded-md bg-zinc-700" />
+            </div>
+            <div className="grid grid-cols-2 gap-6 lg:grid-cols-5">
+              {[6, 7, 8, 9, 10].map((ranking) => (
+                <div key={ranking} className="p-1">
+                  <div className="relative flex flex-col rounded-lg border border-transparent bg-zinc-800 p-4">
+                    {/* Cover Image Skeleton */}
+                    <div
+                      className="relative mb-2 animate-pulse overflow-hidden rounded bg-zinc-700"
+                      style={{ aspectRatio: '672/895' }}
+                    />
+
+                    {/* Content Skeleton */}
+                    <div className="mt-2 flex flex-col gap-1">
+                      {/* Title Skeleton */}
+                      <div className="h-5 w-full animate-pulse rounded bg-zinc-700" />
+
+                      {/* Developer Skeleton */}
+                      <div className="h-4 w-3/4 animate-pulse rounded bg-zinc-700" />
+
+                      {/* Bottom Row Skeleton */}
+                      <div className="flex items-center justify-between gap-2">
+                        {/* Platform Icons Skeleton */}
+                        <div className="mt-1 flex items-center gap-1">
+                          <div className="h-3.5 w-3.5 animate-pulse rounded bg-zinc-700" />
+                          <div className="h-3.5 w-3.5 animate-pulse rounded bg-zinc-700" />
+                        </div>
+
+                        {/* Dislike Count Skeleton */}
+                        <div className="h-4 w-12 animate-pulse rounded bg-zinc-700" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
