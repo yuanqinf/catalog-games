@@ -10,43 +10,26 @@
 - **Styling**: Tailwind CSS + styled-components
 - **Animations**: Framer Motion
 - **Data Fetching**: SWR
-- **Internationalization**: i18next
 
 ## Features
 
 - 🎮 **Top Disliked Games** — Vote and track the most hated games
 - ⚰️ **Gaming Graveyard** — Memorial for dead/abandoned games
-- ⭐ **Detailed Rating System** — Rate games across 5 categories (story, music, graphics, gameplay, longevity)
+- ⭐ **Detailed Rating System** — Rate games across 5 categories
 - 📊 **Trend Analysis** — Google Trends integration for game popularity
-- 🌐 **Multi-language Support** — i18n ready
 - 🔄 **Real-time Updates** — SWR polling with optimistic updates
 - 🎨 **Dynamic Animations** — Smooth number transitions and interactive effects
 
-## Getting Started
+Required environment variables:
 
-### Prerequisites
+- **Clerk**: Sign up at [clerk.com](https://clerk.com) for authentication
+- **Supabase**: Create a project at [supabase.com](https://supabase.com) for database
+- **IGDB API**: Get credentials from [IGDB API Docs](https://api-docs.igdb.com/#account-creation)
 
-- Node.js 20+
-- Supabase account
-- Clerk account
+Optional:
 
-### Environment Variables
-
-Create a `.env.local` file:
-
-```bash
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# Clerk
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-CLERK_SECRET_KEY=your_clerk_secret_key
-
-# IGDB API (for game metadata)
-IGDB_CLIENT_ID=your_igdb_client_id
-IGDB_CLIENT_SECRET=your_igdb_client_secret
-```
+- **Discord Webhook**: For feedback notifications
+- **Sentry**: For error tracking
 
 ### Installation
 
@@ -97,4 +80,26 @@ npm run build      # Build for production
 npm run start      # Start production server
 npm run lint       # Run ESLint
 npm run prettier   # Format code
+npm run test       # Run tests in watch mode
+npm run test:run   # Run tests once
+npm run test:coverage  # Run tests with coverage report
 ```
+
+## Database Setup
+
+This project uses Supabase as the database. You'll need to set up the following tables:
+
+1. **games** - Main games table with metadata from IGDB
+2. **dead_games** - Table for shutdown/abandoned games
+3. **user_reactions** - User dislikes and reactions
+4. **game_ratings** - 5-category rating system
+
+See the [Supabase documentation](https://supabase.com/docs) for table schema setup.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is open source and available under the MIT License.

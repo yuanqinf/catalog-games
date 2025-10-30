@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     url: 'https://dissgame.click',
     images: [
       {
-        url: 'https://wbxceyfjhudwbareawkz.supabase.co/storage/v1/object/public/game-image-assets/logo/logo.png',
+        url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/game-image-assets/logo/logo.png`,
         width: 1024,
         height: 1024,
         alt: 'DissGame — Hall of Shame for Bad Games',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     description:
       'Vote, roast, and bury the most disliked games in the Hall of Shame.',
     images: [
-      'https://wbxceyfjhudwbareawkz.supabase.co/storage/v1/object/public/game-image-assets/logo/logo.png',
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/game-image-assets/logo/logo.png`,
     ],
   },
   alternates: {
